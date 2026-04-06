@@ -1,0 +1,53 @@
+name: ercs-backend
+
+x-server: &base_server_setup
+  build:
+    context: ./
+  stdin_open: true
+  tty: true
+  environment: &base_server_environments
+    DEBUG: ${DEBUG:-true}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?error}
+    # Postgres
+    POSTGRES_DB: ${POSTGRES_DB:-ercs}
+    POSTGRES_USER: ${POSTGRES_USER:-postgres}
+    POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    POSTGRES_HOST: ${POSTGRES_HOST:-db}
+    POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    # CORS
+    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
+    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+  env_file:
+    - path: .env
+      required: false
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  volumes:
+    - ./:/code/
+    - ipython_data_local:/root/.ipython/profile_default
+  depends_on:
+    - db
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: ercs
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data17:/var/lib/postgresql/data
+
+  web:
+    <<: *base_server_setup
+    command: ["/code/misc/dev/run_web.sh"]
+    environment:
+      <<: *base_server_environments
+    ports:
+      - 127.0.0.1:8000:8000
+    depends_on:
+      - db
+
+volumes:
+  postgres_data17:
+  ipython_data_local:

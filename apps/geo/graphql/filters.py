@@ -1,0 +1,12 @@
+import strawberry
+import strawberry_django
+
+from apps.geo.models import AdminArea
+
+
+@strawberry_django.filters.filter(AdminArea, lookups=True)
+class AdminAreaFilter:
+    id: strawberry.ID | None = strawberry.UNSET
+    level: str | None = strawberry.UNSET
+    parent_id: strawberry.ID | None = strawberry.UNSET
+    pcode: str | None = strawberry.UNSET
