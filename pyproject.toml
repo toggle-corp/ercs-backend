@@ -13,6 +13,7 @@ dependencies = [
     "django-storages[s3]>=1.14",
     "strawberry-graphql-django~=0.70.1",
     "django-choices-field",
+    "django-health-check~=3.0",
     "asgiref>=3.8",
     "gunicorn>=23.0",
     "uvicorn>=0.34",

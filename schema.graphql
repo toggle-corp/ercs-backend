@@ -1,0 +1,621 @@
+directive @oneOf on INPUT_OBJECT
+
+input AdminAreaFilter {
+  id: ID
+  level: String
+  parentId: ID
+  pcode: String
+  AND: AdminAreaFilter
+  OR: AdminAreaFilter
+  NOT: AdminAreaFilter
+  DISTINCT: Boolean
+}
+
+input AdminAreaOrder @oneOf {
+  name: Ordering
+  level: Ordering
+}
+
+type AdminAreaType {
+  id: ID!
+  name: String!
+  nameAm: String
+  level: Int!
+  parentId: ID
+  pcode: String
+  centroidLat: Float
+  centroidLon: Float
+}
+
+type AdminAreaTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [AdminAreaType!]!
+}
+
+"""A generic type to return error messages"""
+scalar CustomErrorType
+
+"""Date (isoformat)"""
+scalar Date
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+type DjangoFileType {
+  name: String!
+  size: Int!
+  url: String!
+}
+
+input EmergencyFilter {
+  id: ID
+  disasterType: String
+  status: String
+  regionId: ID
+  goId: Int
+  AND: EmergencyFilter
+  OR: EmergencyFilter
+  NOT: EmergencyFilter
+  DISTINCT: Boolean
+}
+
+input EmergencyOrder @oneOf {
+  name: Ordering
+  startDate: Ordering
+  syncedAt: Ordering
+}
+
+type EmergencyType {
+  id: ID!
+  goId: Int!
+  name: String!
+  disasterType: String!
+  status: String!
+  regionId: ID
+  startDate: Date!
+  affectedPop: Int
+  goUrl: String
+  syncedAt: DateTime!
+}
+
+type EmergencyTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [EmergencyType!]!
+}
+
+input ExternalDashboardCreateInput {
+  title: String!
+  url: String!
+  page: Int!
+  description: String
+  region: ID
+  showOnHome: Boolean! = false
+  order: Int! = 0
+  isActive: Boolean! = true
+}
+
+input ExternalDashboardFilter {
+  id: ID
+  page: String
+  isActive: Boolean
+  showOnHome: Boolean
+  regionId: ID
+  AND: ExternalDashboardFilter
+  OR: ExternalDashboardFilter
+  NOT: ExternalDashboardFilter
+  DISTINCT: Boolean
+}
+
+input ExternalDashboardOrder @oneOf {
+  page: Ordering
+  order: Ordering
+  title: Ordering
+}
+
+type ExternalDashboardType {
+  id: ID!
+  title: String!
+  description: String
+  url: String!
+  page: Int!
+  regionId: ID
+  showOnHome: Boolean!
+  order: Int!
+  isActive: Boolean!
+  createdById: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ExternalDashboardTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ExternalDashboardType
+}
+
+type ExternalDashboardTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ExternalDashboardType!]!
+}
+
+input ExternalDashboardUpdateInput {
+  title: String
+  url: String
+  page: Int
+  description: String
+  region: ID
+  showOnHome: Boolean
+  order: Int
+  isActive: Boolean
+}
+
+input GalleryAlbumCreateInput {
+  title: String!
+  description: String
+}
+
+input GalleryAlbumFilter {
+  id: ID
+  createdById: ID
+  AND: GalleryAlbumFilter
+  OR: GalleryAlbumFilter
+  NOT: GalleryAlbumFilter
+  DISTINCT: Boolean
+}
+
+input GalleryAlbumOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+}
+
+type GalleryAlbumType {
+  id: ID!
+  title: String!
+  description: String
+  coverImage: GalleryImageType
+  createdById: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  images: [GalleryImageType!]!
+}
+
+type GalleryAlbumTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: GalleryAlbumType
+}
+
+type GalleryAlbumTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [GalleryAlbumType!]!
+}
+
+input GalleryAlbumUpdateInput {
+  title: String
+  description: String
+  coverImage: ID
+}
+
+input GalleryImageCreateInput {
+  album: ID!
+  image: Upload!
+  caption: String
+  order: Int! = 0
+}
+
+type GalleryImageType {
+  id: ID!
+  albumId: ID!
+  image: DjangoFileType!
+  caption: String
+  order: Int!
+  uploadedAt: DateTime!
+}
+
+type GalleryImageTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: GalleryImageType
+}
+
+type Mutation {
+  createThematicArea(data: ThematicAreaInput!): ThematicAreaTypeMutationResponseType!
+  createReport(data: ReportCreateInput!): ReportTypeMutationResponseType!
+  updateReport(id: ID!, data: ReportUpdateInput!): ReportTypeMutationResponseType!
+  createNewsPost(data: NewsPostCreateInput!): NewsPostTypeMutationResponseType!
+  updateNewsPost(id: ID!, data: NewsPostUpdateInput!): NewsPostTypeMutationResponseType!
+  createNewsPostReport(data: NewsPostReportInput!): NewsPostReportTypeMutationResponseType!
+  deleteNewsPostReport(newspost: ID!, report: ID!): NewsPostReportTypeMutationResponseType!
+  createExternalDashboard(data: ExternalDashboardCreateInput!): ExternalDashboardTypeMutationResponseType!
+  updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): ExternalDashboardTypeMutationResponseType!
+  createGalleryAlbum(data: GalleryAlbumCreateInput!): GalleryAlbumTypeMutationResponseType!
+  updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): GalleryAlbumTypeMutationResponseType!
+  createGalleryImage(data: GalleryImageCreateInput!): GalleryImageTypeMutationResponseType!
+  deleteGalleryImage(id: ID!): GalleryImageTypeMutationResponseType!
+  createTeam(data: TeamCreateInput!): TeamTypeMutationResponseType!
+  updateTeam(id: ID!, data: TeamUpdateInput!): TeamTypeMutationResponseType!
+  createTeamMember(data: TeamMemberCreateInput!): TeamMemberTypeMutationResponseType!
+  updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): TeamMemberTypeMutationResponseType!
+  deleteTeamMember(id: ID!): TeamMemberTypeMutationResponseType!
+}
+
+input NewsPostCreateInput {
+  title: String!
+  content: String!
+  description: String
+  coverImage: Upload
+  region: ID
+  isPublished: Boolean! = false
+}
+
+input NewsPostFilter {
+  id: ID
+  isPublished: Boolean
+  authorId: ID
+  regionId: ID
+  AND: NewsPostFilter
+  OR: NewsPostFilter
+  NOT: NewsPostFilter
+  DISTINCT: Boolean
+}
+
+input NewsPostOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+  publishedAt: Ordering
+}
+
+input NewsPostReportInput {
+  newspost: ID!
+  report: ID!
+  order: Int! = 0
+}
+
+type NewsPostReportType {
+  id: ID!
+  newspostId: ID!
+  report: ReportType!
+  order: Int!
+}
+
+type NewsPostReportTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: NewsPostReportType
+}
+
+type NewsPostType {
+  id: ID!
+  title: String!
+  description: String
+  coverImage: DjangoFileType
+  content: String!
+  authorId: ID!
+  regionId: ID
+  isPublished: Boolean!
+  publishedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  reports: [ReportType!]!
+}
+
+type NewsPostTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: NewsPostType
+}
+
+type NewsPostTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [NewsPostType!]!
+}
+
+input NewsPostUpdateInput {
+  title: String
+  content: String
+  description: String
+  coverImage: Upload
+  region: ID
+  isPublished: Boolean
+}
+
+type OffsetPaginationInfo {
+  offset: Int!
+  limit: Int
+}
+
+input OffsetPaginationInput {
+  offset: Int! = 0
+  limit: Int
+}
+
+enum Ordering {
+  ASC
+  ASC_NULLS_FIRST
+  ASC_NULLS_LAST
+  DESC
+  DESC_NULLS_FIRST
+  DESC_NULLS_LAST
+}
+
+type Query {
+  adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, order: AdminAreaOrder): AdminAreaTypeOffsetPaginated!
+  adminArea(pk: ID!): AdminAreaType!
+  me: UserMeType
+  thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
+  reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
+  report(pk: ID!): ReportType!
+  newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
+  newsPost(pk: ID!): NewsPostType!
+  externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
+  externalDashboard(pk: ID!): ExternalDashboardType!
+  emergencies(pagination: OffsetPaginationInput, filters: EmergencyFilter, order: EmergencyOrder): EmergencyTypeOffsetPaginated!
+  emergency(pk: ID!): EmergencyType!
+  galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, order: GalleryAlbumOrder): GalleryAlbumTypeOffsetPaginated!
+  galleryAlbum(pk: ID!): GalleryAlbumType!
+  teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
+  team(pk: ID!): TeamType!
+  teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+}
+
+input ReportCreateInput {
+  title: String!
+  contentType: Int!
+  description: String
+  file: Upload
+  iframeUrl: String
+  visibility: Int! = 10
+  thematicArea: ID!
+  region: ID
+  disasterType: String
+  owner: String
+  publishedAt: String
+}
+
+input ReportFilter {
+  id: ID
+  contentType: Int
+  visibility: Int
+  thematicAreaId: ID
+  regionId: ID
+  disasterType: String
+  AND: ReportFilter
+  OR: ReportFilter
+  NOT: ReportFilter
+  DISTINCT: Boolean
+}
+
+input ReportOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+  publishedAt: Ordering
+}
+
+type ReportType {
+  id: ID!
+  title: String!
+  description: String
+  contentType: Int!
+  file: DjangoFileType
+  iframeUrl: String
+  visibility: Int!
+  thematicAreaId: ID!
+  regionId: ID
+  disasterType: String
+  owner: String
+  uploadedById: ID!
+  publishedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ReportTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ReportType
+}
+
+type ReportTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ReportType!]!
+}
+
+input ReportUpdateInput {
+  title: String
+  description: String
+  visibility: Int
+  thematicArea: ID
+  region: ID
+  disasterType: String
+  owner: String
+  publishedAt: String
+}
+
+input TeamCreateInput {
+  name: String!
+  description: String
+}
+
+input TeamFilter {
+  id: ID
+  name: String
+  AND: TeamFilter
+  OR: TeamFilter
+  NOT: TeamFilter
+  DISTINCT: Boolean
+}
+
+input TeamMemberCreateInput {
+  team: ID!
+  name: String!
+  position: String!
+  email: String
+  phoneNumber: String
+  order: Int! = 0
+}
+
+input TeamMemberFilter {
+  id: ID
+  teamId: ID
+  AND: TeamMemberFilter
+  OR: TeamMemberFilter
+  NOT: TeamMemberFilter
+  DISTINCT: Boolean
+}
+
+input TeamMemberOrder @oneOf {
+  order: Ordering
+  name: Ordering
+}
+
+type TeamMemberType {
+  id: ID!
+  teamId: ID!
+  name: String!
+  position: String!
+  email: String
+  phoneNumber: String
+  order: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TeamMemberTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TeamMemberType
+}
+
+type TeamMemberTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [TeamMemberType!]!
+}
+
+input TeamMemberUpdateInput {
+  team: ID
+  name: String
+  position: String
+  email: String
+  phoneNumber: String
+  order: Int
+}
+
+input TeamOrder @oneOf {
+  name: Ordering
+  createdAt: Ordering
+}
+
+type TeamType {
+  id: ID!
+  name: String!
+  description: String
+  members: [TeamMemberType!]!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type TeamTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: TeamType
+}
+
+type TeamTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [TeamType!]!
+}
+
+input TeamUpdateInput {
+  name: String
+  description: String
+}
+
+input ThematicAreaFilter {
+  id: ID
+  name: String
+  AND: ThematicAreaFilter
+  OR: ThematicAreaFilter
+  NOT: ThematicAreaFilter
+  DISTINCT: Boolean
+}
+
+input ThematicAreaInput {
+  name: String!
+}
+
+type ThematicAreaType {
+  id: ID!
+  name: String!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ThematicAreaTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ThematicAreaType
+}
+
+type ThematicAreaTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ThematicAreaType!]!
+}
+
+"""Represents a file upload."""
+scalar Upload
+
+type UserMeType {
+  id: ID!
+  email: String!
+  fullName: String!
+  role: Int!
+  regionId: ID
+  isActive: Boolean!
+  mfaEnabled: Boolean!
+  createdAt: DateTime!
+}
