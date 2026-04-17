@@ -62,7 +62,7 @@ class AdminArea(BaseModel):
         if self.parent_id is None:
             if self.level != AdminAreaLevel.COUNTRY:
                 raise ValidationError(
-                    "Only COUNTRY-level areas may have no parent."
+                    "Only COUNTRY-level areas may have no parent.",
                 )
             return
 
@@ -77,5 +77,5 @@ class AdminArea(BaseModel):
             raise ValidationError(
                 f"A {self.get_level_display()} must have a "
                 f"{AdminAreaLevel(order[child_idx - 1]).label if child_idx > 0 else 'Country'} "
-                f"as its parent, but got a {parent.get_level_display()}."
+                f"as its parent, but got a {parent.get_level_display()}.",
             )

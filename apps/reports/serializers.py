@@ -31,11 +31,7 @@ class ReportSerializer(serializers.ModelSerializer):
         }
 
     def validate_visibility(self, value: int) -> int:
-        if (
-            self.instance
-            and self.instance.visibility == ReportVisibility.PRIVATE
-            and value == ReportVisibility.PUBLIC
-        ):
+        if self.instance and self.instance.visibility == ReportVisibility.PRIVATE and value == ReportVisibility.PUBLIC:
             raise serializers.ValidationError("Cannot change visibility from PRIVATE to PUBLIC.")
         return value
 

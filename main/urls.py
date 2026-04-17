@@ -4,7 +4,8 @@ from django.contrib import admin
 from django.urls import include, path
 from django.views.decorators.csrf import csrf_exempt
 
-from main.graphql.schema import CustomAsyncGraphQLView, schema as graphql_schema
+from main.graphql.schema import CustomAsyncGraphQLView
+from main.graphql.schema import schema as graphql_schema
 
 admin.site.site_header = "ERCS-EOC Admin"
 

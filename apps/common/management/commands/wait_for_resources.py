@@ -23,7 +23,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("DB not available, waiting 1s..."))
             time.sleep(1)
         self.stdout.write(
-            self.style.SUCCESS(f"DB available after {time.time() - start_time:.1f}s")
+            self.style.SUCCESS(f"DB available after {time.time() - start_time:.1f}s"),
         )
 
     @typing.override

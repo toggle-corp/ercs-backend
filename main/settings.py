@@ -1,5 +1,6 @@
-import environ
 from pathlib import Path
+
+import environ
 
 env = environ.Env(
     DEBUG=(bool, False),
@@ -81,7 +82,7 @@ DATABASES = {
         "PASSWORD": env("POSTGRES_PASSWORD", default="postgres"),
         "HOST": env("POSTGRES_HOST", default="localhost"),
         "PORT": env("POSTGRES_PORT", default="5432"),
-    }
+    },
 }
 
 AUTH_USER_MODEL = "users.User"

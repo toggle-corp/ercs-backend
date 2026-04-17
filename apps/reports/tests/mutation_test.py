@@ -53,7 +53,7 @@ class TestReportMutations(TestCase):
                     "title": "Test Report",
                     "contentType": Report.ContentType.IFRAME,
                     "iframeUrl": "https://app.powerbi.com/embed/123",
-                }
+                },
             },
         )
         resp = content["data"]["createReport"]
@@ -73,7 +73,7 @@ class TestReportMutations(TestCase):
                     "title": "Unauthorized",
                     "contentType": Report.ContentType.IFRAME,
                     "iframeUrl": "https://example.com/embed",
-                }
+                },
             },
         )
         assert "errors" in content

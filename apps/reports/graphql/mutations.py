@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.reports.models import Report, ThematicArea
+from apps.reports.models import Report
 from apps.reports.serializers import ReportSerializer, ThematicAreaSerializer
 from main.graphql.context import Info
 from main.graphql.permissions import IsAuthenticated, IsStaffOrAbove

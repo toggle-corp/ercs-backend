@@ -57,8 +57,8 @@ class MutationCustomErrorType:
                     messages=message,
                     object_errors=None,
                     array_errors=None,
-                )
-            ]
+                ),
+            ],
         )
 
     def keys(self) -> list[str]:
@@ -101,7 +101,7 @@ def _serializer_error_to_error_types(
                                 client_id=ARRAY_NON_MEMBER_ERRORS,
                                 messages="".join(str(msg) for msg in value),
                                 object_errors=None,
-                            )
+                            ),
                         ],
                         messages=None,
                         object_errors=None,
@@ -129,7 +129,7 @@ def _serializer_error_to_error_types(
                                 initial_data[field][pos],
                             ),
                             messages=None,
-                        )
+                        ),
                     )
                 err = MutationCustomErrorType(
                     client_id=node_client_id,

@@ -56,7 +56,7 @@ class TestExternalDashboardMutations(TestCase):
                     "title": "Operations KPIs",
                     "url": "https://app.powerbi.com/embed/ops",
                     "page": ExternalDashboard.Page.OPERATIONS,
-                }
+                },
             },
         )
         resp = content["data"]["createExternalDashboard"]
@@ -74,7 +74,7 @@ class TestExternalDashboardMutations(TestCase):
                     "title": "Blocked",
                     "url": "https://example.com",
                     "page": ExternalDashboard.Page.HOME,
-                }
+                },
             },
         )
         assert "errors" in content

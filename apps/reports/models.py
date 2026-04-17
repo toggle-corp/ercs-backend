@@ -98,12 +98,9 @@ class Report(BaseModel):
         if self.pk:
             try:
                 previous = Report.objects.get(pk=self.pk)
-                if (
-                    previous.visibility == ReportVisibility.PRIVATE
-                    and self.visibility == ReportVisibility.PUBLIC
-                ):
+                if previous.visibility == ReportVisibility.PRIVATE and self.visibility == ReportVisibility.PUBLIC:
                     raise ValidationError(
-                        "Cannot change visibility from PRIVATE to PUBLIC."
+                        "Cannot change visibility from PRIVATE to PUBLIC.",
                     )
             except Report.DoesNotExist:
                 pass

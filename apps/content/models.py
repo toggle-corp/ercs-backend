@@ -1,4 +1,3 @@
-import datetime
 import typing
 
 from django.db import models
@@ -87,7 +86,7 @@ class NewsPostReport(models.Model):
             models.UniqueConstraint(
                 fields=["newspost", "report"],
                 name="unique_newspost_report",
-            )
+            ),
         ]
 
     def __str__(self) -> str:

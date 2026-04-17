@@ -36,6 +36,6 @@ class NewsPostReportSerializer(serializers.ModelSerializer):
     def validate_report(self, report: Report) -> Report:
         if report.visibility != ReportVisibility.PUBLIC:
             raise serializers.ValidationError(
-                "Only PUBLIC reports can be linked to a news post."
+                "Only PUBLIC reports can be linked to a news post.",
             )
         return report
