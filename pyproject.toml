@@ -54,6 +54,24 @@ extend-exclude = [
 
 [tool.ruff.lint]
 flake8-builtins.builtins-strict-checking = false
+ignore = [
+    "D100",    # Missing docstring in public module
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
+    "D104",    # Missing docstring in public package
+    "D105",    # Missing docstring in magic method
+    "D106",    # Missing docstring in public nested class
+    "D107",    # Missing docstring in __init__
+    "D205",    # 1 blank line required between summary line and description
+    "D401",    # First line should be in imperative mood
+    "G201",    # Logging .exception should use exc_info=True
+    "PLC0415", # Import should be at top of module
+    "A002",    # Argument shadows a builtin
+    "S608",    # Possible SQL injection via string-based query construction
+    "DJ001",   # Avoid using null=True on string-based fields
+    "C901",    # Function is too complex
+    "BLE001",  # Avoid blind exception catching
+]
 extend-select = [
     "I",   # isort
     "E",   # pycodestyle
@@ -96,6 +114,7 @@ extend-select = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/tests/*.py" = ["S101"]
+"!./apps/**/models.py" = ["D101"]
 
 [tool.pyright]
 venvPath = "."

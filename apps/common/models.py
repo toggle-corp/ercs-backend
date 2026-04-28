@@ -22,5 +22,5 @@ class BaseModel(TimestampedModel):
         editable=False,
     )
 
-    class Meta:
+    class Meta(TimestampedModel.Meta):
         abstract = True

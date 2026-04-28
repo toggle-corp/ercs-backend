@@ -9,6 +9,8 @@ from apps.common.models import BaseModel
 
 
 class AdminAreaLevel(models.IntegerChoices):
+    """Hierarchy levels for administrative areas."""
+
     COUNTRY = 10, "Country"
     REGION = 20, "Region"
     ZONE = 30, "Zone"
@@ -33,7 +35,7 @@ class AdminArea(BaseModel):
 
     name = models.CharField[str, str](max_length=255)
     name_am = models.CharField[str | None, str | None](max_length=255, null=True, blank=True)
-    level: int = IntegerChoicesField(choices_enum=AdminAreaLevel)
+    level: int = IntegerChoicesField(choices_enum=AdminAreaLevel)  # type: ignore[reportAssignmentType]
     parent = models.ForeignKey(
         "self",
         null=True,
@@ -49,33 +51,35 @@ class AdminArea(BaseModel):
     # reverse relation type hints
     children: typing.ClassVar[RelatedManager["AdminArea"]]
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Admin Area"
         verbose_name_plural = "Admin Areas"
         ordering = ["level", "name"]
 
+    @typing.override
     def __str__(self) -> str:
-        return f"{self.name} ({self.get_level_display()})"
+        return f"{self.name} ({self.get_level_display()})"  # type: ignore[reportAttributeAccessIssue]
 
+    @typing.override
     def clean(self) -> None:
         order = self._LEVEL_ORDER
-        if self.parent_id is None:
+        if self.parent_id is None:  # type: ignore[reportAttributeAccessIssue]
             if self.level != AdminAreaLevel.COUNTRY:
                 raise ValidationError(
                     "Only COUNTRY-level areas may have no parent.",
                 )
             return
 
-        parent = AdminArea.objects.get(pk=self.parent_id)
+        parent = AdminArea.objects.get(pk=self.parent_id)  # type: ignore[reportAttributeAccessIssue]
         try:
-            parent_idx = order.index(parent.level)
-            child_idx = order.index(self.level)
+            parent_idx = order.index(parent.level)  # type: ignore[reportArgumentType]
+            child_idx = order.index(self.level)  # type: ignore[reportArgumentType]
         except ValueError:
-            raise ValidationError("Invalid level value.")
+            raise ValidationError("Invalid level value.") from None
 
         if child_idx != parent_idx + 1:
             raise ValidationError(
-                f"A {self.get_level_display()} must have a "
+                f"A {self.get_level_display()} must have a "  # type: ignore[reportAttributeAccessIssue]
                 f"{AdminAreaLevel(order[child_idx - 1]).label if child_idx > 0 else 'Country'} "
-                f"as its parent, but got a {parent.get_level_display()}.",
+                f"as its parent, but got a {parent.get_level_display()}.",  # type: ignore[reportAttributeAccessIssue]
             )

@@ -124,7 +124,7 @@ def _serializer_error_to_error_types(
                     array_errors.append(
                         ArrayNestedErrorType(
                             client_id=array_client_id,
-                            object_errors=_serializer_error_to_error_types(  # type: ignore[reportArgumentType]
+                            object_errors=_serializer_error_to_error_types(
                                 array_item,
                                 initial_data[field][pos],
                             ),
@@ -153,6 +153,6 @@ def _serializer_error_to_error_types(
 def mutation_is_not_valid(serializer: serializers.Serializer) -> CustomErrorType | None:
     """Return a CustomErrorType if serializer is invalid, else None."""
     if not serializer.is_valid():
-        errors = _serializer_error_to_error_types(serializer.errors, serializer.initial_data)
+        errors = _serializer_error_to_error_types(serializer.errors, serializer.initial_data)  # type: ignore[reportArgumentType]
         return CustomErrorType([dict(each) for each in errors])
     return None

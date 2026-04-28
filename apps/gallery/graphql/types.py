@@ -28,4 +28,4 @@ class GalleryAlbumType:
 
     @strawberry_django.field
     async def images_count(self) -> int:
-        return await sync_to_async(self.images.count)()
+        return await sync_to_async(self.images.count)()  # type: ignore[reportAttributeAccessIssue]

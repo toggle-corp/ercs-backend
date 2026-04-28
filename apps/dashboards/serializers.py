@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 
 from .models import ExternalDashboard
@@ -21,6 +23,7 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
             "created_by": {"required": False},
         }
 
+    @typing.override
     def create(self, validated_data: dict) -> ExternalDashboard:
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:

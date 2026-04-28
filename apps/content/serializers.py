@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 
 from apps.reports.models import Report, ReportVisibility
@@ -21,6 +23,7 @@ class NewsPostSerializer(serializers.ModelSerializer):
             "author": {"required": False},
         }
 
+    @typing.override
     def create(self, validated_data: dict) -> NewsPost:
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:

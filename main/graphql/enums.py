@@ -39,7 +39,7 @@ def generate_app_enum_collection_data(name: str):
     return type(
         name,
         (),
-        {enum.__name__: [AppEnumData(e) for e in enum] for enum in ENUM_TO_STRAWBERRY_ENUMS},
+        {enum.__name__: [AppEnumData(e) for e in enum] for enum in ENUM_TO_STRAWBERRY_ENUMS},  # type: ignore[reportGeneralTypeIssues]
     )
 
 

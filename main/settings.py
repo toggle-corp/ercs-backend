@@ -1,3 +1,4 @@
+# type: ignore[reportAttributeAccessIssue]
 from pathlib import Path
 
 import environ

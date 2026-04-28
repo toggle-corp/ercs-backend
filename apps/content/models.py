@@ -45,14 +45,16 @@ class NewsPost(BaseModel):
     # reverse relation type hints
     newspost_reports: typing.ClassVar[RelatedManager["NewsPostReport"]]
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "News Post"
         verbose_name_plural = "News Posts"
         ordering = ["-created_at"]
 
+    @typing.override
     def __str__(self) -> str:
         return self.title
 
+    @typing.override
     def save(self, *args, **kwargs) -> None:
         if self.is_published and not self.published_at:
             self.published_at = timezone.now()
@@ -89,5 +91,6 @@ class NewsPostReport(models.Model):
             ),
         ]
 
+    @typing.override
     def __str__(self) -> str:
         return f"{self.newspost} — {self.report} (order: {self.order})"

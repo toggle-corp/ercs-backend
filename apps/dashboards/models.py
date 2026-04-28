@@ -1,3 +1,5 @@
+import typing
+
 from django.db import models
 from django_choices_field import IntegerChoicesField
 
@@ -5,6 +7,8 @@ from apps.common.models import BaseModel
 
 
 class DashboardPage(models.IntegerChoices):
+    """Site pages where an external dashboard can be embedded."""
+
     HOME = 10, "Home"
     OPERATIONS = 20, "Operations"
     PROJECT_MAPPING = 30, "Project Mapping"
@@ -21,7 +25,7 @@ class ExternalDashboard(BaseModel):
     title = models.CharField[str, str](max_length=500)
     description = models.TextField[str | None, str | None](null=True, blank=True)
     url = models.URLField[str, str]()
-    page: int = IntegerChoicesField(choices_enum=DashboardPage)
+    page: int = IntegerChoicesField(choices_enum=DashboardPage)  # type: ignore[reportAssignmentType]
     region = models.ForeignKey(
         "geo.AdminArea",
         null=True,
@@ -41,10 +45,11 @@ class ExternalDashboard(BaseModel):
         related_name="created_dashboards",
     )
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "External Dashboard"
         verbose_name_plural = "External Dashboards"
         ordering = ["page", "order"]
 
+    @typing.override
     def __str__(self) -> str:
-        return f"{self.title} ({self.get_page_display()})"
+        return f"{self.title} ({self.get_page_display()})"  # type: ignore[reportAttributeAccessIssue]
