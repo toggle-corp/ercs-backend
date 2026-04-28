@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 
 from apps.gallery.models import GalleryAlbum, GalleryImage
 from utils.graphql.types import DjangoFileType
@@ -26,5 +27,5 @@ class GalleryAlbumType:
     updated_at: strawberry.auto
 
     @strawberry_django.field
-    def images_count(self) -> int:
-        return self.images.count()  # type: ignore[union-attr]
+    async def images_count(self) -> int:
+        return await sync_to_async(self.images.count)()

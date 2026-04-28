@@ -1,7 +1,6 @@
-import typing
-
 import strawberry
 import strawberry_django
+from django.db.models import Q
 
 from apps.reports.models import Report, ThematicArea
 
@@ -12,8 +11,8 @@ class ThematicAreaFilter:
     name: str | None = strawberry.UNSET
 
     @strawberry_django.filter_field
-    def search(self, queryset: typing.Any, value: str, prefix: str) -> typing.Any:
-        return queryset.filter(name__icontains=value)
+    def search(self, value: str, prefix: str) -> Q:
+        return Q(name__icontains=value)
 
 
 @strawberry_django.filters.filter(Report, lookups=True)
@@ -26,5 +25,5 @@ class ReportFilter:
     disaster_type: str | None = strawberry.UNSET
 
     @strawberry_django.filter_field
-    def search(self, queryset: typing.Any, value: str, prefix: str) -> typing.Any:
-        return queryset.filter(title__icontains=value)
+    def search(self, value: str, prefix: str) -> Q:
+        return Q(title__icontains=value)
