@@ -20,6 +20,11 @@ class TeamMemberCreateInput:
     position: str
     email: str | None = strawberry.UNSET
     phone_number: str | None = strawberry.UNSET
+    sex: int | None = strawberry.UNSET
+    region: strawberry.ID | None = strawberry.UNSET
+    woreda: strawberry.ID | None = strawberry.UNSET
+    training: str | None = strawberry.UNSET
+    field_of_study: str | None = strawberry.UNSET
     order: int = 0
 
 
@@ -30,4 +35,9 @@ class TeamMemberUpdateInput:
     position: str | None = strawberry.UNSET
     email: str | None = strawberry.UNSET
     phone_number: str | None = strawberry.UNSET
+    sex: int | None = strawberry.UNSET
+    region: strawberry.ID | None = strawberry.UNSET
+    woreda: strawberry.ID | None = strawberry.UNSET
+    training: str | None = strawberry.UNSET
+    field_of_study: str | None = strawberry.UNSET
     order: int | None = strawberry.UNSET

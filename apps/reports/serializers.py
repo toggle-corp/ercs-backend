@@ -15,6 +15,7 @@ class ReportSerializer(serializers.ModelSerializer):
         fields = [
             "title",
             "description",
+            "cover_image",
             "content_type",
             "file",
             "iframe_url",

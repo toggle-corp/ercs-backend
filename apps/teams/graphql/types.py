@@ -12,6 +12,11 @@ class TeamMemberType:
     position: strawberry.auto
     email: strawberry.auto
     phone_number: strawberry.auto
+    sex: int | None
+    region_id: strawberry.ID | None
+    woreda_id: strawberry.ID | None
+    training: strawberry.auto
+    field_of_study: strawberry.auto
     order: strawberry.auto
     created_at: strawberry.auto
     updated_at: strawberry.auto

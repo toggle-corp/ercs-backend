@@ -9,6 +9,7 @@ input AdminAreaFilter {
   OR: AdminAreaFilter
   NOT: AdminAreaFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input AdminAreaOrder @oneOf {
@@ -37,6 +38,51 @@ type AdminAreaTypeOffsetPaginated {
   results: [AdminAreaType!]!
 }
 
+type AppEnumCollection {
+  AdminAreaLevel: [AppEnumCollectionAdminAreaLevel!]!
+  UserRole: [AppEnumCollectionUserRole!]!
+  ReportContentType: [AppEnumCollectionReportContentType!]!
+  ReportVisibility: [AppEnumCollectionReportVisibility!]!
+  DashboardPage: [AppEnumCollectionDashboardPage!]!
+  TeamMemberSex: [AppEnumCollectionTeamMemberSex!]!
+}
+
+type AppEnumCollectionAdminAreaLevel {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionDashboardPage {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionReportContentType {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionReportVisibility {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionTeamMemberSex {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionUserRole {
+  key: String!
+  label: String!
+  value: Int!
+}
+
 """A generic type to return error messages"""
 scalar CustomErrorType
 
@@ -62,6 +108,7 @@ input EmergencyFilter {
   OR: EmergencyFilter
   NOT: EmergencyFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input EmergencyOrder @oneOf {
@@ -176,6 +223,7 @@ input GalleryAlbumFilter {
   OR: GalleryAlbumFilter
   NOT: GalleryAlbumFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input GalleryAlbumOrder @oneOf {
@@ -191,7 +239,6 @@ type GalleryAlbumType {
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
-  images: [GalleryImageType!]!
 }
 
 type GalleryAlbumTypeMutationResponseType {
@@ -223,6 +270,20 @@ input GalleryImageCreateInput {
   order: Int! = 0
 }
 
+input GalleryImageFilter {
+  id: ID
+  albumId: ID
+  AND: GalleryImageFilter
+  OR: GalleryImageFilter
+  NOT: GalleryImageFilter
+  DISTINCT: Boolean
+}
+
+input GalleryImageOrder @oneOf {
+  order: Ordering
+  uploadedAt: Ordering
+}
+
 type GalleryImageType {
   id: ID!
   albumId: ID!
@@ -236,6 +297,16 @@ type GalleryImageTypeMutationResponseType {
   ok: Boolean!
   errors: CustomErrorType
   result: GalleryImageType
+}
+
+type GalleryImageTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [GalleryImageType!]!
 }
 
 type Mutation {
@@ -277,6 +348,7 @@ input NewsPostFilter {
   OR: NewsPostFilter
   NOT: NewsPostFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input NewsPostOrder @oneOf {
@@ -378,15 +450,18 @@ type Query {
   emergency(pk: ID!): EmergencyType!
   galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, order: GalleryAlbumOrder): GalleryAlbumTypeOffsetPaginated!
   galleryAlbum(pk: ID!): GalleryAlbumType!
+  galleryImages(pagination: OffsetPaginationInput, filters: GalleryImageFilter, order: GalleryImageOrder): GalleryImageTypeOffsetPaginated!
   teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
   team(pk: ID!): TeamType!
   teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+  enums: AppEnumCollection!
 }
 
 input ReportCreateInput {
   title: String!
   contentType: Int!
   description: String
+  coverImage: Upload
   file: Upload
   iframeUrl: String
   visibility: Int! = 10
@@ -408,6 +483,7 @@ input ReportFilter {
   OR: ReportFilter
   NOT: ReportFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input ReportOrder @oneOf {
@@ -420,6 +496,7 @@ type ReportType {
   id: ID!
   title: String!
   description: String
+  coverImage: DjangoFileType
   contentType: Int!
   file: DjangoFileType
   iframeUrl: String
@@ -453,6 +530,7 @@ type ReportTypeOffsetPaginated {
 input ReportUpdateInput {
   title: String
   description: String
+  coverImage: Upload
   visibility: Int
   thematicArea: ID
   region: ID
@@ -473,6 +551,7 @@ input TeamFilter {
   OR: TeamFilter
   NOT: TeamFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input TeamMemberCreateInput {
@@ -481,16 +560,24 @@ input TeamMemberCreateInput {
   position: String!
   email: String
   phoneNumber: String
+  sex: Int
+  region: ID
+  woreda: ID
+  training: String
+  fieldOfStudy: String
   order: Int! = 0
 }
 
 input TeamMemberFilter {
   id: ID
   teamId: ID
+  regionId: ID
+  woredaId: ID
   AND: TeamMemberFilter
   OR: TeamMemberFilter
   NOT: TeamMemberFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input TeamMemberOrder @oneOf {
@@ -505,6 +592,11 @@ type TeamMemberType {
   position: String!
   email: String
   phoneNumber: String
+  sex: Int
+  regionId: ID
+  woredaId: ID
+  training: String
+  fieldOfStudy: String
   order: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -532,6 +624,11 @@ input TeamMemberUpdateInput {
   position: String
   email: String
   phoneNumber: String
+  sex: Int
+  region: ID
+  woreda: ID
+  training: String
+  fieldOfStudy: String
   order: Int
 }
 
@@ -577,6 +674,7 @@ input ThematicAreaFilter {
   OR: ThematicAreaFilter
   NOT: ThematicAreaFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input ThematicAreaInput {

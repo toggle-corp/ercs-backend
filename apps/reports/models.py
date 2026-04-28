@@ -49,6 +49,7 @@ class Report(BaseModel):
 
     title = models.CharField[str, str](max_length=500)
     description = models.TextField[str | None, str | None](null=True, blank=True)
+    cover_image = models.ImageField(upload_to="reports/covers/", null=True, blank=True)
     content_type: int = IntegerChoicesField(choices_enum=ReportContentType)
     file = models.FileField(upload_to="reports/", null=True, blank=True)
     iframe_url = models.URLField[str | None, str | None](null=True, blank=True)

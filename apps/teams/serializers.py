@@ -12,4 +12,16 @@ class TeamSerializer(serializers.ModelSerializer):
 class TeamMemberSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamMember
-        fields = ["team", "name", "position", "email", "phone_number", "order"]
+        fields = [
+            "team",
+            "name",
+            "position",
+            "email",
+            "phone_number",
+            "sex",
+            "region",
+            "woreda",
+            "training",
+            "field_of_study",
+            "order",
+        ]

@@ -18,6 +18,7 @@ class ReportType:
     id: strawberry.ID
     title: strawberry.auto
     description: strawberry.auto
+    cover_image: DjangoFileType | None
     content_type: int
     file: DjangoFileType | None
     iframe_url: strawberry.auto

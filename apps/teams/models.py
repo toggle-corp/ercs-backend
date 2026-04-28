@@ -1,9 +1,16 @@
 import typing
 
 from django.db import models
+from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import BaseModel
+
+
+class TeamMemberSex(models.IntegerChoices):
+    MALE = 10, "Male"
+    FEMALE = 20, "Female"
+    OTHER = 30, "Other"
 
 
 class Team(BaseModel):
@@ -27,6 +34,8 @@ class Team(BaseModel):
 class TeamMember(BaseModel):
     """Individual member belonging to a Team."""
 
+    Sex = TeamMemberSex  # convenience alias
+
     team = models.ForeignKey(
         Team,
         on_delete=models.CASCADE,
@@ -36,6 +45,25 @@ class TeamMember(BaseModel):
     position = models.CharField[str, str](max_length=255)
     email = models.EmailField[str | None, str | None](null=True, blank=True)
     phone_number = models.CharField[str | None, str | None](max_length=50, null=True, blank=True)
+    sex: int = IntegerChoicesField(choices_enum=TeamMemberSex, null=True, blank=True)
+    region = models.ForeignKey(
+        "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members",
+        help_text="AdminArea at region level (level=20).",
+    )
+    woreda = models.ForeignKey(
+        "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members_by_woreda",
+        help_text="AdminArea at woreda level (level=40).",
+    )
+    training = models.CharField[str | None, str | None](max_length=500, null=True, blank=True)
+    field_of_study = models.CharField[str | None, str | None](max_length=500, null=True, blank=True)
     order = models.PositiveIntegerField[int, int](default=0)
 
     class Meta:

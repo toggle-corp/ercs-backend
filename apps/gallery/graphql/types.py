@@ -24,4 +24,7 @@ class GalleryAlbumType:
     created_by_id: strawberry.ID
     created_at: strawberry.auto
     updated_at: strawberry.auto
-    images: list[GalleryImageType]
+
+    @strawberry_django.field
+    def images_count(self) -> int:
+        return self.images.count()  # type: ignore[union-attr]

@@ -158,3 +158,5 @@ deploy/eb/
 .mypy-dep/
 .mypy_cache/
 .claude/
+
+CLAUDE.md

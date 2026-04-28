@@ -1,3 +1,5 @@
+import typing
+
 import strawberry
 import strawberry_django
 
@@ -11,3 +13,7 @@ class EmergencyFilter:
     status: str | None = strawberry.UNSET
     region_id: strawberry.ID | None = strawberry.UNSET
     go_id: int | None = strawberry.UNSET
+
+    @strawberry_django.filter_field
+    def search(self, queryset: typing.Any, value: str, prefix: str) -> typing.Any:
+        return queryset.filter(name__icontains=value)
