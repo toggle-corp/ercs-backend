@@ -1,0 +1,20 @@
+app:
+  ingress:
+    enabled: true
+    className: nginx
+    host: ercs-api.example.com
+
+  postgresql:
+    auth:
+      postgresPassword: "test-pg-password"
+      database: "ercs"
+
+  minio:
+    enabled: true
+    apiIngress:
+      hostname: ercs-minio.example.com
+    auth:
+      rootPassword: "test-minio-password"
+
+  env:
+    APP_DOMAIN: https://ercs-api.example.com

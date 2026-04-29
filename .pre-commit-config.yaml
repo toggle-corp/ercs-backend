@@ -8,7 +8,8 @@ exclude: |
       __pycache__|
       \.venv|
       schema\.graphql|
-      .*/migrations/.*
+      .*/migrations/.*|
+      helm/snapshots/.*
     )
 
 repos:
@@ -34,6 +35,10 @@ repos:
       - id: check-docstring-first
       - id: detect-private-key
       - id: name-tests-test
+        args: [--pytest-test-first]
+        exclude: ^main/tests/base\.py$
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.2

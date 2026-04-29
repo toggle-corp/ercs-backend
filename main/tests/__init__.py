@@ -1,3 +1,13 @@
-from .base_test import TestCase
+from .base import TestCase
 
-__all__ = ["TestCase"]
+
+class FakeTest(TestCase):
+    """Used by CI to run migrations without running real tests.
+    docker compose exec web ./manage.py test --keepdb -v 2 main.tests.FakeTest.
+    """
+
+    def test_fake(self):
+        pass
+
+
+__all__ = ["FakeTest", "TestCase"]

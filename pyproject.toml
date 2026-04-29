@@ -23,6 +23,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest-django>=4.9",
+    "pytest-cov>=6.0",
     "django-debug-toolbar>=4.3",
     "django-stubs>=5.0",
     "ipython>=8.0",
@@ -119,6 +120,7 @@ extend-select = [
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+pythonVersion = "3.14"
 exclude = [
     "**/__pycache__",
     ".venv/",

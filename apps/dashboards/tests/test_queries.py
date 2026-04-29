@@ -10,7 +10,7 @@ class TestExternalDashboardQueries(TestCase):
     class Query:
         DASHBOARDS = """
             query ExternalDashboards($pagination: OffsetPaginationInput, $filters: ExternalDashboardFilter) {
-                externalDashboards(pagination: $pagination, filters: $filters, order: {page: ASC, order: ASC}) {
+                externalDashboards(pagination: $pagination, filters: $filters, order: {page: ASC}) {
                     totalCount
                     pageInfo { offset limit }
                     results {
@@ -34,7 +34,7 @@ class TestExternalDashboardQueries(TestCase):
         cls.user = UserFactory.create()
         cls.home_db = ExternalDashboardFactory.create(page=ExternalDashboard.Page.HOME, order=0)
         cls.ops_db = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=0)
-        cls.inactive = ExternalDashboardFactory.create(is_active=False)
+        cls.inactive = ExternalDashboardFactory.create(is_active=False, page=ExternalDashboard.Page.OPERATIONS)
 
     def test_all_dashboards(self):
         content = self.query_check(
@@ -48,7 +48,7 @@ class TestExternalDashboardQueries(TestCase):
             self.Query.DASHBOARDS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"isActive": {"exact": True}},
+                "filters": {"isActive": True},
             },
         )
         assert content["data"]["externalDashboards"]["totalCount"] == 2
@@ -58,7 +58,7 @@ class TestExternalDashboardQueries(TestCase):
             self.Query.DASHBOARDS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"page": {"exact": ExternalDashboard.Page.HOME}},
+                "filters": {"page": str(ExternalDashboard.Page.HOME)},
             },
         )
         results = content["data"]["externalDashboards"]["results"]

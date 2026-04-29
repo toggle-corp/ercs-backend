@@ -15,7 +15,6 @@ class TestTeamMutations(TestCase):
                     result {
                         id
                         name
-                        teamType
                     }
                 }
             }
@@ -29,7 +28,6 @@ class TestTeamMutations(TestCase):
                     result {
                         id
                         name
-                        teamType
                     }
                 }
             }
@@ -46,19 +44,18 @@ class TestTeamMutations(TestCase):
         self.force_login(self.staff)
         content = self.query_check(
             self.Mutation.CREATE_TEAM,
-            variables={"data": {"name": "Rapid Response", "teamType": "BDRT"}},
+            variables={"data": {"name": "Rapid Response"}},
         )
         resp = content["data"]["createTeam"]
         assert resp["ok"] is True
         assert resp["result"]["name"] == "Rapid Response"
-        assert resp["result"]["teamType"] == "BDRT"
 
     def test_viewer_cannot_create_team(self):
         self.force_login(self.viewer)
         content = self.query_check(
             self.Mutation.CREATE_TEAM,
             assert_errors=True,
-            variables={"data": {"name": "Blocked", "teamType": "CBHFA"}},
+            variables={"data": {"name": "Blocked"}},
         )
         assert "errors" in content
 
@@ -67,7 +64,7 @@ class TestTeamMutations(TestCase):
         # First create
         create_content = self.query_check(
             self.Mutation.CREATE_TEAM,
-            variables={"data": {"name": "Old Name", "teamType": "BDRT"}},
+            variables={"data": {"name": "Old Name"}},
         )
         team_id = create_content["data"]["createTeam"]["result"]["id"]
 
@@ -79,4 +76,3 @@ class TestTeamMutations(TestCase):
         resp = content["data"]["updateTeam"]
         assert resp["ok"] is True
         assert resp["result"]["name"] == "New Name"
-        assert resp["result"]["teamType"] == "BDRT"

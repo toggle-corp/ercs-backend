@@ -19,7 +19,7 @@ class TestReportQueries(TestCase):
                         contentType
                         visibility
                         iframeUrl
-                        thematicArea
+                        thematicAreaId
                         disasterType
                         owner
                         uploadedById
@@ -58,7 +58,7 @@ class TestReportQueries(TestCase):
             self.Query.REPORTS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"visibility": {"exact": Report.Visibility.PUBLIC}},
+                "filters": {"visibility": Report.Visibility.PUBLIC},
             },
         )
         results = content["data"]["reports"]["results"]

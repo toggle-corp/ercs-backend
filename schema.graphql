@@ -239,6 +239,7 @@ type GalleryAlbumType {
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
+  imagesCount: Int!
 }
 
 type GalleryAlbumTypeMutationResponseType {

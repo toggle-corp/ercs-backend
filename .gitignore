@@ -3,6 +3,9 @@ wheels/
 .ruff_cache
 tmp/
 
+# CI artefacts
+ci-share/
+
 # Virtual environments
 .venv
 

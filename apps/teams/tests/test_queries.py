@@ -15,9 +15,7 @@ class TestTeamQueries(TestCase):
                     results {
                         id
                         name
-                        teamType
                         description
-                        contactInfo
                         createdAt
                     }
                 }
@@ -29,8 +27,8 @@ class TestTeamQueries(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = UserFactory.create()
-        cls.team1 = TeamFactory.create(name="Alpha BDRT", team_type="BDRT")
-        cls.team2 = TeamFactory.create(name="Beta CBHFA", team_type="CBHFA")
+        cls.team1 = TeamFactory.create(name="Alpha BDRT")
+        cls.team2 = TeamFactory.create(name="Beta CBHFA")
 
     def test_teams_require_auth(self):
         self.logout()
