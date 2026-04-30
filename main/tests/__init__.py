@@ -1,4 +1,4 @@
-from .base import TestCase
+from .base_test import TestCase
 
 
 class FakeTest(TestCase):

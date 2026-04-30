@@ -54,7 +54,7 @@ spec:
 kind: NetworkPolicy
 apiVersion: networking.k8s.io/v1
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -77,33 +77,6 @@ spec:
   ingress:
     - ports:
         - port: 5432
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/networkpolicy.yaml
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: django-redis
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: redis
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - {}
-  ingress:
-    # Allow inbound connections
-    - ports:
-        - port: 6379
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/pdb.yaml
 apiVersion: policy/v1
@@ -128,7 +101,7 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -144,27 +117,6 @@ spec:
       app.kubernetes.io/instance: release-name
       app.kubernetes.io/name: postgresql
       app.kubernetes.io/component: primary
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/master/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: django-redis-master
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-    app.kubernetes.io/component: master
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: master
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/serviceaccount.yaml
 apiVersion: v1
@@ -186,7 +138,7 @@ secrets:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -195,20 +147,6 @@ metadata:
     app.kubernetes.io/version: 17.2.0
     helm.sh/chart: postgresql-16.4.5
 automountServiceAccountToken: false
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/master/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-automountServiceAccountToken: false
-metadata:
-  name: django-redis-master
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/secrets.yaml
 apiVersion: v1
@@ -225,13 +163,13 @@ metadata:
 type: Opaque
 data:
   root-user: "ZXJjcw=="
-  root-password: "dGVzdC1taW5pby1wYXNzd29yZA=="
+  root-password: "dGVzdC1wYXNzd29yZA=="
 ---
 # Source: ercs-backend-helm/charts/app/charts/postgresql/templates/secrets.yaml
 apiVersion: v1
 kind: Secret
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -241,7 +179,7 @@ metadata:
     helm.sh/chart: postgresql-16.4.5
 type: Opaque
 data:
-  postgres-password: "dGVzdC1wZy1wYXNzd29yZA=="
+  postgres-password: "dGVzdC1wYXNzd29yZA=="
   # We don't auto-generate LDAP password when it's not provided as we do for other passwords
 ---
 # Source: ercs-backend-helm/charts/app/templates/config/secret.yaml
@@ -257,11 +195,14 @@ type: Opaque
 stringData:
   # secrets
   AWS_S3_ACCESS_KEY_ID: "ercs"
+  AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
   AWS_S3_REGION_NAME: "us-east-1"
-  AWS_S3_SECRET_ACCESS_KEY: "test-minio-password"
+  AWS_S3_SECRET_ACCESS_KEY: "test-password"
+  AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
+  DJANGO_SECRET_KEY: "django-secret-key"
   POSTGRES_DB: "ercs"
-  POSTGRES_HOST: "ercs-pg"
-  POSTGRES_PASSWORD: "test-pg-password"
+  POSTGRES_HOST: "ercs-postgresql"
+  POSTGRES_PASSWORD: "test-password"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "postgres"
 ---
@@ -280,176 +221,6 @@ metadata:
     app.kubernetes.io/component: minio-provisioning
 data:
 ---
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: django-redis-configuration
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-data:
-  redis.conf: |-
-    # User-supplied common configuration:
-    # Enable AOF https://redis.io/topics/persistence#append-only-file
-    appendonly yes
-    # Disable RDB persistence, AOF persistence already enabled.
-    save ""
-    # End of common configuration
-  master.conf: |-
-    dir /data
-    # User-supplied master configuration:
-    rename-command FLUSHDB ""
-    rename-command FLUSHALL ""
-    # End of master configuration
-  replica.conf: |-
-    dir /data
-    # User-supplied replica configuration:
-    rename-command FLUSHDB ""
-    rename-command FLUSHALL ""
-    # End of replica configuration
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/health-configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: django-redis-health
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-data:
-  ping_readiness_local.sh: |-
-    #!/bin/bash
-
-    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
-    [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
-    response=$(
-      timeout -s 15 $1 \
-      redis-cli \
-        -h localhost \
-        -p $REDIS_PORT \
-        ping
-    )
-    if [ "$?" -eq "124" ]; then
-      echo "Timed out"
-      exit 1
-    fi
-    if [ "$response" != "PONG" ]; then
-      echo "$response"
-      exit 1
-    fi
-  ping_liveness_local.sh: |-
-    #!/bin/bash
-
-    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
-    [[ -n "$REDIS_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_PASSWORD"
-    response=$(
-      timeout -s 15 $1 \
-      redis-cli \
-        -h localhost \
-        -p $REDIS_PORT \
-        ping
-    )
-    if [ "$?" -eq "124" ]; then
-      echo "Timed out"
-      exit 1
-    fi
-    responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
-    if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ] && [ "$responseFirstWord" != "MASTERDOWN" ]; then
-      echo "$response"
-      exit 1
-    fi
-  ping_readiness_master.sh: |-
-    #!/bin/bash
-
-    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
-    [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
-    response=$(
-      timeout -s 15 $1 \
-      redis-cli \
-        -h $REDIS_MASTER_HOST \
-        -p $REDIS_MASTER_PORT_NUMBER \
-        ping
-    )
-    if [ "$?" -eq "124" ]; then
-      echo "Timed out"
-      exit 1
-    fi
-    if [ "$response" != "PONG" ]; then
-      echo "$response"
-      exit 1
-    fi
-  ping_liveness_master.sh: |-
-    #!/bin/bash
-
-    [[ -f $REDIS_MASTER_PASSWORD_FILE ]] && export REDIS_MASTER_PASSWORD="$(< "${REDIS_MASTER_PASSWORD_FILE}")"
-    [[ -n "$REDIS_MASTER_PASSWORD" ]] && export REDISCLI_AUTH="$REDIS_MASTER_PASSWORD"
-    response=$(
-      timeout -s 15 $1 \
-      redis-cli \
-        -h $REDIS_MASTER_HOST \
-        -p $REDIS_MASTER_PORT_NUMBER \
-        ping
-    )
-    if [ "$?" -eq "124" ]; then
-      echo "Timed out"
-      exit 1
-    fi
-    responseFirstWord=$(echo $response | head -n1 | awk '{print $1;}')
-    if [ "$response" != "PONG" ] && [ "$responseFirstWord" != "LOADING" ]; then
-      echo "$response"
-      exit 1
-    fi
-  ping_readiness_local_and_master.sh: |-
-    script_dir="$(dirname "$0")"
-    exit_status=0
-    "$script_dir/ping_readiness_local.sh" $1 || exit_status=$?
-    "$script_dir/ping_readiness_master.sh" $1 || exit_status=$?
-    exit $exit_status
-  ping_liveness_local_and_master.sh: |-
-    script_dir="$(dirname "$0")"
-    exit_status=0
-    "$script_dir/ping_liveness_local.sh" $1 || exit_status=$?
-    "$script_dir/ping_liveness_master.sh" $1 || exit_status=$?
-    exit $exit_status
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/scripts-configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: django-redis-scripts
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-data:
-  start-master.sh: |
-    #!/bin/bash
-
-    [[ -f $REDIS_PASSWORD_FILE ]] && export REDIS_PASSWORD="$(< "${REDIS_PASSWORD_FILE}")"
-    if [[ -f /opt/bitnami/redis/mounted-etc/master.conf ]];then
-        cp /opt/bitnami/redis/mounted-etc/master.conf /opt/bitnami/redis/etc/master.conf
-    fi
-    if [[ -f /opt/bitnami/redis/mounted-etc/redis.conf ]];then
-        cp /opt/bitnami/redis/mounted-etc/redis.conf /opt/bitnami/redis/etc/redis.conf
-    fi
-    ARGS=("--port" "${REDIS_PORT}")
-    ARGS+=("--protected-mode" "no")
-    ARGS+=("--include" "/opt/bitnami/redis/etc/redis.conf")
-    ARGS+=("--include" "/opt/bitnami/redis/etc/master.conf")
-    exec redis-server "${ARGS[@]}"
----
 # Source: ercs-backend-helm/charts/app/templates/config/configmap.yaml
 kind: ConfigMap
 apiVersion: v1
@@ -461,14 +232,18 @@ metadata:
     release: release-name
 data:
   # Configs
-  APP_DOMAIN: "https://ercs-api.example.com"
+  APP_DOMAIN: "https://ercs.test.com"
   APP_ENVIRONMENT: "ALPHA"
-  APP_RELEASE: "SET-BY-CICD-TAG"
-  AWS_S3_ENABLED: "true"
-  AWS_S3_ENDPOINT_URL: "https://ercs-minio.example.com/"
+  APP_RELEASE: "https://ercs.test.com"
+  APP_TYPE: "WEB"
+  AWS_S3_ENABLED: "false"
+  AWS_S3_ENDPOINT_URL: "https://ercs-minio.test.com/"
   AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
   AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
+  CSRF_COOKIE_DOMAIN: ".example.com"
   DJANGO_DEBUG: "false"
+  FRONTEND_DOMAIN: "https://ercs-frontend.test.com"
+  SESSION_COOKIE_DOMAIN: ".example.com"
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/pvc.yaml
 kind: PersistentVolumeClaim
@@ -487,7 +262,7 @@ spec:
     - "ReadWriteOnce"
   resources:
     requests:
-      storage: "10Gi"
+      storage: "1Gi"
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/service.yaml
 apiVersion: v1
@@ -520,7 +295,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ercs-pg-hl
+  name: ercs-postgresql-hl
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -550,7 +325,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -571,56 +346,6 @@ spec:
     app.kubernetes.io/instance: release-name
     app.kubernetes.io/name: postgresql
     app.kubernetes.io/component: primary
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/headless-svc.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: django-redis-headless
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-spec:
-  type: ClusterIP
-  clusterIP: None
-  ports:
-    - name: tcp-redis
-      port: 6379
-      targetPort: redis
-  selector:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/name: redis
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/master/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: django-redis-master
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-    app.kubernetes.io/component: master
-spec:
-  type: ClusterIP
-  internalTrafficPolicy: Cluster
-  sessionAffinity: None
-  ports:
-    - name: tcp-redis
-      port: 6379
-      targetPort: redis
-      nodePort: null
-  selector:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/component: master
 ---
 # Source: ercs-backend-helm/charts/app/templates/api/service.yaml
 apiVersion: v1
@@ -670,7 +395,7 @@ spec:
         app.kubernetes.io/version: 2024.12.18
         helm.sh/chart: minio-14.10.5
       annotations:
-        checksum/credentials-secret: 010371f2ae46ec728ea353f945dae356847cbaa05b87316a4ac4a82d568fc41f
+        checksum/credentials-secret: 427c5e55a445ebfde5b1d7e18ea48bae9a4a96c93010d97fcf6bf45ef5789126
     spec:
       
       serviceAccountName: ercs-minio
@@ -815,8 +540,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 50d8eb7ae6b79627d55053b245044db67fa59e595eae0a8620b9681e2575c181
-        checksum/configmap: 2011f19cc624a7115a0fcade1f023b0c56a2c987b5dd8494a7a1608cb64a906b
+        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
         component: api
@@ -826,7 +551,7 @@ spec:
           image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
           imagePullPolicy: IfNotPresent
           command:
-            - /code/scripts/deploy/run_web.sh
+            - misc/prod/run_web.sh
           ports:
             - name: http
               containerPort: 80
@@ -834,25 +559,25 @@ spec:
           # TODO: livenessProbe
           resources:
             limits:
-              cpu: "2"
+              cpu: "0.5"
               memory: 1Gi
             requests:
-              cpu: "1"
-              memory: 0.5Gi
+              cpu: "0.3"
+              memory: 0.4Gi
           envFrom:
             - secretRef:
                 name: release-name-app-secret
             - configMapRef:
                 name: release-name-app-env-name
           env:
-            - name: DJANGO_APP_TYPE
+            - name: APP_TYPE
               value: "web"
 ---
 # Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/statefulset.yaml
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ercs-pg
+  name: ercs-postgresql
   namespace: "default"
   labels:
     app.kubernetes.io/instance: release-name
@@ -863,7 +588,7 @@ metadata:
     app.kubernetes.io/component: primary
 spec:
   replicas: 1
-  serviceName: ercs-pg-hl
+  serviceName: ercs-postgresql-hl
   updateStrategy:
     rollingUpdate: {}
     type: RollingUpdate
@@ -874,7 +599,7 @@ spec:
       app.kubernetes.io/component: primary
   template:
     metadata:
-      name: ercs-pg
+      name: ercs-postgresql
       labels:
         app.kubernetes.io/instance: release-name
         app.kubernetes.io/managed-by: Helm
@@ -883,7 +608,7 @@ spec:
         helm.sh/chart: postgresql-16.4.5
         app.kubernetes.io/component: primary
     spec:
-      serviceAccountName: ercs-pg
+      serviceAccountName: ercs-postgresql
       
       automountServiceAccountToken: false
       affinity:
@@ -938,7 +663,7 @@ spec:
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: ercs-pg
+                  name: ercs-postgresql
                   key: postgres-password
             - name: POSTGRES_DATABASE
               value: "ercs"
@@ -1028,183 +753,7 @@ spec:
           - "ReadWriteOnce"
         resources:
           requests:
-            storage: "8Gi"
----
-# Source: ercs-backend-helm/charts/app/charts/redis/templates/master/application.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: django-redis-master
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/version: 7.4.2
-    helm.sh/chart: redis-20.6.3
-    app.kubernetes.io/component: master
-spec:
-  replicas: 1
-  revisionHistoryLimit: 10
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: master
-  serviceName: django-redis-headless
-  updateStrategy:
-    type: RollingUpdate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: release-name
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: redis
-        app.kubernetes.io/version: 7.4.2
-        helm.sh/chart: redis-20.6.3
-        app.kubernetes.io/component: master
-      annotations:
-        checksum/configmap: 86bcc953bb473748a3d3dc60b7c11f34e60c93519234d4c37f42e22ada559d47
-        checksum/health: aff24913d801436ea469d8d374b2ddb3ec4c43ee7ab24663d5f8ff1a1b6991a9
-        checksum/scripts: 43cdf68c28f3abe25ce017a82f74dbf2437d1900fd69df51a55a3edf6193d141
-        checksum/secret: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
-    spec:
-      
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      serviceAccountName: django-redis-master
-      automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: release-name
-                    app.kubernetes.io/name: redis
-                    app.kubernetes.io/component: master
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
-      enableServiceLinks: true
-      terminationGracePeriodSeconds: 30
-      containers:
-        - name: redis
-          image: docker.io/bitnamilegacy/redis:7.4.2-debian-12-r0
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          command:
-            - /bin/bash
-          args:
-            - -c
-            - /opt/bitnami/scripts/start-scripts/start-master.sh
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: REDIS_REPLICATION_MODE
-              value: master
-            - name: ALLOW_EMPTY_PASSWORD
-              value: "yes"
-            - name: REDIS_TLS_ENABLED
-              value: "no"
-            - name: REDIS_PORT
-              value: "6379"
-          ports:
-            - name: redis
-              containerPort: 6379
-          livenessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            # One second longer than command timeout should prevent generation of zombie processes.
-            timeoutSeconds: 6
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - -c
-                - /health/ping_liveness_local.sh 5
-          readinessProbe:
-            initialDelaySeconds: 20
-            periodSeconds: 5
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 5
-            exec:
-              command:
-                - sh
-                - -c
-                - /health/ping_readiness_local.sh 1
-          resources:
-            limits:
-              cpu: 150m
-              ephemeral-storage: 2Gi
-              memory: 192Mi
-            requests:
-              cpu: 100m
-              ephemeral-storage: 50Mi
-              memory: 128Mi
-          volumeMounts:
-            - name: start-scripts
-              mountPath: /opt/bitnami/scripts/start-scripts
-            - name: health
-              mountPath: /health
-            - name: redis-data
-              mountPath: /data
-            - name: config
-              mountPath: /opt/bitnami/redis/mounted-etc
-            - name: empty-dir
-              mountPath: /opt/bitnami/redis/etc/
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-      volumes:
-        - name: start-scripts
-          configMap:
-            name: django-redis-scripts
-            defaultMode: 0755
-        - name: health
-          configMap:
-            name: django-redis-health
-            defaultMode: 0755
-        - name: config
-          configMap:
-            name: django-redis-configuration
-        - name: empty-dir
-          emptyDir: {}
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: redis-data
-        labels:
-          app.kubernetes.io/instance: release-name
-          app.kubernetes.io/name: redis
-          app.kubernetes.io/component: master
-      spec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: ".5Gi"
+            storage: "1Gi"
 ---
 # Source: ercs-backend-helm/charts/app/templates/argo-hooks/hook-job.yaml
 # Hook: collect-static
@@ -1218,8 +767,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 50d8eb7ae6b79627d55053b245044db67fa59e595eae0a8620b9681e2575c181
-        checksum/configmap: 2011f19cc624a7115a0fcade1f023b0c56a2c987b5dd8494a7a1608cb64a906b
+        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
         component: argo-hooks
@@ -1230,23 +779,23 @@ spec:
           image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
           imagePullPolicy: IfNotPresent
           command: 
-            - ./manage.py
-            - collectstatic
-            - --noinput
+            - /bin/bash
+            - -c
+            - ./manage.py wait_for_resources --minio && ./manage.py collectstatic --noinput
           resources:
             limits:
-              cpu: "2"
-              memory: 1Gi
+              cpu: "1"
+              memory: 2Gi
             requests:
               cpu: "0.1"
-              memory: 0.5Gi
+              memory: 1Gi
           envFrom:
             - secretRef:
                 name: release-name-app-secret
             - configMapRef:
                 name: release-name-app-env-name
           env:
-            - name: DJANGO_APP_TYPE
+            - name: APP_TYPE
               value: "hook"
 ---
 # Source: ercs-backend-helm/charts/app/templates/argo-hooks/hook-job.yaml
@@ -1261,8 +810,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 50d8eb7ae6b79627d55053b245044db67fa59e595eae0a8620b9681e2575c181
-        checksum/configmap: 2011f19cc624a7115a0fcade1f023b0c56a2c987b5dd8494a7a1608cb64a906b
+        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
         component: argo-hooks
@@ -1275,22 +824,21 @@ spec:
           command: 
             - /bin/bash
             - -c
-          args: 
             - ./manage.py wait_for_resources --db && ./manage.py migrate
           resources:
             limits:
-              cpu: "2"
-              memory: 1Gi
+              cpu: "1"
+              memory: 2Gi
             requests:
               cpu: "0.1"
-              memory: 0.5Gi
+              memory: 1Gi
           envFrom:
             - secretRef:
                 name: release-name-app-secret
             - configMapRef:
                 name: release-name-app-env-name
           env:
-            - name: DJANGO_APP_TYPE
+            - name: APP_TYPE
               value: "hook"
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/api-ingress.yaml
@@ -1309,7 +857,7 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-body-size: 50m
 spec:
   rules:
-    - host: ercs-minio.example.com
+    - host: ercs-minio.test.com
       http:
         paths:
           - path: /
@@ -1330,10 +878,12 @@ metadata:
     component: api
     environment: ALPHA
     release: release-name
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 20m
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "ercs-api.example.com"
+    - host: "test.ercs.com"
       http:
         paths:
           - path: /
@@ -1514,7 +1064,7 @@ spec:
               fi
               echo "Minio is available. Executing provisioning commands";
               
-              mc anonymous set download provisioning/ercs-static;
+              mc anonymous set download provisioning/ercs-static;mc anonymous set download provisioning/ercs-media;
 
               echo "End Minio provisioning";
           env:
