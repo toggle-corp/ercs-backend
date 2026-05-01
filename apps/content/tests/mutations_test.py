@@ -14,6 +14,7 @@ class TestNewsPostMutations(TestCase):
         CREATE_NEWS_POST = """
             mutation CreateNewsPost($data: NewsPostCreateInput!) {
                 createNewsPost(data: $data) {
+                    ... on NewsPostTypeMutationResponseType{
                     ok
                     errors
                     result {
@@ -24,19 +25,22 @@ class TestNewsPostMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
         CREATE_NEWS_POST_REPORT = """
             mutation CreateNewsPostReport($data: NewsPostReportInput!) {
                 createNewsPostReport(data: $data) {
-                    ok
-                    errors
+                    ... on NewsPostReportTypeMutationResponseType{
+                        errors
+                        ok
                     result {
                         id
                         order
                     }
                 }
             }
+        }
         """
 
     @typing.override
