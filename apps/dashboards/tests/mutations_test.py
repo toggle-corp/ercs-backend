@@ -12,6 +12,7 @@ class TestExternalDashboardMutations(TestCase):
         CREATE_DASHBOARD = """
             mutation CreateExternalDashboard($data: ExternalDashboardCreateInput!) {
                 createExternalDashboard(data: $data) {
+                    ... on ExternalDashboardTypeMutationResponseType{
                     ok
                     errors
                     result {
@@ -24,11 +25,13 @@ class TestExternalDashboardMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
         UPDATE_DASHBOARD = """
             mutation UpdateExternalDashboard($id: ID!, $data: ExternalDashboardUpdateInput!) {
                 updateExternalDashboard(id: $id, data: $data) {
+                    ... on ExternalDashboardTypeMutationResponseType{
                     ok
                     errors
                     result {
@@ -38,6 +41,7 @@ class TestExternalDashboardMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
     @typing.override

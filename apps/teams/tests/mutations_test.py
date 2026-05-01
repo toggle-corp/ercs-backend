@@ -10,6 +10,9 @@ class TestTeamMutations(TestCase):
         CREATE_TEAM = """
             mutation CreateTeam($data: TeamCreateInput!) {
                 createTeam(data: $data) {
+                    ... on TeamTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -18,11 +21,15 @@ class TestTeamMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
         UPDATE_TEAM = """
             mutation UpdateTeam($id: ID!, $data: TeamUpdateInput!) {
                 updateTeam(id: $id, data: $data) {
+                    ... on TeamTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -31,6 +38,7 @@ class TestTeamMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
     @typing.override
