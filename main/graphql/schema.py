@@ -15,6 +15,8 @@ from apps.gallery.graphql import queries as gallery_queries
 from apps.geo.graphql import queries as geo_queries
 from apps.reports.graphql import mutations as report_mutations
 from apps.reports.graphql import queries as report_queries
+from apps.resources.graphql import mutations as resource_mutations
+from apps.resources.graphql import queries as resource_queries
 from apps.teams.graphql import mutations as team_mutations
 from apps.teams.graphql import queries as team_queries
 from apps.users.graphql import queries as user_queries
@@ -26,8 +28,6 @@ from .enums import AppEnumCollection, AppEnumCollectionData
 class CustomAsyncGraphQLView(AsyncGraphQLView):
     async def get_context(self, *args, **kwargs) -> GraphQLContext:  # type: ignore[reportIncompatibleMethodOverride]
         context = GraphQLContext(*args, **kwargs)
-        # Pre-resolve the lazy request.user in a worker thread so sync permission
-        # classes (required by OffsetPaginated) can safely access user attributes.
         await sync_to_async(lambda: context.request.user.is_authenticated)()
         return context
 
@@ -37,6 +37,7 @@ class Query(
     geo_queries.Query,
     user_queries.Query,
     report_queries.Query,
+    resource_queries.Query,
     content_queries.Query,
     dashboard_queries.Query,
     emergency_queries.Query,
@@ -51,6 +52,7 @@ class Query(
 @strawberry.type
 class Mutation(
     report_mutations.Mutation,
+    resource_mutations.Mutation,
     content_mutations.Mutation,
     dashboard_mutations.Mutation,
     gallery_mutations.Mutation,

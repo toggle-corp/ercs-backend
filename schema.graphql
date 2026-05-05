@@ -310,10 +310,16 @@ type GalleryImageTypeOffsetPaginated {
   results: [GalleryImageType!]!
 }
 
+input IframeUrlInput {
+  url: String!
+}
+
 type Mutation {
   createThematicArea(data: ThematicAreaInput!): ThematicAreaTypeMutationResponseType!
   createReport(data: ReportCreateInput!): ReportTypeMutationResponseType!
   updateReport(id: ID!, data: ReportUpdateInput!): ReportTypeMutationResponseType!
+  createResource(data: ResourceCreateInput!): ResourceTypeMutationResponseType!
+  updateResource(id: ID!, data: ResourceUpdateInput!): ResourceTypeMutationResponseType!
   createNewsPost(data: NewsPostCreateInput!): NewsPostTypeMutationResponseType!
   updateNewsPost(id: ID!, data: NewsPostUpdateInput!): NewsPostTypeMutationResponseType!
   createNewsPostReport(data: NewsPostReportInput!): NewsPostReportTypeMutationResponseType!
@@ -443,6 +449,8 @@ type Query {
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
   reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
   report(pk: ID!): ReportType!
+  resources(pagination: OffsetPaginationInput, filters: ResourceFilter, order: ResourceOrder): ResourceTypeOffsetPaginated!
+  resource(pk: ID!): ResourceType!
   newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
   newsPost(pk: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
@@ -538,6 +546,79 @@ input ReportUpdateInput {
   disasterType: String
   owner: String
   publishedAt: String
+}
+
+input ResourceCreateInput {
+  title: String!
+  contentType: Int!
+  description: String
+  file: Upload
+  iframeUrls: [IframeUrlInput!]
+  isPublished: Boolean! = false
+  region: ID
+}
+
+input ResourceFilter {
+  id: ID
+  contentType: Int
+  isPublished: Boolean
+  regionId: ID
+  AND: ResourceFilter
+  OR: ResourceFilter
+  NOT: ResourceFilter
+  DISTINCT: Boolean
+  search: String
+}
+
+type ResourceIframeUrlType {
+  id: ID!
+  url: String!
+}
+
+input ResourceOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+  publishedAt: Ordering
+}
+
+type ResourceType {
+  id: ID!
+  title: String!
+  description: String
+  contentType: Int!
+  file: DjangoFileType
+  iframeUrls: [ResourceIframeUrlType!]!
+  isPublished: Boolean!
+  publishedAt: DateTime
+  uploadedById: ID!
+  regionId: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ResourceTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: ResourceType
+}
+
+type ResourceTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ResourceType!]!
+}
+
+input ResourceUpdateInput {
+  title: String
+  description: String
+  file: Upload
+  iframeUrls: [IframeUrlInput!]
+  isPublished: Boolean
+  region: ID
 }
 
 input TeamCreateInput {
