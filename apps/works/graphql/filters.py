@@ -2,11 +2,11 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.resources.models import Resource
+from apps.works.models import EmergencyAlert
 
 
-@strawberry_django.filters.filter(Resource, lookups=True)
-class ResourceFilter:
+@strawberry_django.filters.filter(EmergencyAlert, lookups=True)
+class EmergencyAlertFilter:
     id: strawberry.ID | None = strawberry.UNSET
     content_type: int | None = strawberry.UNSET
     is_published: bool | None = strawberry.UNSET

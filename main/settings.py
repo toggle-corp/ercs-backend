@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     "apps.gallery",
     "apps.teams",
     "apps.resources",
+    "apps.works",
 ]
 
 MIDDLEWARE = [

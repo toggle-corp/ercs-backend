@@ -1,4 +1,3 @@
-# apps/resources/graphql/mutations.py
 import strawberry
 import strawberry_django
 

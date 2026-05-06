@@ -98,6 +98,84 @@ type DjangoFileType {
   url: String!
 }
 
+input EmergencyALertIframeUrlInput {
+  url: String!
+}
+
+input EmergencyAlertCreateInput {
+  title: String!
+  contentType: Int!
+  description: String
+  file: Upload
+  iframeUrls: [EmergencyALertIframeUrlInput!]
+  isPublished: Boolean! = false
+  region: ID
+}
+
+input EmergencyAlertFilter {
+  id: ID
+  contentType: Int
+  isPublished: Boolean
+  regionId: ID
+  AND: EmergencyAlertFilter
+  OR: EmergencyAlertFilter
+  NOT: EmergencyAlertFilter
+  DISTINCT: Boolean
+  search: String
+}
+
+type EmergencyAlertIframeUrlType {
+  id: ID!
+  url: String!
+  order: Int!
+}
+
+input EmergencyAlertOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+  publishedAt: Ordering
+}
+
+type EmergencyAlertType {
+  id: ID!
+  title: String!
+  description: String
+  contentType: Int!
+  file: DjangoFileType
+  iframeUrls: [EmergencyAlertIframeUrlType!]!
+  isPublished: Boolean!
+  publishedAt: DateTime
+  uploadedById: ID!
+  regionId: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type EmergencyAlertTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: EmergencyAlertType
+}
+
+type EmergencyAlertTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [EmergencyAlertType!]!
+}
+
+input EmergencyAlertUpdateInput {
+  title: String
+  description: String
+  file: Upload
+  iframeUrls: [EmergencyALertIframeUrlInput!]
+  isPublished: Boolean
+  region: ID
+}
+
 input EmergencyFilter {
   id: ID
   disasterType: String
@@ -320,6 +398,8 @@ type Mutation {
   updateReport(id: ID!, data: ReportUpdateInput!): ReportTypeMutationResponseType!
   createResource(data: ResourceCreateInput!): ResourceTypeMutationResponseType!
   updateResource(id: ID!, data: ResourceUpdateInput!): ResourceTypeMutationResponseType!
+  createEmergencyalert(data: EmergencyAlertCreateInput!): EmergencyAlertTypeMutationResponseType!
+  updateEmergencyalert(id: ID!, data: EmergencyAlertUpdateInput!): EmergencyAlertTypeMutationResponseType!
   createNewsPost(data: NewsPostCreateInput!): NewsPostTypeMutationResponseType!
   updateNewsPost(id: ID!, data: NewsPostUpdateInput!): NewsPostTypeMutationResponseType!
   createNewsPostReport(data: NewsPostReportInput!): NewsPostReportTypeMutationResponseType!
@@ -451,6 +531,8 @@ type Query {
   report(pk: ID!): ReportType!
   resources(pagination: OffsetPaginationInput, filters: ResourceFilter, order: ResourceOrder): ResourceTypeOffsetPaginated!
   resource(pk: ID!): ResourceType!
+  EmergencyAlerts(pagination: OffsetPaginationInput, filters: EmergencyAlertFilter, order: EmergencyAlertOrder): EmergencyAlertTypeOffsetPaginated!
+  EmergencyAlert(pk: ID!): EmergencyAlertType!
   newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
   newsPost(pk: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!

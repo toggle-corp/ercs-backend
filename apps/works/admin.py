@@ -1,18 +1,18 @@
 from django.contrib import admin
 
-from .models import Resource, ResourceIframeUrl
+from .models import EmergencyAlert, EmergencyAlertIframeUrl
 
 
-class ResourceIframeUrlInline(admin.TabularInline):
-    model = ResourceIframeUrl
+class EmergencyAlertIframeUrlInline(admin.TabularInline):
+    model = EmergencyAlertIframeUrl
     extra = 1
     fields = ["url", "order"]
     ordering = ["order"]
 
 
-@admin.register(Resource)
-class ResourceAdmin(admin.ModelAdmin):
-    inlines = [ResourceIframeUrlInline]
+@admin.register(EmergencyAlert)
+class EmergencyAlertAdmin(admin.ModelAdmin):
+    inlines = [EmergencyAlertIframeUrlInline]
     list_display = [
         "title",
         "content_type",

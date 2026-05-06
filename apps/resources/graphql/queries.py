@@ -1,4 +1,3 @@
-# apps/resources/graphql/queries.py
 import strawberry
 import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
@@ -16,4 +15,3 @@ class Query:
     )
 
     resource: ResourceType = strawberry_django.field()
-    

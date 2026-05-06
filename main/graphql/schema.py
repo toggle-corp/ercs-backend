@@ -20,6 +20,8 @@ from apps.resources.graphql import queries as resource_queries
 from apps.teams.graphql import mutations as team_mutations
 from apps.teams.graphql import queries as team_queries
 from apps.users.graphql import queries as user_queries
+from apps.works.graphql import mutations as emergencyAlert_mutations
+from apps.works.graphql import queries as emergencyAlert_queries
 
 from .context import GraphQLContext
 from .enums import AppEnumCollection, AppEnumCollectionData
@@ -38,6 +40,7 @@ class Query(
     user_queries.Query,
     report_queries.Query,
     resource_queries.Query,
+    emergencyAlert_queries.Query,
     content_queries.Query,
     dashboard_queries.Query,
     emergency_queries.Query,
@@ -53,6 +56,7 @@ class Query(
 class Mutation(
     report_mutations.Mutation,
     resource_mutations.Mutation,
+    emergencyAlert_mutations.Mutation,
     content_mutations.Mutation,
     dashboard_mutations.Mutation,
     gallery_mutations.Mutation,

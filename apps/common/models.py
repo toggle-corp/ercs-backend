@@ -24,3 +24,10 @@ class BaseModel(TimestampedModel):
 
     class Meta(TimestampedModel.Meta):
         abstract = True
+
+
+class ContentType(models.IntegerChoices):
+    """Determines how the content is stored and rendered."""
+
+    FILE = 10, "File"
+    IFRAME = 20, "IFrame"

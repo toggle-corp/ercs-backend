@@ -8,11 +8,11 @@ from django_stubs_ext.db.models.manager import RelatedManager
 from apps.common.models import BaseModel, ContentType
 
 
-class ResourceIframeUrl(BaseModel):
-    """Stores multiple iframe URLs for a resource."""
+class EmergencyAlertIframeUrl(BaseModel):
+    """Stores multiple iframe URLs for an emergency alert."""
 
-    resource = models.ForeignKey(
-        "Resource",
+    alert = models.ForeignKey(
+        "EmergencyAlert",
         on_delete=models.CASCADE,
         related_name="iframe_urls",
     )
@@ -20,8 +20,8 @@ class ResourceIframeUrl(BaseModel):
     order = models.PositiveIntegerField(default=0)
 
     class Meta(BaseModel.Meta):
-        verbose_name = "Resource Iframe URL"
-        verbose_name_plural = "Resource Iframe URLs"
+        verbose_name = "EmergencyAlert Iframe URL"
+        verbose_name_plural = "EmergencyAlert Iframe URLs"
         ordering = ["order"]
 
     @typing.override
@@ -29,8 +29,8 @@ class ResourceIframeUrl(BaseModel):
         return self.url
 
 
-class Resource(BaseModel):
-    """Unified model for file-upload and iframe-embed resources.
+class EmergencyAlert(BaseModel):
+    """Unified model for file-upload and iframe-embed Emergency Alert.
 
     Content-type rules:
     - FILE: `file` field must be populated; `iframe_urls` must be empty.
@@ -40,27 +40,27 @@ class Resource(BaseModel):
     title = models.CharField[str, str](max_length=500)
     description = models.TextField[str | None, str | None](null=True, blank=True)
     content_type = IntegerChoicesField(choices_enum=ContentType)  # type: ignore[call-arg]
-    file = models.FileField(upload_to="resources/", null=True, blank=True)
+    file = models.FileField(upload_to="emergency_alerts/", null=True, blank=True)
     is_published = models.BooleanField(default=False)
     published_at = models.DateTimeField(null=True, blank=True)
     uploaded_by = models.ForeignKey(
         "users.User",
         on_delete=models.PROTECT,
-        related_name="uploaded_resources",
+        related_name="uploaded_emergency_alerts",
     )
     region = models.ForeignKey(
         "geo.AdminArea",
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
-        related_name="resources",
+        related_name="emergency_alerts",
     )
 
-    iframe_urls: typing.ClassVar[RelatedManager["ResourceIframeUrl"]]
+    iframe_urls: typing.ClassVar[RelatedManager["EmergencyAlertIframeUrl"]]
 
     class Meta(BaseModel.Meta):
-        verbose_name = "Resource"
-        verbose_name_plural = "Resources"
+        verbose_name = "Emergency Alert"
+        verbose_name_plural = "Emergency Alerts"
         ordering = ["-created_at"]
 
     @typing.override
@@ -78,10 +78,10 @@ class Resource(BaseModel):
 
         if self.pk:
             try:
-                previous = Resource.objects.get(pk=self.pk)
+                previous = EmergencyAlert.objects.get(pk=self.pk)
                 if not previous.is_published and self.is_published and not self.published_at:
                     self.published_at = timezone.now()
-            except Resource.DoesNotExist:
+            except EmergencyAlert.DoesNotExist:
                 pass
         elif self.is_published and not self.published_at:
             self.published_at = timezone.now()
