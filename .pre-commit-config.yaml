@@ -7,9 +7,9 @@ exclude: |
       \.git|
       __pycache__|
       \.venv|
-      schema\.graphql|
+      schema.graphql|
       .*/migrations/.*|
-      helm/snapshots/.*
+      helm/snapshots
     )
 
 repos:
@@ -35,10 +35,6 @@ repos:
       - id: check-docstring-first
       - id: detect-private-key
       - id: name-tests-test
-        args: [--pytest-test-first]
-        exclude: ^main/tests/base\.py$
-      - id: check-executables-have-shebangs
-      - id: check-shebang-scripts-are-executable
 
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.24.2
@@ -67,3 +63,14 @@ repos:
     rev: v1.1.398
     hooks:
       - id: pyright
+        additional_dependencies:
+          [
+            beartype,
+            einops,
+            jax,
+            jaxtyping,
+            optax,
+            pytest,
+            typing_extensions,
+            wadler_lindig,
+          ]

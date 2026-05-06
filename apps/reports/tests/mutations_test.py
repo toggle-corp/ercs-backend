@@ -11,6 +11,9 @@ class TestReportMutations(TestCase):
         CREATE_REPORT = """
             mutation CreateReport($data: ReportCreateInput!) {
                 createReport(data: $data) {
+                    ... on ReportTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -22,11 +25,15 @@ class TestReportMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
         UPDATE_REPORT = """
             mutation UpdateReport($id: ID!, $data: ReportUpdateInput!) {
                 updateReport(id: $id, data: $data) {
+                    ... on ReportTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -36,6 +43,7 @@ class TestReportMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
     @typing.override
