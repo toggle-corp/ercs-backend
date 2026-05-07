@@ -95,6 +95,88 @@ type AppEnumCollectionUserRole {
   value: Int!
 }
 
+input CapacityAndResourceCreateInput {
+  title: String!
+  description: String
+  region: ID
+  isActive: Boolean! = true
+  order: Int! = 0
+  iframeUrls: [CapacityAndResourceIframeUrlInput!]!
+}
+
+"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+input CapacityAndResourceFilter {
+  id: ID
+  isActive: Boolean
+  regionId: ID
+  AND: CapacityAndResourceFilter
+  OR: CapacityAndResourceFilter
+  NOT: CapacityAndResourceFilter
+  DISTINCT: Boolean
+  search: String
+}
+
+input CapacityAndResourceIframeUrlInput {
+  dashboard: ID!
+  order: Int! = 0
+}
+
+"""
+Through model linking ExternalDashboard to CapacityAndResource.
+Only allows ExternalDashboards with page = CAPACITY_RESOURCES.
+"""
+type CapacityAndResourceIframeUrlType {
+  id: ID!
+  dashboard: ExternalDashboardType!
+  order: Int!
+}
+
+input CapacityAndResourceOrder @oneOf {
+  order: Ordering
+  title: Ordering
+}
+
+"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+type CapacityAndResourceType {
+  id: ID!
+  title: String!
+  description: String
+  regionId: ID
+  isActive: Boolean!
+  order: Int!
+  iframeUrls: [CapacityAndResourceIframeUrlType!]!
+  createdById: ID!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CapacityAndResourceTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: CapacityAndResourceType
+}
+
+type CapacityAndResourceTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [CapacityAndResourceType!]!
+}
+
+input CapacityAndResourceUpdateInput {
+  title: String
+  description: String
+  region: ID
+  isActive: Boolean
+  order: Int
+  iframeUrls: [CapacityAndResourceIframeUrlInput!]
+}
+
+union CreateCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
+
 union CreateExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
 
 union CreateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
@@ -218,6 +300,7 @@ input ExternalDashboardFilter {
   OR: ExternalDashboardFilter
   NOT: ExternalDashboardFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input ExternalDashboardOrder @oneOf {
@@ -406,6 +489,8 @@ type Mutation {
   deleteNewsPostReport(newspost: ID!, report: ID!): DeleteNewsPostReportPayload!
   createExternalDashboard(data: ExternalDashboardCreateInput!): CreateExternalDashboardPayload!
   updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
+  createCapacityAndResource(data: CapacityAndResourceCreateInput!): CreateCapacityAndResourcePayload!
+  updateCapacityAndResource(id: ID!, data: CapacityAndResourceUpdateInput!): UpdateCapacityAndResourcePayload!
   createGalleryAlbum(data: GalleryAlbumCreateInput!): CreateGalleryAlbumPayload!
   updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): UpdateGalleryAlbumPayload!
   createGalleryImage(data: GalleryImageCreateInput!): CreateGalleryImagePayload!
@@ -580,6 +665,8 @@ type Query {
   newsPost(id: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
   externalDashboard(id: ID!): ExternalDashboardType!
+  capacityAndResources(pagination: OffsetPaginationInput, filters: CapacityAndResourceFilter, order: CapacityAndResourceOrder): CapacityAndResourceTypeOffsetPaginated!
+  capacityAndResource(id: ID!): CapacityAndResourceType!
   emergencies(pagination: OffsetPaginationInput, filters: EmergencyFilter, order: EmergencyOrder): EmergencyTypeOffsetPaginated!
   emergency(id: ID!): EmergencyType!
   galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, order: GalleryAlbumOrder): GalleryAlbumTypeOffsetPaginated!
@@ -873,6 +960,8 @@ type ThematicAreaTypeOffsetPaginated {
   """List of paginated results."""
   results: [ThematicAreaType!]!
 }
+
+union UpdateCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
 
 union UpdateExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
 
