@@ -1,5 +1,11 @@
 directive @oneOf on INPUT_OBJECT
 
+"""
+Central geo-reference model with a self-referential level hierarchy.
+
+Hierarchy: COUNTRY → REGION → ZONE → WOREDA.
+Seeded via import script; no admin mutations expected.
+"""
 input AdminAreaFilter {
   id: ID
   level: String
@@ -9,6 +15,7 @@ input AdminAreaFilter {
   OR: AdminAreaFilter
   NOT: AdminAreaFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input AdminAreaOrder @oneOf {
@@ -16,6 +23,12 @@ input AdminAreaOrder @oneOf {
   level: Ordering
 }
 
+"""
+Central geo-reference model with a self-referential level hierarchy.
+
+Hierarchy: COUNTRY → REGION → ZONE → WOREDA.
+Seeded via import script; no admin mutations expected.
+"""
 type AdminAreaType {
   id: ID!
   name: String!
@@ -37,6 +50,69 @@ type AdminAreaTypeOffsetPaginated {
   results: [AdminAreaType!]!
 }
 
+type AppEnumCollection {
+  AdminAreaLevel: [AppEnumCollectionAdminAreaLevel!]!
+  UserRole: [AppEnumCollectionUserRole!]!
+  ReportContentType: [AppEnumCollectionReportContentType!]!
+  ReportVisibility: [AppEnumCollectionReportVisibility!]!
+  DashboardPage: [AppEnumCollectionDashboardPage!]!
+  TeamMemberSex: [AppEnumCollectionTeamMemberSex!]!
+}
+
+type AppEnumCollectionAdminAreaLevel {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionDashboardPage {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionReportContentType {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionReportVisibility {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionTeamMemberSex {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionUserRole {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+union CreateExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
+
+union CreateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
+
+union CreateGalleryImagePayload = GalleryImageTypeMutationResponseType | OperationInfo
+
+union CreateNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
+
+union CreateNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
+
+union CreateReportPayload = ReportTypeMutationResponseType | OperationInfo
+
+union CreateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
+union CreateTeamPayload = TeamTypeMutationResponseType | OperationInfo
+
+union CreateThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
+
 """A generic type to return error messages"""
 scalar CustomErrorType
 
@@ -46,22 +122,38 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+union DeleteGalleryImagePayload = GalleryImageTypeMutationResponseType | OperationInfo
+
+union DeleteNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
+
+union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
 type DjangoFileType {
   name: String!
   size: Int!
   url: String!
 }
 
+"""
+Emergency events synced from the IFRC GO API.
+
+Read-only within the application. Populated exclusively by the sync job.
+go_id is the GO platform's native integer ID and is used as the upsert key.
+synced_at is updated on every sync write (auto_now=True).
+"""
 input EmergencyFilter {
   id: ID
   disasterType: String
   status: String
+
+  """Matched by name/pcode during sync."""
   regionId: ID
   goId: Int
   AND: EmergencyFilter
   OR: EmergencyFilter
   NOT: EmergencyFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input EmergencyOrder @oneOf {
@@ -70,12 +162,21 @@ input EmergencyOrder @oneOf {
   syncedAt: Ordering
 }
 
+"""
+Emergency events synced from the IFRC GO API.
+
+Read-only within the application. Populated exclusively by the sync job.
+go_id is the GO platform's native integer ID and is used as the upsert key.
+synced_at is updated on every sync write (auto_now=True).
+"""
 type EmergencyType {
   id: ID!
   goId: Int!
   name: String!
   disasterType: String!
   status: String!
+
+  """Matched by name/pcode during sync."""
   regionId: ID
   startDate: Date!
   affectedPop: Int
@@ -104,10 +205,13 @@ input ExternalDashboardCreateInput {
   isActive: Boolean! = true
 }
 
+"""Power BI / iframe dashboards embedded across site pages via CMS."""
 input ExternalDashboardFilter {
   id: ID
   page: String
   isActive: Boolean
+
+  """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean
   regionId: ID
   AND: ExternalDashboardFilter
@@ -122,6 +226,7 @@ input ExternalDashboardOrder @oneOf {
   title: Ordering
 }
 
+"""Power BI / iframe dashboards embedded across site pages via CMS."""
 type ExternalDashboardType {
   id: ID!
   title: String!
@@ -129,6 +234,8 @@ type ExternalDashboardType {
   url: String!
   page: Int!
   regionId: ID
+
+  """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean!
   order: Int!
   isActive: Boolean!
@@ -169,6 +276,13 @@ input GalleryAlbumCreateInput {
   description: String
 }
 
+"""
+Auth-gated photo album. Login required to access.
+
+cover_image is a nullable FK to GalleryImage, set after images are uploaded.
+The forward string reference ('GalleryImage') avoids a circular import.
+on_delete=SET_NULL so deleting the cover image does not cascade to the album.
+"""
 input GalleryAlbumFilter {
   id: ID
   createdById: ID
@@ -176,6 +290,7 @@ input GalleryAlbumFilter {
   OR: GalleryAlbumFilter
   NOT: GalleryAlbumFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input GalleryAlbumOrder @oneOf {
@@ -183,6 +298,13 @@ input GalleryAlbumOrder @oneOf {
   createdAt: Ordering
 }
 
+"""
+Auth-gated photo album. Login required to access.
+
+cover_image is a nullable FK to GalleryImage, set after images are uploaded.
+The forward string reference ('GalleryImage') avoids a circular import.
+on_delete=SET_NULL so deleting the cover image does not cascade to the album.
+"""
 type GalleryAlbumType {
   id: ID!
   title: String!
@@ -191,7 +313,7 @@ type GalleryAlbumType {
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
-  images: [GalleryImageType!]!
+  imagesCount: Int!
 }
 
 type GalleryAlbumTypeMutationResponseType {
@@ -223,6 +345,32 @@ input GalleryImageCreateInput {
   order: Int! = 0
 }
 
+"""
+Individual image within a GalleryAlbum.
+
+Uses uploaded_at instead of the standard created_at/updated_at pair.
+on_delete=CASCADE so all images are removed when the album is deleted.
+"""
+input GalleryImageFilter {
+  id: ID
+  albumId: ID
+  AND: GalleryImageFilter
+  OR: GalleryImageFilter
+  NOT: GalleryImageFilter
+  DISTINCT: Boolean
+}
+
+input GalleryImageOrder @oneOf {
+  order: Ordering
+  uploadedAt: Ordering
+}
+
+"""
+Individual image within a GalleryAlbum.
+
+Uses uploaded_at instead of the standard created_at/updated_at pair.
+on_delete=CASCADE so all images are removed when the album is deleted.
+"""
 type GalleryImageType {
   id: ID!
   albumId: ID!
@@ -238,25 +386,35 @@ type GalleryImageTypeMutationResponseType {
   result: GalleryImageType
 }
 
+type GalleryImageTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [GalleryImageType!]!
+}
+
 type Mutation {
-  createThematicArea(data: ThematicAreaInput!): ThematicAreaTypeMutationResponseType!
-  createReport(data: ReportCreateInput!): ReportTypeMutationResponseType!
-  updateReport(id: ID!, data: ReportUpdateInput!): ReportTypeMutationResponseType!
-  createNewsPost(data: NewsPostCreateInput!): NewsPostTypeMutationResponseType!
-  updateNewsPost(id: ID!, data: NewsPostUpdateInput!): NewsPostTypeMutationResponseType!
-  createNewsPostReport(data: NewsPostReportInput!): NewsPostReportTypeMutationResponseType!
-  deleteNewsPostReport(newspost: ID!, report: ID!): NewsPostReportTypeMutationResponseType!
-  createExternalDashboard(data: ExternalDashboardCreateInput!): ExternalDashboardTypeMutationResponseType!
-  updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): ExternalDashboardTypeMutationResponseType!
-  createGalleryAlbum(data: GalleryAlbumCreateInput!): GalleryAlbumTypeMutationResponseType!
-  updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): GalleryAlbumTypeMutationResponseType!
-  createGalleryImage(data: GalleryImageCreateInput!): GalleryImageTypeMutationResponseType!
-  deleteGalleryImage(id: ID!): GalleryImageTypeMutationResponseType!
-  createTeam(data: TeamCreateInput!): TeamTypeMutationResponseType!
-  updateTeam(id: ID!, data: TeamUpdateInput!): TeamTypeMutationResponseType!
-  createTeamMember(data: TeamMemberCreateInput!): TeamMemberTypeMutationResponseType!
-  updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): TeamMemberTypeMutationResponseType!
-  deleteTeamMember(id: ID!): TeamMemberTypeMutationResponseType!
+  createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
+  createReport(data: ReportCreateInput!): CreateReportPayload!
+  updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
+  createNewsPost(data: NewsPostCreateInput!): CreateNewsPostPayload!
+  updateNewsPost(id: ID!, data: NewsPostUpdateInput!): UpdateNewsPostPayload!
+  createNewsPostReport(data: NewsPostReportInput!): CreateNewsPostReportPayload!
+  deleteNewsPostReport(newspost: ID!, report: ID!): DeleteNewsPostReportPayload!
+  createExternalDashboard(data: ExternalDashboardCreateInput!): CreateExternalDashboardPayload!
+  updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
+  createGalleryAlbum(data: GalleryAlbumCreateInput!): CreateGalleryAlbumPayload!
+  updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): UpdateGalleryAlbumPayload!
+  createGalleryImage(data: GalleryImageCreateInput!): CreateGalleryImagePayload!
+  deleteGalleryImage(id: ID!): DeleteGalleryImagePayload!
+  createTeam(data: TeamCreateInput!): CreateTeamPayload!
+  updateTeam(id: ID!, data: TeamUpdateInput!): UpdateTeamPayload!
+  createTeamMember(data: TeamMemberCreateInput!): CreateTeamMemberPayload!
+  updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): UpdateTeamMemberPayload!
+  deleteTeamMember(id: ID!): DeleteTeamMemberPayload!
 }
 
 input NewsPostCreateInput {
@@ -268,6 +426,12 @@ input NewsPostCreateInput {
   isPublished: Boolean! = false
 }
 
+"""
+Editorial blog/news posts. Always public — no visibility field.
+
+published_at is auto-set the first time is_published is flipped to True.
+Reports are linked via the ordered NewsPostReport through-table.
+"""
 input NewsPostFilter {
   id: ID
   isPublished: Boolean
@@ -277,6 +441,7 @@ input NewsPostFilter {
   OR: NewsPostFilter
   NOT: NewsPostFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input NewsPostOrder @oneOf {
@@ -291,6 +456,12 @@ input NewsPostReportInput {
   order: Int! = 0
 }
 
+"""
+Ordered join table linking NewsPost to Report.
+
+Constraint: report.visibility must be PUBLIC.
+Enforced in the serializer/mutation layer, not at the DB level.
+"""
 type NewsPostReportType {
   id: ID!
   newspostId: ID!
@@ -304,6 +475,12 @@ type NewsPostReportTypeMutationResponseType {
   result: NewsPostReportType
 }
 
+"""
+Editorial blog/news posts. Always public — no visibility field.
+
+published_at is auto-set the first time is_published is flipped to True.
+Reports are linked via the ordered NewsPostReport through-table.
+"""
 type NewsPostType {
   id: ID!
   title: String!
@@ -354,6 +531,35 @@ input OffsetPaginationInput {
   limit: Int
 }
 
+type OperationInfo {
+  """List of messages returned by the operation."""
+  messages: [OperationMessage!]!
+}
+
+type OperationMessage {
+  """The kind of this message."""
+  kind: OperationMessageKind!
+
+  """The error message."""
+  message: String!
+
+  """
+  The field that caused the error, or `null` if it isn't associated with any particular field.
+  """
+  field: String
+
+  """The error code, or `null` if no error code was set."""
+  code: String
+}
+
+enum OperationMessageKind {
+  INFO
+  WARNING
+  ERROR
+  PERMISSION
+  VALIDATION
+}
+
 enum Ordering {
   ASC
   ASC_NULLS_FIRST
@@ -365,28 +571,31 @@ enum Ordering {
 
 type Query {
   adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, order: AdminAreaOrder): AdminAreaTypeOffsetPaginated!
-  adminArea(pk: ID!): AdminAreaType!
+  adminArea(id: ID!): AdminAreaType!
   me: UserMeType
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
   reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
-  report(pk: ID!): ReportType!
+  report(id: ID!): ReportType!
   newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
-  newsPost(pk: ID!): NewsPostType!
+  newsPost(id: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
-  externalDashboard(pk: ID!): ExternalDashboardType!
+  externalDashboard(id: ID!): ExternalDashboardType!
   emergencies(pagination: OffsetPaginationInput, filters: EmergencyFilter, order: EmergencyOrder): EmergencyTypeOffsetPaginated!
-  emergency(pk: ID!): EmergencyType!
+  emergency(id: ID!): EmergencyType!
   galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, order: GalleryAlbumOrder): GalleryAlbumTypeOffsetPaginated!
-  galleryAlbum(pk: ID!): GalleryAlbumType!
+  galleryAlbum(id: ID!): GalleryAlbumType!
+  galleryImages(pagination: OffsetPaginationInput, filters: GalleryImageFilter, order: GalleryImageOrder): GalleryImageTypeOffsetPaginated!
   teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
-  team(pk: ID!): TeamType!
+  team(id: ID!): TeamType!
   teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+  enums: AppEnumCollection!
 }
 
 input ReportCreateInput {
   title: String!
   contentType: Int!
   description: String
+  coverImage: Upload
   file: Upload
   iframeUrl: String
   visibility: Int! = 10
@@ -397,6 +606,17 @@ input ReportCreateInput {
   publishedAt: String
 }
 
+"""
+Unified model for file-upload and iframe-embed reports.
+
+Visibility rules:
+- PUBLIC → PRIVATE is allowed (redact a report).
+- PRIVATE → PUBLIC is blocked at save() and must also be enforced at the API level.
+
+Content-type rules:
+- FILE: `file` field must be populated; `iframe_url` must be empty.
+- IFRAME: `iframe_url` must be populated; `file` must be empty.
+"""
 input ReportFilter {
   id: ID
   contentType: Int
@@ -408,6 +628,7 @@ input ReportFilter {
   OR: ReportFilter
   NOT: ReportFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input ReportOrder @oneOf {
@@ -416,10 +637,22 @@ input ReportOrder @oneOf {
   publishedAt: Ordering
 }
 
+"""
+Unified model for file-upload and iframe-embed reports.
+
+Visibility rules:
+- PUBLIC → PRIVATE is allowed (redact a report).
+- PRIVATE → PUBLIC is blocked at save() and must also be enforced at the API level.
+
+Content-type rules:
+- FILE: `file` field must be populated; `iframe_url` must be empty.
+- IFRAME: `iframe_url` must be populated; `file` must be empty.
+"""
 type ReportType {
   id: ID!
   title: String!
   description: String
+  coverImage: DjangoFileType
   contentType: Int!
   file: DjangoFileType
   iframeUrl: String
@@ -453,6 +686,7 @@ type ReportTypeOffsetPaginated {
 input ReportUpdateInput {
   title: String
   description: String
+  coverImage: Upload
   visibility: Int
   thematicArea: ID
   region: ID
@@ -466,6 +700,7 @@ input TeamCreateInput {
   description: String
 }
 
+"""Auth-gated response team registry. Login required to access."""
 input TeamFilter {
   id: ID
   name: String
@@ -473,6 +708,7 @@ input TeamFilter {
   OR: TeamFilter
   NOT: TeamFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input TeamMemberCreateInput {
@@ -481,16 +717,29 @@ input TeamMemberCreateInput {
   position: String!
   email: String
   phoneNumber: String
+  sex: Int
+  region: ID
+  woreda: ID
+  training: String
+  fieldOfStudy: String
   order: Int! = 0
 }
 
+"""Individual member belonging to a Team."""
 input TeamMemberFilter {
   id: ID
   teamId: ID
+
+  """AdminArea at region level (level=20)."""
+  regionId: ID
+
+  """AdminArea at woreda level (level=40)."""
+  woredaId: ID
   AND: TeamMemberFilter
   OR: TeamMemberFilter
   NOT: TeamMemberFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input TeamMemberOrder @oneOf {
@@ -498,6 +747,7 @@ input TeamMemberOrder @oneOf {
   name: Ordering
 }
 
+"""Individual member belonging to a Team."""
 type TeamMemberType {
   id: ID!
   teamId: ID!
@@ -505,6 +755,15 @@ type TeamMemberType {
   position: String!
   email: String
   phoneNumber: String
+  sex: Int
+
+  """AdminArea at region level (level=20)."""
+  regionId: ID
+
+  """AdminArea at woreda level (level=40)."""
+  woredaId: ID
+  training: String
+  fieldOfStudy: String
   order: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -532,6 +791,11 @@ input TeamMemberUpdateInput {
   position: String
   email: String
   phoneNumber: String
+  sex: Int
+  region: ID
+  woreda: ID
+  training: String
+  fieldOfStudy: String
   order: Int
 }
 
@@ -540,6 +804,7 @@ input TeamOrder @oneOf {
   createdAt: Ordering
 }
 
+"""Auth-gated response team registry. Login required to access."""
 type TeamType {
   id: ID!
   name: String!
@@ -570,6 +835,7 @@ input TeamUpdateInput {
   description: String
 }
 
+"""Controlled vocabulary for report thematic areas."""
 input ThematicAreaFilter {
   id: ID
   name: String
@@ -577,12 +843,14 @@ input ThematicAreaFilter {
   OR: ThematicAreaFilter
   NOT: ThematicAreaFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input ThematicAreaInput {
   name: String!
 }
 
+"""Controlled vocabulary for report thematic areas."""
 type ThematicAreaType {
   id: ID!
   name: String!
@@ -606,14 +874,36 @@ type ThematicAreaTypeOffsetPaginated {
   results: [ThematicAreaType!]!
 }
 
+union UpdateExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
+
+union UpdateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
+
+union UpdateNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
+
+union UpdateReportPayload = ReportTypeMutationResponseType | OperationInfo
+
+union UpdateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
+union UpdateTeamPayload = TeamTypeMutationResponseType | OperationInfo
+
 """Represents a file upload."""
 scalar Upload
 
+"""
+Custom user model with email as the login identifier.
+
+Roles drive access control throughout the app:
+- SUPER_ADMIN: full access across all regions
+- REGIONAL_ADMIN: access scoped to their assigned region
+- STAFF, PARTNER, VIEWER: read-access tiers
+"""
 type UserMeType {
   id: ID!
   email: String!
   fullName: String!
   role: Int!
+
+  """Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area."""
   regionId: ID
   isActive: Boolean!
   mfaEnabled: Boolean!

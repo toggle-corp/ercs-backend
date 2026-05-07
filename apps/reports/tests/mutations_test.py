@@ -1,6 +1,6 @@
 import typing
 
-from apps.reports.factories import ReportFactory
+from apps.reports.factories import ReportFactory, ThematicAreaFactory
 from apps.reports.models import Report
 from apps.users.factories import UserFactory
 from main.tests import TestCase
@@ -11,6 +11,9 @@ class TestReportMutations(TestCase):
         CREATE_REPORT = """
             mutation CreateReport($data: ReportCreateInput!) {
                 createReport(data: $data) {
+                    ... on ReportTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -22,11 +25,15 @@ class TestReportMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
         UPDATE_REPORT = """
             mutation UpdateReport($id: ID!, $data: ReportUpdateInput!) {
                 updateReport(id: $id, data: $data) {
+                    ... on ReportTypeMutationResponseType{
+
+
                     ok
                     errors
                     result {
@@ -36,6 +43,7 @@ class TestReportMutations(TestCase):
                     }
                 }
             }
+        }
         """
 
     @typing.override
@@ -43,6 +51,7 @@ class TestReportMutations(TestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.user = UserFactory.create()
+        cls.thematic_area = ThematicAreaFactory.create()
 
     def test_create_iframe_report(self):
         self.force_login(self.user)
@@ -53,7 +62,8 @@ class TestReportMutations(TestCase):
                     "title": "Test Report",
                     "contentType": Report.ContentType.IFRAME,
                     "iframeUrl": "https://app.powerbi.com/embed/123",
-                }
+                    "thematicArea": str(self.thematic_area.pk),
+                },
             },
         )
         resp = content["data"]["createReport"]
@@ -73,7 +83,8 @@ class TestReportMutations(TestCase):
                     "title": "Unauthorized",
                     "contentType": Report.ContentType.IFRAME,
                     "iframeUrl": "https://example.com/embed",
-                }
+                    "thematicArea": str(self.thematic_area.pk),
+                },
             },
         )
         assert "errors" in content

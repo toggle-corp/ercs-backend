@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 
 from apps.gallery.models import GalleryAlbum, GalleryImage
 from utils.graphql.types import DjangoFileType
@@ -24,4 +25,7 @@ class GalleryAlbumType:
     created_by_id: strawberry.ID
     created_at: strawberry.auto
     updated_at: strawberry.auto
-    images: list[GalleryImageType]
+
+    @strawberry_django.field
+    async def images_count(self) -> int:
+        return await sync_to_async(self.images.count)()  # type: ignore[reportAttributeAccessIssue]

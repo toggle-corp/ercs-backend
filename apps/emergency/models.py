@@ -1,3 +1,4 @@
+import typing
 import uuid
 
 from django.db import models
@@ -39,5 +40,6 @@ class Emergency(models.Model):
         verbose_name_plural = "Emergencies"
         ordering = ["-start_date"]
 
+    @typing.override
     def __str__(self) -> str:
         return f"{self.name} ({self.disaster_type})"

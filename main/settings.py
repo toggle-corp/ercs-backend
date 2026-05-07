@@ -1,17 +1,76 @@
-import environ
+# type: ignore[reportAttributeAccessIssue]
+import typing
 from pathlib import Path
+from urllib.parse import ParseResult
+from urllib.parse import urlparse as _urlparse
 
-env = environ.Env(
-    DEBUG=(bool, False),
-)
+import environ
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-environ.Env.read_env(BASE_DIR / ".env")
 
-SECRET_KEY = env("DJANGO_SECRET_KEY", default="change-me-in-production")
+@typing.overload
+def urlparse(value: None) -> None: ...
+
+
+@typing.overload
+def urlparse(value: str) -> ParseResult: ...
+
+
+def urlparse(value) -> ParseResult:
+    if not value:
+        return None
+    return _urlparse(value.strip("/"))
+
+
+env = environ.Env(
+    DEBUG=(bool, False),
+    SECRET_KEY=str,
+    ADDITIONAL_ALLOWED_HOSTS=(list, []),
+    APP_ENVIRONMENT=str,
+    APP_TYPE=str,
+    APP_RELEASE=(str, None),
+    # Domain configs
+    APP_DOMAIN=str,
+    FRONTEND_DOMAIN=str,
+    SESSION_COOKIE_DOMAIN=str,  # .example.com
+    CSRF_COOKIE_DOMAIN=str,  # .example.com
+    ADDITIONAL_TRUSTED_ORIGINS=(list, []),
+    TIME_ZONE=(str, "UTC"),
+    # Database
+    POSTGRES_DB=str,
+    POSTGRES_USER=str,
+    POSTGRES_PASSWORD=str,
+    POSTGRES_HOST=str,
+    POSTGRES_PORT=(int, 5432),
+    # Storage
+    MEDIA_URL=(str, "media/"),
+    STATIC_URL=(str, "static/"),
+    TEMP_DIR=(str, "/temp/"),
+    # -- S3 storage
+    AWS_S3_ENABLED=(bool, False),
+    AWS_S3_ENDPOINT_URL=(str, None),
+    AWS_S3_ACCESS_KEY_ID=str,
+    AWS_S3_SECRET_ACCESS_KEY=str,
+    AWS_S3_REGION_NAME=str,
+    AWS_S3_MEDIA_BUCKET_NAME=str,
+    AWS_S3_STATIC_BUCKET_NAME=str,
+    # -- Filesystem (default) XXX: Don't use in production
+    MEDIA_ROOT=(str, BASE_DIR / "data/media"),
+    STATIC_ROOT=(str, BASE_DIR / "data/static"),
+)
+
+APP_DOMAIN = urlparse(env("APP_DOMAIN"))
+FRONTEND_DOMAIN = urlparse(env("FRONTEND_DOMAIN"))
+APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
+APP_TYPE = env("APP_TYPE").upper()
+SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DEBUG")
-ALLOWED_HOSTS = env.list("ALLOWED_HOSTS", default=["*"])
+
+ALLOWED_HOSTS = [
+    APP_DOMAIN.hostname,
+    *env("ADDITIONAL_ALLOWED_HOSTS"),
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -24,12 +83,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "strawberry_django",
-    # Health-check
-    "health_check",
-    "health_check.db",
-    "health_check.cache",
-    "health_check.storage",
-    "health_check.contrib.migrations",
+    # - Health-check
+    "health_check",  # required
     # Local apps
     "apps.common",
     "apps.geo",
@@ -76,12 +131,12 @@ WSGI_APPLICATION = "main.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("POSTGRES_DB", default="ercs"),
-        "USER": env("POSTGRES_USER", default="postgres"),
-        "PASSWORD": env("POSTGRES_PASSWORD", default="postgres"),
-        "HOST": env("POSTGRES_HOST", default="localhost"),
-        "PORT": env("POSTGRES_PORT", default="5432"),
-    }
+        "NAME": env("POSTGRES_DB"),
+        "USER": env("POSTGRES_USER"),
+        "PASSWORD": env("POSTGRES_PASSWORD"),
+        "HOST": env("POSTGRES_HOST"),
+        "PORT": env("POSTGRES_PORT"),
+    },
 }
 
 AUTH_USER_MODEL = "users.User"
@@ -96,22 +151,95 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = env("TIME_ZONE")
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+TEMP_DIR = Path(env("TEMP_DIR"))
+MEDIA_URL = env("MEDIA_URL")
+STATIC_URL = env("STATIC_URL")
 
-MEDIA_URL = "/media/"
-MEDIA_ROOT = BASE_DIR / "media"
 
-CSRF_COOKIE_NAME = "ERCS-CSRFTOKEN"
+if env("AWS_S3_ENABLED"):
+    AWS_S3_CONFIG_OPTIONS = {
+        "endpoint_url": env("AWS_S3_ENDPOINT_URL"),
+        "access_key": env("AWS_S3_ACCESS_KEY_ID"),
+        "secret_key": env("AWS_S3_SECRET_ACCESS_KEY"),
+        "region_name": env("AWS_S3_REGION_NAME"),
+    }
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                **AWS_S3_CONFIG_OPTIONS,
+                "bucket_name": env("AWS_S3_MEDIA_BUCKET_NAME"),
+                "querystring_auth": False,
+                "location": "media/",
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS": {
+                **AWS_S3_CONFIG_OPTIONS,
+                "bucket_name": env("AWS_S3_STATIC_BUCKET_NAME"),
+                "querystring_auth": False,
+                "location": "static/",
+                "file_overwrite": True,
+            },
+        },
+    }
+
+else:
+    # Filesystem
+    MEDIA_ROOT = env("MEDIA_ROOT")
+    STATIC_ROOT = env("STATIC_ROOT")
+
+TRUSTED_ORIGINS = [
+    APP_DOMAIN.geturl(),
+    FRONTEND_DOMAIN.geturl(),
+    *env("ADDITIONAL_TRUSTED_ORIGINS"),
+]
+
+SESSION_COOKIE_NAME = f"ERCS-{APP_ENVIRONMENT}-SESSIONID"
+CSRF_COOKIE_NAME = f"ERCS-{APP_ENVIRONMENT}-CSRFTOKEN"
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+CSP_DEFAULT_SRC = ["'self'"]
+SECURE_REFERRER_POLICY = "same-origin"
+if APP_DOMAIN.scheme == "https":
+    SESSION_COOKIE_NAME = f"__Secure-{SESSION_COOKIE_NAME}"
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SECURE_HSTS_SECONDS = 30  # TODO: Increase this slowly
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    CSRF_TRUSTED_ORIGINS = TRUSTED_ORIGINS
+
+# -- https://docs.djangoproject.com/en/3.2/ref/settings/#std:setting-SESSION_COOKIE_DOMAIN
+SESSION_COOKIE_DOMAIN = env("SESSION_COOKIE_DOMAIN")
+# https://docs.djangoproject.com/en/3.2/ref/settings/#csrf-cookie-domain
+CSRF_COOKIE_DOMAIN = env("CSRF_COOKIE_DOMAIN")
+
+
+# CORS
+CORS_ALLOWED_ORIGINS = TRUSTED_ORIGINS
+CSRF_TRUSTED_ORIGINS = TRUSTED_ORIGINS
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=[])
-CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_URLS_REGEX = r"(^/media/.*$)|(^/graphql/$)|(^/health-check/$)"
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+
 CORS_ALLOW_HEADERS = (
     "accept",
     "accept-encoding",
@@ -123,12 +251,30 @@ CORS_ALLOW_HEADERS = (
     "x-csrftoken",
     "x-requested-with",
 )
+# Strawberry
+STRAWBERRY_DJANGO = {
+    "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,
+    "TYPE_DESCRIPTION_FROM_MODEL_DOCSTRING": True,
+    "MUTATIONS_DEFAULT_HANDLE_ERRORS": True,
+    "PAGINATION_DEFAULT_LIMIT": 20,
+    "DEFAULT_PK_FIELD_NAME": "id",
+}
+
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-    ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
-    ],
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework.authentication.SessionAuthentication",),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 50,
+    "DEFAULT_FILTER_BACKENDS": (
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
+    "DEFAULT_RENDERER_CLASSES": ("rest_framework.renderers.JSONRenderer",),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
+
+if DEBUG:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = (
+        *REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"],
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    )

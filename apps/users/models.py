@@ -11,6 +11,8 @@ from .managers import UserManager
 
 
 class UserRole(models.IntegerChoices):
+    """Access-control roles assigned to users."""
+
     SUPER_ADMIN = 10, "Super Admin"
     REGIONAL_ADMIN = 20, "Regional Admin"
     STAFF = 30, "Staff"
@@ -36,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
     email = models.EmailField[str, str](unique=True)
     full_name = models.CharField[str, str](max_length=255)
-    role: int = IntegerChoicesField(choices_enum=UserRole, default=UserRole.VIEWER)
+    role: int = IntegerChoicesField(choices_enum=UserRole, default=UserRole.VIEWER)  # type: ignore[reportAssignmentType]
     region = models.ForeignKey(
         "geo.AdminArea",
         null=True,
@@ -45,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name="regional_admins",
         help_text="Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area.",
     )
-    is_active = models.BooleanField[bool, bool](default=True)
+    is_active = models.BooleanField[bool, bool](default=True)  # type: ignore[reportAssignmentType]
     is_staff = models.BooleanField[bool, bool](default=False)
     mfa_enabled = models.BooleanField[bool, bool](default=False)
     created_at = models.DateTimeField[datetime.datetime, datetime.datetime](auto_now_add=True)
@@ -59,13 +61,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     # reverse relation type hints
-    uploaded_reports: typing.ClassVar[RelatedManager["apps.reports.models.Report"]]  # type: ignore[name-defined]
-    news_posts: typing.ClassVar[RelatedManager["apps.content.models.NewsPost"]]  # type: ignore[name-defined]
+    uploaded_reports: typing.ClassVar[RelatedManager["apps.reports.models.Report"]]  # type: ignore[name-defined]  # noqa: F821
+    news_posts: typing.ClassVar[RelatedManager["apps.content.models.NewsPost"]]  # type: ignore[name-defined]  # noqa: F821
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "User"
         verbose_name_plural = "Users"
         ordering = ["full_name"]
 
+    @typing.override
     def __str__(self) -> str:
         return f"{self.full_name} <{self.email}>"

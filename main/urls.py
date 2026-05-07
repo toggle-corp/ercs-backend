@@ -1,10 +1,12 @@
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path
 from django.views.decorators.csrf import csrf_exempt
+from health_check.views import HealthCheckView
 
-from main.graphql.schema import CustomAsyncGraphQLView, schema as graphql_schema
+from main.graphql.schema import CustomAsyncGraphQLView
+from main.graphql.schema import schema as graphql_schema
 
 admin.site.site_header = "ERCS-EOC Admin"
 
@@ -15,7 +17,19 @@ base_graphql_kwargs = dict(
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("health-check/", include("health_check.urls")),
+    path(
+        "health-check/",
+        HealthCheckView.as_view(
+            checks=[
+                "health_check.Cache",
+                "health_check.Database",
+                "health_check.Storage",
+                # 3rd party checks
+                "health_check.contrib.psutil.Disk",
+                "health_check.contrib.psutil.Memory",
+            ],
+        ),
+    ),
     path(
         "graphql/",
         csrf_exempt(

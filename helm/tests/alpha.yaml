@@ -1,0 +1,38 @@
+app:
+  environment: ALPHA
+
+  ingress:
+    enabled: true
+    className: nginx
+    host: test.ercs.com
+    annotations:
+      nginx.ingress.kubernetes.io/proxy-body-size: "20m"
+
+  redis:
+    enabled: false
+
+  postgresql:
+    enabled: true
+    fullnameOverride: "ercs-postgresql"
+    architecture: standalone
+    auth:
+      postgresPassword: "test-password"
+
+
+  minio:
+    enabled: true
+    apiIngress:
+      hostname: ercs-minio.test.com
+    auth:
+      rootPassword: test-password
+
+  env:
+    APP_DOMAIN: https://ercs.test.com
+    APP_RELEASE:  https://ercs.test.com
+    FRONTEND_DOMAIN: https://ercs-frontend.test.com
+    SESSION_COOKIE_DOMAIN: .example.com
+    CSRF_COOKIE_DOMAIN: .example.com
+    # AWS
+    AWS_S3_ENABLED: "false"
+  secrets:
+    DJANGO_SECRET_KEY: "django-secret-key"

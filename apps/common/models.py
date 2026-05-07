@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 from django.db import models
@@ -23,5 +22,5 @@ class BaseModel(TimestampedModel):
         editable=False,
     )
 
-    class Meta:
+    class Meta(TimestampedModel.Meta):
         abstract = True

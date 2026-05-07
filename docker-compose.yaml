@@ -1,5 +1,3 @@
-name: ercs-backend
-
 x-server: &base_server_setup
   build:
     context: ./
@@ -7,24 +5,27 @@ x-server: &base_server_setup
   tty: true
   environment: &base_server_environments
     DEBUG: ${DEBUG:-true}
+    APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?error}
+    # Domain configs
+    APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
+    FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-http://localhost:3000}
+    SESSION_COOKIE_DOMAIN: ${SESSION_COOKIE_DOMAIN:-localhost}
+    CSRF_COOKIE_DOMAIN: ${CSRF_COOKIE_DOMAIN:-localhost}
     # Postgres
     POSTGRES_DB: ${POSTGRES_DB:-ercs}
     POSTGRES_USER: ${POSTGRES_USER:-postgres}
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     POSTGRES_HOST: ${POSTGRES_HOST:-db}
     POSTGRES_PORT: ${POSTGRES_PORT:-5432}
-    # CORS
-    ALLOWED_HOSTS: ${ALLOWED_HOSTS:-*}
-    CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
   env_file:
-    - path: .env
+    - path: ${BACKEND_ENV_FILE:-.env}
       required: false
   extra_hosts:
     - "host.docker.internal:host-gateway"
   volumes:
     - ./:/code/
-    - ipython_data_local:/root/.ipython/profile_default
+    - ipython_data_local:/root/.ipython/profile_default # persist ipython data, including ipython history
   depends_on:
     - db
 
@@ -43,6 +44,7 @@ services:
     command: ["/code/misc/dev/run_web.sh"]
     environment:
       <<: *base_server_environments
+      APP_TYPE: "WEB"
     ports:
       - 127.0.0.1:8000:8000
     depends_on:

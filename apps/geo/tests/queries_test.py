@@ -45,7 +45,7 @@ class TestAdminAreaQueries(TestCase):
             self.Query.ADMIN_AREAS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"level": {"exact": AdminArea.Level.REGION}},
+                "filters": {"level": str(AdminArea.Level.REGION)},
             },
         )
         results = content["data"]["adminAreas"]["results"]
@@ -58,7 +58,7 @@ class TestAdminAreaQueries(TestCase):
             self.Query.ADMIN_AREAS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"pcode": {"exact": "ET"}},
+                "filters": {"pcode": "ET"},
             },
         )
         results = content["data"]["adminAreas"]["results"]

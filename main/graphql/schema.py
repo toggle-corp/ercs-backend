@@ -20,6 +20,7 @@ from apps.teams.graphql import queries as team_queries
 from apps.users.graphql import queries as user_queries
 
 from .context import GraphQLContext
+from .enums import AppEnumCollection, AppEnumCollectionData
 
 
 class CustomAsyncGraphQLView(AsyncGraphQLView):
@@ -41,7 +42,10 @@ class Query(
     emergency_queries.Query,
     gallery_queries.Query,
     team_queries.Query,
-): ...
+):
+    enums: AppEnumCollection = strawberry.field(  # type: ignore[reportGeneralTypeIssues]
+        resolver=lambda: AppEnumCollectionData(),  # noqa: PLW0108
+    )
 
 
 @strawberry.type

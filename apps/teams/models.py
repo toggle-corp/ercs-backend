@@ -1,9 +1,18 @@
 import typing
 
 from django.db import models
+from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import BaseModel
+
+
+class TeamMemberSex(models.IntegerChoices):
+    """Biological sex of a team member."""
+
+    MALE = 10, "Male"
+    FEMALE = 20, "Female"
+    OTHER = 30, "Other"
 
 
 class Team(BaseModel):
@@ -15,17 +24,20 @@ class Team(BaseModel):
     # reverse relation type hints
     members: typing.ClassVar[RelatedManager["TeamMember"]]
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Team"
         verbose_name_plural = "Teams"
         ordering = ["name"]
 
+    @typing.override
     def __str__(self) -> str:
         return self.name
 
 
 class TeamMember(BaseModel):
     """Individual member belonging to a Team."""
+
+    Sex = TeamMemberSex  # convenience alias
 
     team = models.ForeignKey(
         Team,
@@ -36,12 +48,32 @@ class TeamMember(BaseModel):
     position = models.CharField[str, str](max_length=255)
     email = models.EmailField[str | None, str | None](null=True, blank=True)
     phone_number = models.CharField[str | None, str | None](max_length=50, null=True, blank=True)
+    sex: int = IntegerChoicesField(choices_enum=TeamMemberSex, null=True, blank=True)  # type: ignore[reportAssignmentType]
+    region = models.ForeignKey(
+        "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members",
+        help_text="AdminArea at region level (level=20).",
+    )
+    woreda = models.ForeignKey(
+        "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="team_members_by_woreda",
+        help_text="AdminArea at woreda level (level=40).",
+    )
+    training = models.CharField[str | None, str | None](max_length=500, null=True, blank=True)
+    field_of_study = models.CharField[str | None, str | None](max_length=500, null=True, blank=True)
     order = models.PositiveIntegerField[int, int](default=0)
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Team Member"
         verbose_name_plural = "Team Members"
         ordering = ["order", "name"]
 
+    @typing.override
     def __str__(self) -> str:
         return f"{self.name} — {self.position} ({self.team})"

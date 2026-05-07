@@ -1,4 +1,3 @@
-import datetime
 import typing
 import uuid
 
@@ -34,11 +33,12 @@ class GalleryAlbum(BaseModel):
     # reverse relation type hints
     images: typing.ClassVar[RelatedManager["GalleryImage"]]
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Gallery Album"
         verbose_name_plural = "Gallery Albums"
         ordering = ["-created_at"]
 
+    @typing.override
     def __str__(self) -> str:
         return self.title
 
@@ -70,5 +70,6 @@ class GalleryImage(models.Model):
         verbose_name_plural = "Gallery Images"
         ordering = ["order"]
 
+    @typing.override
     def __str__(self) -> str:
         return f"{self.album.title} — {self.caption or f'image {self.order}'}"

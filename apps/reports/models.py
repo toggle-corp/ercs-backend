@@ -9,11 +9,15 @@ from apps.common.models import BaseModel
 
 
 class ReportContentType(models.IntegerChoices):
+    """Determines how the report content is stored and rendered."""
+
     FILE = 10, "File"
     IFRAME = 20, "IFrame"
 
 
 class ReportVisibility(models.IntegerChoices):
+    """Controls who can access the report."""
+
     PUBLIC = 10, "Public"
     PRIVATE = 20, "Private"
 
@@ -23,11 +27,12 @@ class ThematicArea(BaseModel):
 
     name = models.CharField[str, str](max_length=255, unique=True)
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Thematic Area"
         verbose_name_plural = "Thematic Areas"
         ordering = ["name"]
 
+    @typing.override
     def __str__(self) -> str:
         return self.name
 
@@ -49,10 +54,11 @@ class Report(BaseModel):
 
     title = models.CharField[str, str](max_length=500)
     description = models.TextField[str | None, str | None](null=True, blank=True)
-    content_type: int = IntegerChoicesField(choices_enum=ReportContentType)
+    cover_image = models.ImageField(upload_to="reports/covers/", null=True, blank=True)
+    content_type: int = IntegerChoicesField(choices_enum=ReportContentType)  # type: ignore[reportAssignmentType]
     file = models.FileField(upload_to="reports/", null=True, blank=True)
     iframe_url = models.URLField[str | None, str | None](null=True, blank=True)
-    visibility: int = IntegerChoicesField(choices_enum=ReportVisibility, default=ReportVisibility.PUBLIC)
+    visibility: int = IntegerChoicesField(choices_enum=ReportVisibility, default=ReportVisibility.PUBLIC)  # type: ignore[reportAssignmentType]
     thematic_area = models.ForeignKey(
         ThematicArea,
         on_delete=models.PROTECT,
@@ -78,32 +84,32 @@ class Report(BaseModel):
     )
 
     # reverse relation type hints
-    newspost_reports: typing.ClassVar[RelatedManager["apps.content.models.NewsPostReport"]]  # type: ignore[name-defined]
+    newspost_reports: typing.ClassVar[RelatedManager["apps.content.models.NewsPostReport"]]  # type: ignore[name-defined]  # noqa: F821
 
-    class Meta:
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Report"
         verbose_name_plural = "Reports"
         ordering = ["-created_at"]
 
+    @typing.override
     def __str__(self) -> str:
         return self.title
 
+    @typing.override
     def clean(self) -> None:
         if self.content_type == ReportContentType.FILE and not self.file:
             raise ValidationError({"file": "A file is required when content_type is FILE."})
         if self.content_type == ReportContentType.IFRAME and not self.iframe_url:
             raise ValidationError({"iframe_url": "An iframe URL is required when content_type is IFRAME."})
 
+    @typing.override
     def save(self, *args, **kwargs) -> None:
         if self.pk:
             try:
                 previous = Report.objects.get(pk=self.pk)
-                if (
-                    previous.visibility == ReportVisibility.PRIVATE
-                    and self.visibility == ReportVisibility.PUBLIC
-                ):
+                if previous.visibility == ReportVisibility.PRIVATE and self.visibility == ReportVisibility.PUBLIC:
                     raise ValidationError(
-                        "Cannot change visibility from PRIVATE to PUBLIC."
+                        "Cannot change visibility from PRIVATE to PUBLIC.",
                     )
             except Report.DoesNotExist:
                 pass

@@ -1,6 +1,3 @@
-from django.contrib import admin
-
-
 class ReadOnlyMixin:
     """Mixin for models that should never be modified through the admin UI.
 

@@ -1,3 +1,5 @@
+import typing
+
 from rest_framework import serializers
 
 from .models import Report, ReportContentType, ReportVisibility, ThematicArea
@@ -15,6 +17,7 @@ class ReportSerializer(serializers.ModelSerializer):
         fields = [
             "title",
             "description",
+            "cover_image",
             "content_type",
             "file",
             "iframe_url",
@@ -31,25 +34,23 @@ class ReportSerializer(serializers.ModelSerializer):
         }
 
     def validate_visibility(self, value: int) -> int:
-        if (
-            self.instance
-            and self.instance.visibility == ReportVisibility.PRIVATE
-            and value == ReportVisibility.PUBLIC
-        ):
+        if self.instance and self.instance.visibility == ReportVisibility.PRIVATE and value == ReportVisibility.PUBLIC:
             raise serializers.ValidationError("Cannot change visibility from PRIVATE to PUBLIC.")
         return value
 
-    def validate(self, data: dict) -> dict:
-        content_type = data.get("content_type", getattr(self.instance, "content_type", None))
-        file = data.get("file", getattr(self.instance, "file", None))
-        iframe_url = data.get("iframe_url", getattr(self.instance, "iframe_url", None))
+    @typing.override
+    def validate(self, attrs: dict) -> dict:
+        content_type = attrs.get("content_type", getattr(self.instance, "content_type", None))
+        file = attrs.get("file", getattr(self.instance, "file", None))
+        iframe_url = attrs.get("iframe_url", getattr(self.instance, "iframe_url", None))
 
         if content_type == ReportContentType.FILE and not file:
             raise serializers.ValidationError({"file": "A file is required when content_type is FILE."})
         if content_type == ReportContentType.IFRAME and not iframe_url:
             raise serializers.ValidationError({"iframe_url": "An iframe URL is required when content_type is IFRAME."})
-        return data
+        return attrs
 
+    @typing.override
     def create(self, validated_data: dict) -> Report:
         request = self.context.get("request")
         if request and hasattr(request, "user") and request.user.is_authenticated:

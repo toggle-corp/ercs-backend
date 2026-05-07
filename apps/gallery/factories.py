@@ -1,6 +1,4 @@
-import typing
-
-from factory import Sequence, SubFactory
+from factory.declarations import Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from apps.users.factories import UserFactory
@@ -8,22 +6,17 @@ from apps.users.factories import UserFactory
 from .models import GalleryAlbum, GalleryImage
 
 
-class GalleryAlbumFactory(DjangoModelFactory):
+class GalleryAlbumFactory(DjangoModelFactory[GalleryAlbum]):
     title = Sequence(lambda n: f"Album {n}")
     created_by = SubFactory(UserFactory)
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         model = GalleryAlbum
 
 
-class GalleryImageFactory(DjangoModelFactory):
+class GalleryImageFactory(DjangoModelFactory[GalleryImage]):
     album = SubFactory(GalleryAlbumFactory)
     order = Sequence(lambda n: n)
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         model = GalleryImage
-
-
-if typing.TYPE_CHECKING:
-    GalleryAlbumFactory: type[DjangoModelFactory[GalleryAlbum]]
-    GalleryImageFactory: type[DjangoModelFactory[GalleryImage]]

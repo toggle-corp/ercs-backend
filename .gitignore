@@ -3,6 +3,9 @@ wheels/
 .ruff_cache
 tmp/
 
+# CI artefacts
+ci-share/
+
 # Virtual environments
 .venv
 
@@ -158,3 +161,5 @@ deploy/eb/
 .mypy-dep/
 .mypy_cache/
 .claude/
+
+CLAUDE.md

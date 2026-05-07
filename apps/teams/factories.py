@@ -1,18 +1,11 @@
-import typing
-
-from factory import Sequence
+from factory.declarations import Sequence
 from factory.django import DjangoModelFactory
 
 from .models import Team
 
 
-class TeamFactory(DjangoModelFactory):
+class TeamFactory(DjangoModelFactory[Team]):
     name = Sequence(lambda n: f"Team {n}")
-    team_type = "BDRT"
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         model = Team
-
-
-if typing.TYPE_CHECKING:
-    TeamFactory: type[DjangoModelFactory[Team]]

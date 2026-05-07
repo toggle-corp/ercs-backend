@@ -1,6 +1,4 @@
-import typing
-
-from factory import Sequence, SubFactory
+from factory.declarations import Sequence, SubFactory
 from factory.django import DjangoModelFactory
 
 from apps.users.factories import UserFactory
@@ -8,23 +6,18 @@ from apps.users.factories import UserFactory
 from .models import NewsPost, NewsPostReport
 
 
-class NewsPostFactory(DjangoModelFactory):
+class NewsPostFactory(DjangoModelFactory[NewsPost]):
     title = Sequence(lambda n: f"News Post {n}")
     content = "Default content in **markdown**."
     author = SubFactory(UserFactory)
     is_published = False
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         model = NewsPost
 
 
-class NewsPostReportFactory(DjangoModelFactory):
+class NewsPostReportFactory(DjangoModelFactory[NewsPostReport]):
     order = Sequence(lambda n: n)
 
-    class Meta:
+    class Meta:  # type: ignore[misc]
         model = NewsPostReport
-
-
-if typing.TYPE_CHECKING:
-    NewsPostFactory: type[DjangoModelFactory[NewsPost]]
-    NewsPostReportFactory: type[DjangoModelFactory[NewsPostReport]]

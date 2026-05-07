@@ -45,7 +45,7 @@ class TestNewsPostQueries(TestCase):
             self.Query.NEWS_POSTS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"isPublished": {"exact": True}},
+                "filters": {"isPublished": True},
             },
         )
         results = content["data"]["newsPosts"]["results"]

@@ -18,15 +18,20 @@ dependencies = [
     "gunicorn>=23.0",
     "uvicorn>=0.34",
     "django-stubs-ext>=5.0",
+    "requests>=2.33.1",
 ]
 
 [dependency-groups]
 dev = [
     "pytest-django>=4.9",
+    "pytest-cov>=6.0",
     "django-debug-toolbar>=4.3",
     "django-stubs>=5.0",
     "ipython>=8.0",
     "factory-boy>=3.3",
+    "pre-commit",
+    "pyright",
+    "ruff",
 ]
 
 [tool.uv]
@@ -35,6 +40,136 @@ package = false
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"
 log_cli = true
+
+[tool.ruff]
+line-length = 125
+extend-exclude = [
+    ".git",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    ".venv",
+    "venv",
+    "**/migrations/*",
+    "__pycache__",
+]
+
+[tool.ruff.lint]
+flake8-builtins.builtins-strict-checking = false
+ignore = [
+    "D100",    # Missing docstring in public module
+    "D102",    # Missing docstring in public method
+    "D103",    # Missing docstring in public function
+    "D104",    # Missing docstring in public package
+    "D105",    # Missing docstring in magic method
+    "D106",    # Missing docstring in public nested class
+    "D107",    # Missing docstring in __init__
+    "D205",    # 1 blank line required between summary line and description
+    "D401",    # First line should be in imperative mood
+    "G201",    # Logging .exception should use exc_info=True
+    "PLC0415", # Import should be at top of module
+    "A002",    # Argument shadows a builtin
+    "S608",    # Possible SQL injection via string-based query construction
+    "DJ001",   # Avoid using null=True on string-based fields
+    "C901",    # Function is too complex
+    "BLE001",  # Avoid blind exception catching
+]
+extend-select = [
+    "I",   # isort
+    "E",   # pycodestyle
+    "F",   # pyflakes
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "W",   # pycodestyle
+    "DJ",  # flake8-django
+    "COM", # flake8-commas
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "LOG", # flake8-logging
+    "G",   # flake8-logging-format
+    "T20", # flake8-print
+    "TID", # flake8-tidy-imports
+    "PT",  # flake8-pytest-style
+    "Q",   # flake8-quotes
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TC",  # flake8-type-checking
+    "PTH", # flake8-use-pathlib
+    "UP",  # pyupgrade
+    "D",   # pydocstyle
+    "ASYNC", # flake8-async
+    "S",   # flake8-bandit
+    "BLE", # blind-except
+    "FA",  # flake8-future-annotations
+    "INP", # flake8-no-pep420
+    "PIE", # flake8-pie
+    "RSE", # flake8-raise
+    "SLOT", # flake8-slots
+    "FLY", # flynt
+    "C90", # mccabe
+    "PGH", # pygrep-hooks
+    "PLC", # Convention
+    "PLE", # Error
+    "PLW", # Warning
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]
+"**/tests/*.py" = ["S101"]
+"!./apps/**/models.py" = ["D101"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.14"
+exclude = [
+    "**/__pycache__",
+    ".venv/",
+    "**/migrations/*.py",
+]
+typeCheckingMode = "standard"
+analyzeUnannotatedFunctions = true
+enableReachabilityAnalysis = true
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
+reportCallInDefaultInitializer = "information"
+reportConstantRedefinition = "error"
+reportDeprecated = "information"
+reportDuplicateImport = "warning"
+reportImplicitOverride = "error"
+reportImplicitStringConcatenation = "none"
+reportImportCycles = "none"
+reportInconsistentConstructor = "warning"
+reportMatchNotExhaustive = "warning"
+reportMissingImports = "error"
+reportMissingParameterType = "warning"
+reportMissingTypeArgument = "warning"
+reportMissingTypeStubs = "warning"
+reportPrivateUsage = "error"
+reportPropertyTypeMismatch = "error"
+reportShadowedImports = "error"
+reportUninitializedInstanceVariable = "warning"
+reportUnknownArgumentType = "none"
+reportUnknownLambdaType = "none"
+reportUnknownMemberType = "none"
+reportUnknownParameterType = "none"
+reportUnknownVariableType = "none"
+reportUnnecessaryCast = "warning"
+reportUnnecessaryComparison = "warning"
+reportUnnecessaryContains = "warning"
+reportUnnecessaryIsInstance = "warning"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportUntypedBaseClass = "warning"
+reportUntypedClassDecorator = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportUntypedNamedTuple = "warning"
+reportUnusedClass = "warning"
+reportUnusedExpression = "warning"
+reportUnusedFunction = "warning"
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"
+reportPrivateImportUsage = "error"
 
 [tool.mypy]
 plugins = ["mypy_django_plugin.main"]
