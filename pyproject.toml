@@ -18,6 +18,7 @@ dependencies = [
     "gunicorn>=23.0",
     "uvicorn>=0.34",
     "django-stubs-ext>=5.0",
+    "requests>=2.33.1",
 ]
 
 [dependency-groups]
