@@ -26,7 +26,7 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
     @typing.override
     def create(self, validated_data: dict) -> ExternalDashboard:
         request = self.context.get("request")
-        if request and hasattr(request, "user") and request.user.is_authenticated:
+        if request and hasattr(request, "user"):
             validated_data.setdefault("created_by", request.user)
         return super().create(validated_data)
 
@@ -38,7 +38,7 @@ class CapacityAndResourceIframeUrlSerializer(serializers.ModelSerializer):
 
 
 class CapacityAndResourceSerializer(serializers.ModelSerializer):
-    iframe_urls = CapacityAndResourceIframeUrlSerializer(many=True, required=False)
+    iframe_urls = CapacityAndResourceIframeUrlSerializer(many=True, required=True)
 
     class Meta:
         model = CapacityAndResource
@@ -56,14 +56,23 @@ class CapacityAndResourceSerializer(serializers.ModelSerializer):
         }
 
     @typing.override
+    def validate(self, attrs: dict) -> dict:
+        if not self.instance:
+            iframe_urls = attrs.get("iframe_urls", [])
+            if not iframe_urls:
+                raise serializers.ValidationError({"iframe_urls": "At least one iframe URL is required."})
+        return attrs
+
+    @typing.override
     def create(self, validated_data: dict) -> CapacityAndResource:
         request = self.context.get("request")
         iframe_urls_data = validated_data.pop("iframe_urls", [])
-        if request and hasattr(request, "user") and request.user.is_authenticated:
+        if request and hasattr(request, "user"):
             validated_data.setdefault("created_by", request.user)
         instance = super().create(validated_data)
-        for item in iframe_urls_data:
-            CapacityAndResourceIframeUrl.objects.create(capacity_and_resource=instance, **item)
+        CapacityAndResourceIframeUrl.objects.bulk_create(
+            [CapacityAndResourceIframeUrl(capacity_and_resource=instance, **item) for item in iframe_urls_data],
+        )
         return instance
 
     @typing.override
@@ -72,6 +81,7 @@ class CapacityAndResourceSerializer(serializers.ModelSerializer):
         instance = super().update(instance, validated_data)
         if iframe_urls_data is not None:
             instance.iframe_urls.all().delete()
-            for item in iframe_urls_data:
-                CapacityAndResourceIframeUrl.objects.create(capacity_and_resource=instance, **item)
+            CapacityAndResourceIframeUrl.objects.bulk_create(
+                [CapacityAndResourceIframeUrl(capacity_and_resource=instance, **item) for item in iframe_urls_data],
+            )
         return instance

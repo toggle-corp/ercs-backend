@@ -71,7 +71,7 @@ class CapacityAndResource(BaseModel):
         related_name="capacity_and_resource",
     )
     is_active = models.BooleanField[bool, bool](default=True)
-    order = models.PositiveIntegerField[int, int](default=0)
+    order = models.PositiveIntegerField[int, int](unique=True, default=1)
     created_by = models.ForeignKey(
         "users.User",
         on_delete=models.PROTECT,
@@ -108,13 +108,16 @@ class CapacityAndResourceIframeUrl(BaseModel):
         limit_choices_to={"page": DashboardPage.CAPACITY_RESOURCES},
     )
     dashboard_id: int
-    order = models.PositiveIntegerField[int, int](default=0)
+    order = models.PositiveIntegerField[int, int](default=1)
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Capacity And Resource Iframe URL"
         verbose_name_plural = "Capacity And Resource Iframe URLs"
         ordering = ["order"]
-        unique_together = [["capacity_and_resource", "dashboard"]]
+        unique_together = [
+            ["capacity_and_resource", "dashboard"],
+            ["capacity_and_resource", "order"],
+        ]
 
     @typing.override
     def __str__(self) -> str:

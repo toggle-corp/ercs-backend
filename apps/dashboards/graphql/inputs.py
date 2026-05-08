@@ -38,7 +38,7 @@ class CapacityAndResourceCreateInput:
     region: strawberry.ID | None = strawberry.UNSET
     is_active: bool = True
     order: int = 0
-    iframe_urls: list[CapacityAndResourceIframeUrlInput] = strawberry.UNSET
+    iframe_urls: list[CapacityAndResourceIframeUrlInput] = strawberry.field(default_factory=list)
 
 
 @strawberry.input

@@ -101,7 +101,7 @@ input CapacityAndResourceCreateInput {
   region: ID
   isActive: Boolean! = true
   order: Int! = 0
-  iframeUrls: [CapacityAndResourceIframeUrlInput!]!
+  iframeUrls: [CapacityAndResourceIframeUrlInput!]! = []
 }
 
 """Links multiple ExternalDashboards to a Capacity & Resources entry."""
