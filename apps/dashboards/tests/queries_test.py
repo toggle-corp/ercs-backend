@@ -2,7 +2,7 @@
 import typing
 
 from apps.dashboards.factories import CapacityAndResourceFactory, ExternalDashboardFactory
-from apps.dashboards.models import CapacityAndResourceIframeUrl, ExternalDashboard
+from apps.dashboards.models import ExternalDashboard
 from apps.users.factories import UserFactory
 from main.tests import TestCase
 
@@ -80,20 +80,16 @@ class TestCapacityAndResourceQueries(TestCase):
                         description
                         isActive
                         order
-                        iframeUrls {
-                            id
-                            order
-                            dashboard {
+                        createdAt
+                        dashboards {
                                 id
                                 title
                                 url
                                 page
                             }
                         }
-                        createdAt
                     }
                 }
-            }
         """
 
     @typing.override
@@ -112,8 +108,11 @@ class TestCapacityAndResourceQueries(TestCase):
         )
 
         cls.capacity_1 = CapacityAndResourceFactory.create(order=0, is_active=True)
+        cls.capacity_1.dashboards.set([cls.dashboard_1])
         cls.capacity_2 = CapacityAndResourceFactory.create(order=1, is_active=True)
+        cls.capacity_2.dashboards.set([cls.dashboard_2])
         cls.capacity_inactive = CapacityAndResourceFactory.create(order=2, is_active=False)
+        cls.capacity_inactive.dashboards.set([cls.dashboard_1])
 
     def test_all_capacity_and_resources(self):
         content = self.query_check(
@@ -143,30 +142,6 @@ class TestCapacityAndResourceQueries(TestCase):
         results = content["data"]["capacityAndResources"]["results"]
         assert len(results) == 1
         assert results[0]["title"] == self.capacity_1.title
-
-    def test_iframe_urls(self):
-        CapacityAndResourceIframeUrl.objects.create(
-            capacity_and_resource=self.capacity_1,
-            dashboard=self.dashboard_1,
-            order=0,
-        )
-        CapacityAndResourceIframeUrl.objects.create(
-            capacity_and_resource=self.capacity_1,
-            dashboard=self.dashboard_2,
-            order=1,
-        )
-
-        content = self.query_check(
-            self.Query.CAPACITY_AND_RESOURCES,
-            variables={
-                "pagination": {"limit": 10, "offset": 0},
-                "filters": {"id": str(self.capacity_1.id)},
-            },
-        )
-        results = content["data"]["capacityAndResources"]["results"]
-        assert len(results) == 1
-        assert len(results[0]["iframeUrls"]) == 2
-        assert results[0]["iframeUrls"][0]["dashboard"]["page"] == ExternalDashboard.Page.CAPACITY_RESOURCES
 
     def test_pagination(self):
         content = self.query_check(

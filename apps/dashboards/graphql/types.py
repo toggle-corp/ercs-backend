@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.dashboards.models import CapacityAndResource, CapacityAndResourceIframeUrl, ExternalDashboard
+from apps.dashboards.models import CapacityAndResource, ExternalDashboard
 
 
 @strawberry_django.type(ExternalDashboard)
@@ -20,13 +20,6 @@ class ExternalDashboardType:
     updated_at: strawberry.auto
 
 
-@strawberry_django.type(CapacityAndResourceIframeUrl)
-class CapacityAndResourceIframeUrlType:
-    id: strawberry.ID
-    dashboard: ExternalDashboardType
-    order: strawberry.auto
-
-
 @strawberry_django.type(CapacityAndResource)
 class CapacityAndResourceType:
     id: strawberry.ID
@@ -35,7 +28,7 @@ class CapacityAndResourceType:
     region_id: strawberry.ID | None
     is_active: strawberry.auto
     order: strawberry.auto
-    iframe_urls: list[CapacityAndResourceIframeUrlType]
+    dashboards: list[ExternalDashboardType] | None
     created_by_id: strawberry.ID
     created_at: strawberry.auto
     updated_at: strawberry.auto

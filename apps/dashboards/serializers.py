@@ -2,7 +2,9 @@ import typing
 
 from rest_framework import serializers
 
-from .models import CapacityAndResource, CapacityAndResourceIframeUrl, ExternalDashboard
+from apps.geo.models import AdminArea
+
+from .models import CapacityAndResource, DashboardPage, ExternalDashboard
 
 
 class ExternalDashboardSerializer(serializers.ModelSerializer):
@@ -31,57 +33,51 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class CapacityAndResourceIframeUrlSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CapacityAndResourceIframeUrl
-        fields = ["id", "dashboard", "order"]
-
-
 class CapacityAndResourceSerializer(serializers.ModelSerializer):
-    iframe_urls = CapacityAndResourceIframeUrlSerializer(many=True, required=True)
+    dashboards = serializers.PrimaryKeyRelatedField(
+        queryset=ExternalDashboard.objects.filter(
+            page=DashboardPage.CAPACITY_RESOURCES,
+        ),
+        many=True,
+        write_only=True,
+        required=True,
+    )
+
+    region = serializers.PrimaryKeyRelatedField(
+        queryset=AdminArea.objects.all(),
+        required=False,
+        write_only=True,
+    )
 
     class Meta:
         model = CapacityAndResource
         fields = [
+            "id",
             "title",
             "description",
             "region",
             "is_active",
             "order",
-            "iframe_urls",
-            "created_by",
+            "dashboards",
         ]
-        extra_kwargs = {
-            "created_by": {"required": False},
-        }
 
     @typing.override
-    def validate(self, attrs: dict) -> dict:
-        if not self.instance:
-            iframe_urls = attrs.get("iframe_urls", [])
-            if not iframe_urls:
-                raise serializers.ValidationError({"iframe_urls": "At least one iframe URL is required."})
-        return attrs
-
-    @typing.override
-    def create(self, validated_data: dict) -> CapacityAndResource:
-        request = self.context.get("request")
-        iframe_urls_data = validated_data.pop("iframe_urls", [])
-        if request and hasattr(request, "user"):
-            validated_data.setdefault("created_by", request.user)
-        instance = super().create(validated_data)
-        CapacityAndResourceIframeUrl.objects.bulk_create(
-            [CapacityAndResourceIframeUrl(capacity_and_resource=instance, **item) for item in iframe_urls_data],
+    def create(self, validated_data: dict[str, typing.Any]) -> CapacityAndResource:
+        request = self.context["request"]
+        dashboards = validated_data.pop("dashboards")
+        capacity_resource = CapacityAndResource.objects.create(
+            created_by=request.user,
+            **validated_data,
         )
-        return instance
+        capacity_resource.dashboards.add(*dashboards)
+        return capacity_resource
 
     @typing.override
-    def update(self, instance: CapacityAndResource, validated_data: dict) -> CapacityAndResource:
-        iframe_urls_data = validated_data.pop("iframe_urls", None)
-        instance = super().update(instance, validated_data)
-        if iframe_urls_data is not None:
-            instance.iframe_urls.all().delete()
-            CapacityAndResourceIframeUrl.objects.bulk_create(
-                [CapacityAndResourceIframeUrl(capacity_and_resource=instance, **item) for item in iframe_urls_data],
-            )
+    def update(self, instance: CapacityAndResource, validated_data: dict[str, typing.Any]) -> CapacityAndResource:
+        dashboards = validated_data.pop("dashboards", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        if dashboards is not None:
+            instance.dashboards.set(dashboards)
         return instance

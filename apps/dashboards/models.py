@@ -1,9 +1,7 @@
 import typing
 
-from django.core.exceptions import ValidationError
 from django.db import models
 from django_choices_field import IntegerChoicesField
-from django_stubs_ext.db.models.manager import RelatedManager
 
 from apps.common.models import BaseModel
 
@@ -40,7 +38,7 @@ class ExternalDashboard(BaseModel):
         default=False,
         help_text="Surface this dashboard as a quick link on the homepage.",
     )
-    order = models.PositiveIntegerField[int, int](default=0)
+    order = models.PositiveIntegerField[int, int](default=1)
     is_active = models.BooleanField[bool, bool](default=True)
     created_by = models.ForeignKey(
         "users.User",
@@ -70,16 +68,18 @@ class CapacityAndResource(BaseModel):
         on_delete=models.SET_NULL,
         related_name="capacity_and_resource",
     )
-    is_active = models.BooleanField[bool, bool](default=True)
+    is_active = models.BooleanField[bool, bool](default=False)
     order = models.PositiveIntegerField[int, int](unique=True, default=1)
     created_by = models.ForeignKey(
         "users.User",
         on_delete=models.PROTECT,
         related_name="created_capacity_and_resource",
     )
-
-    # reverse relation type hints
-    iframe_urls: typing.ClassVar[RelatedManager["CapacityAndResourceIframeUrl"]]
+    dashboards = models.ManyToManyField(
+        "ExternalDashboard",
+        related_name="capacity_resource_dashboard",
+        blank=True,
+    )
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Capacity And Resource"
@@ -89,43 +89,3 @@ class CapacityAndResource(BaseModel):
     @typing.override
     def __str__(self) -> str:
         return self.title
-
-
-class CapacityAndResourceIframeUrl(BaseModel):
-    """Through model linking ExternalDashboard to CapacityAndResource.
-    Only allows ExternalDashboards with page = CAPACITY_RESOURCES.
-    """
-
-    capacity_and_resource = models.ForeignKey(
-        "CapacityAndResource",
-        on_delete=models.CASCADE,
-        related_name="iframe_urls",
-    )
-    dashboard = models.ForeignKey(
-        "ExternalDashboard",
-        on_delete=models.PROTECT,
-        related_name="capacity_and_resource_iframe_urls",
-        limit_choices_to={"page": DashboardPage.CAPACITY_RESOURCES},
-    )
-    dashboard_id: int
-    order = models.PositiveIntegerField[int, int](default=1)
-
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
-        verbose_name = "Capacity And Resource Iframe URL"
-        verbose_name_plural = "Capacity And Resource Iframe URLs"
-        ordering = ["order"]
-        unique_together = [
-            ["capacity_and_resource", "dashboard"],
-            ["capacity_and_resource", "order"],
-        ]
-
-    @typing.override
-    def __str__(self) -> str:
-        return f"{self.capacity_and_resource} → {self.dashboard}"
-
-    @typing.override
-    def clean(self) -> None:
-        if self.dashboard_id and self.dashboard.page != DashboardPage.CAPACITY_RESOURCES:
-            raise ValidationError(
-                {"dashboard": "Only dashboards with page 'Capacity & Resources' are allowed here."},
-            )

@@ -95,13 +95,14 @@ type AppEnumCollectionUserRole {
   value: Int!
 }
 
+"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
 input CapacityAndResourceCreateInput {
   title: String!
   description: String
   region: ID
-  isActive: Boolean! = true
-  order: Int! = 0
-  iframeUrls: [CapacityAndResourceIframeUrlInput!]! = []
+  isActive: Boolean
+  order: Int!
+  dashboards: [ID!]!
 }
 
 """Links multiple ExternalDashboards to a Capacity & Resources entry."""
@@ -114,21 +115,6 @@ input CapacityAndResourceFilter {
   NOT: CapacityAndResourceFilter
   DISTINCT: Boolean
   search: String
-}
-
-input CapacityAndResourceIframeUrlInput {
-  dashboard: ID!
-  order: Int! = 0
-}
-
-"""
-Through model linking ExternalDashboard to CapacityAndResource.
-Only allows ExternalDashboards with page = CAPACITY_RESOURCES.
-"""
-type CapacityAndResourceIframeUrlType {
-  id: ID!
-  dashboard: ExternalDashboardType!
-  order: Int!
 }
 
 input CapacityAndResourceOrder @oneOf {
@@ -144,7 +130,7 @@ type CapacityAndResourceType {
   regionId: ID
   isActive: Boolean!
   order: Int!
-  iframeUrls: [CapacityAndResourceIframeUrlType!]!
+  dashboards: [ExternalDashboardType!]
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
@@ -166,13 +152,14 @@ type CapacityAndResourceTypeOffsetPaginated {
   results: [CapacityAndResourceType!]!
 }
 
+"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
 input CapacityAndResourceUpdateInput {
   title: String
   description: String
-  region: ID
   isActive: Boolean
   order: Int
-  iframeUrls: [CapacityAndResourceIframeUrlInput!]
+  region: ID
+  dashboards: [ID!]
 }
 
 union CreateCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo

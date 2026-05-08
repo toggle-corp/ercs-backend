@@ -1,4 +1,7 @@
 import strawberry
+import strawberry_django
+
+from apps.dashboards.models import CapacityAndResource
 
 
 @strawberry.input
@@ -25,27 +28,21 @@ class ExternalDashboardUpdateInput:
     is_active: bool | None = strawberry.UNSET
 
 
-@strawberry.input
-class CapacityAndResourceIframeUrlInput:
-    dashboard: strawberry.ID
-    order: int = 0
-
-
-@strawberry.input
+@strawberry_django.input(CapacityAndResource)
 class CapacityAndResourceCreateInput:
-    title: str
-    description: str | None = strawberry.UNSET
+    title: strawberry.auto
+    description: strawberry.auto
     region: strawberry.ID | None = strawberry.UNSET
-    is_active: bool = True
-    order: int = 0
-    iframe_urls: list[CapacityAndResourceIframeUrlInput] = strawberry.field(default_factory=list)
+    is_active: strawberry.auto
+    order: int
+    dashboards: list[strawberry.ID]
 
 
-@strawberry.input
+@strawberry_django.partial(CapacityAndResource)
 class CapacityAndResourceUpdateInput:
-    title: str | None = strawberry.UNSET
-    description: str | None = strawberry.UNSET
+    title: strawberry.auto
+    description: strawberry.auto
+    is_active: strawberry.auto
+    order: strawberry.auto
     region: strawberry.ID | None = strawberry.UNSET
-    is_active: bool | None = strawberry.UNSET
-    order: int | None = strawberry.UNSET
-    iframe_urls: list[CapacityAndResourceIframeUrlInput] | None = strawberry.UNSET
+    dashboards: list[strawberry.ID] | None = strawberry.UNSET
