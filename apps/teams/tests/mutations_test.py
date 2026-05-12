@@ -10,18 +10,16 @@ class TestTeamMutations(TestCase):
         CREATE_TEAM = """
             mutation CreateTeam($data: TeamCreateInput!) {
                 createTeam(data: $data) {
-                    ... on TeamTypeMutationResponseType{
-
-
-                    ok
-                    errors
-                    result {
-                        id
-                        name
+                    ... on TeamTypeMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            name
+                        }
                     }
                 }
             }
-        }
         """
 
         UPDATE_TEAM = """
@@ -45,7 +43,7 @@ class TestTeamMutations(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.staff = UserFactory.create(role=User.Role.STAFF)
+        cls.staff = UserFactory.create(is_staff=True, role=User.Role.STAFF)
         cls.viewer = UserFactory.create(role=User.Role.VIEWER)
 
     def test_create_team(self):

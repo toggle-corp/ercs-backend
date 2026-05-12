@@ -3,7 +3,7 @@ from factory.django import DjangoModelFactory
 
 from apps.users.factories import UserFactory
 
-from .models import ExternalDashboard
+from .models import CapacityAndResource, ExternalDashboard
 
 
 class ExternalDashboardFactory(DjangoModelFactory[ExternalDashboard]):
@@ -16,3 +16,13 @@ class ExternalDashboardFactory(DjangoModelFactory[ExternalDashboard]):
 
     class Meta:  # type: ignore[misc]
         model = ExternalDashboard
+
+
+class CapacityAndResourceFactory(DjangoModelFactory[CapacityAndResource]):
+    title = Sequence(lambda n: f"Capacity And Resource {n}")
+    is_active = True
+    order = 0
+    created_by = SubFactory(UserFactory)
+
+    class Meta:  # type: ignore[misc]
+        model = CapacityAndResource
