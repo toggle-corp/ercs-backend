@@ -467,6 +467,8 @@ type GalleryImageTypeOffsetPaginated {
 }
 
 type Mutation {
+  login(email: String!, password: String!): UserMeType!
+  logout: Boolean!
   createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
   createReport(data: ReportCreateInput!): CreateReportPayload!
   updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
