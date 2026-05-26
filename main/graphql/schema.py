@@ -17,6 +17,7 @@ from apps.reports.graphql import mutations as report_mutations
 from apps.reports.graphql import queries as report_queries
 from apps.teams.graphql import mutations as team_mutations
 from apps.teams.graphql import queries as team_queries
+from apps.users.graphql import mutations as user_mutations
 from apps.users.graphql import queries as user_queries
 
 from .context import GraphQLContext
@@ -50,6 +51,7 @@ class Query(
 
 @strawberry.type
 class Mutation(
+    user_mutations.Mutation,
     report_mutations.Mutation,
     content_mutations.Mutation,
     dashboard_mutations.Mutation,
