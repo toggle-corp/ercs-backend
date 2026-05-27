@@ -4,14 +4,16 @@ import strawberry
 
 from apps.dashboards.models import DashboardPage
 from apps.geo.models import AdminAreaLevel
-from apps.reports.models import ReportContentType, ReportVisibility
+from apps.reports.models import LinkType, ReportContentType, ReportType, ReportVisibility
 from apps.teams.models import TeamMemberSex
 from apps.users.models import UserRole
 
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     AdminAreaLevel,
     UserRole,
+    LinkType,
     ReportContentType,
+    ReportType,
     ReportVisibility,
     DashboardPage,
     TeamMemberSex,

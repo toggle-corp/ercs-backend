@@ -11,6 +11,11 @@ class UserType:
     full_name: strawberry.auto
     role: int
     region_id: strawberry.ID | None
+
+    @strawberry.field
+    def role_display(self) -> str:
+        return self.get_role_display()  # type: ignore[reportAttributeAccessIssue]
+
     is_active: strawberry.auto
     mfa_enabled: strawberry.auto
     created_at: strawberry.auto

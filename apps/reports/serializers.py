@@ -2,7 +2,13 @@ import typing
 
 from rest_framework import serializers
 
-from .models import Report, ReportContentType, ReportVisibility, ThematicArea
+from .models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+
+
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Link
+        fields = ["title", "description", "url", "link_type"]
 
 
 class ThematicAreaSerializer(serializers.ModelSerializer):
@@ -22,6 +28,7 @@ class ReportSerializer(serializers.ModelSerializer):
             "file",
             "iframe_url",
             "visibility",
+            "report_type",
             "thematic_area",
             "region",
             "disaster_type",

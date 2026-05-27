@@ -1,8 +1,23 @@
 import strawberry
 import strawberry_django
 
-from apps.reports.models import Report, ThematicArea
+from apps.reports.models import Link, Report, ThematicArea
 from utils.graphql.types import DjangoFileType
+
+
+@strawberry_django.type(Link)
+class LinkType:
+    id: strawberry.ID
+    title: strawberry.auto
+    description: strawberry.auto
+    url: strawberry.auto
+    link_type: int
+    created_at: strawberry.auto
+    updated_at: strawberry.auto
+
+    @strawberry.field
+    def link_type_display(self) -> str:
+        return self.get_link_type_display()  # type: ignore[reportAttributeAccessIssue]
 
 
 @strawberry_django.type(ThematicArea)
@@ -23,7 +38,21 @@ class ReportType:
     file: DjangoFileType | None
     iframe_url: strawberry.auto
     visibility: int
+    report_type: int
     thematic_area_id: strawberry.ID
+
+    @strawberry.field
+    def content_type_display(self) -> str:
+        return self.get_content_type_display()  # type: ignore[reportAttributeAccessIssue]
+
+    @strawberry.field
+    def visibility_display(self) -> str:
+        return self.get_visibility_display()  # type: ignore[reportAttributeAccessIssue]
+
+    @strawberry.field
+    def report_type_display(self) -> str:
+        return self.get_report_type_display()  # type: ignore[reportAttributeAccessIssue]
+
     region_id: strawberry.ID | None
     disaster_type: strawberry.auto
     owner: strawberry.auto

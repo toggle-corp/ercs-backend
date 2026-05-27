@@ -2,9 +2,11 @@ import strawberry
 import strawberry_django
 from strawberry_django.pagination import OffsetPaginated
 
-from .filters import ReportFilter, ThematicAreaFilter
-from .orders import ReportOrder
-from .types import ReportType, ThematicAreaType
+from main.graphql.permissions import IsAuthenticated
+
+from .filters import LinkFilter, ReportFilter, ThematicAreaFilter
+from .orders import LinkOrder, ReportOrder
+from .types import LinkType, ReportType, ThematicAreaType
 
 
 @strawberry.type
@@ -19,3 +21,16 @@ class Query:
     )
 
     report: ReportType = strawberry_django.field()
+
+    public_links: OffsetPaginated[LinkType] = strawberry_django.offset_paginated(
+        filters=LinkFilter,
+        order=LinkOrder,
+    )
+
+    internal_links: OffsetPaginated[LinkType] = strawberry_django.offset_paginated(
+        filters=LinkFilter,
+        order=LinkOrder,
+        permission_classes=[IsAuthenticated],
+    )
+
+    link: LinkType = strawberry_django.field()

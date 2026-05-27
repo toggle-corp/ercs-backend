@@ -15,11 +15,28 @@ class ReportContentType(models.IntegerChoices):
     IFRAME = 20, "IFrame"
 
 
+class ReportType(models.IntegerChoices):
+    """Categorises the kind of report."""
+
+    REPORT = 10, "Report"
+    MANUAL = 20, "Manual"
+    POLICY = 30, "Policy"
+    GUIDELINE = 40, "Guideline"
+    ONLINE_INTERACTIVE = 50, "Online Interactive"
+
+
 class ReportVisibility(models.IntegerChoices):
     """Controls who can access the report."""
 
     PUBLIC = 10, "Public"
     PRIVATE = 20, "Private"
+
+
+class LinkType(models.IntegerChoices):
+    """Distinguishes internal resources from external ones."""
+
+    INTERNAL = 10, "Internal"
+    EXTERNAL = 20, "External"
 
 
 class ThematicArea(BaseModel):
@@ -51,6 +68,7 @@ class Report(BaseModel):
 
     ContentType = ReportContentType  # convenience alias
     Visibility = ReportVisibility  # convenience alias
+    ReportType = ReportType  # convenience alias
 
     title = models.CharField[str, str](max_length=500)
     description = models.TextField[str | None, str | None](null=True, blank=True)
@@ -59,6 +77,7 @@ class Report(BaseModel):
     file = models.FileField(upload_to="reports/", null=True, blank=True)
     iframe_url = models.URLField[str | None, str | None](null=True, blank=True)
     visibility: int = IntegerChoicesField(choices_enum=ReportVisibility, default=ReportVisibility.PUBLIC)  # type: ignore[reportAssignmentType]
+    report_type: int = IntegerChoicesField(choices_enum=ReportType, default=ReportType.REPORT)  # type: ignore[reportAssignmentType]
     thematic_area = models.ForeignKey(
         ThematicArea,
         on_delete=models.PROTECT,
@@ -114,3 +133,23 @@ class Report(BaseModel):
             except Report.DoesNotExist:
                 pass
         super().save(*args, **kwargs)
+
+
+class Link(BaseModel):
+    """Internal or external resource links associated with reports."""
+
+    LinkType = LinkType  # convenience alias
+
+    title = models.CharField[str, str](max_length=500)
+    description = models.TextField[str | None, str | None](null=True, blank=True)
+    url = models.URLField[str, str](max_length=2000)
+    link_type: int = IntegerChoicesField(choices_enum=LinkType)  # type: ignore[reportAssignmentType]
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        verbose_name = "Link"
+        verbose_name_plural = "Links"
+        ordering = ["title"]
+
+    @typing.override
+    def __str__(self) -> str:
+        return self.title

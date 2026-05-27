@@ -3,7 +3,7 @@ from factory.django import DjangoModelFactory
 
 from apps.users.factories import UserFactory
 
-from .models import Report, ThematicArea
+from .models import Link, Report, ThematicArea
 
 
 class ThematicAreaFactory(DjangoModelFactory[ThematicArea]):
@@ -18,11 +18,21 @@ class ReportFactory(DjangoModelFactory[Report]):
     content_type = Report.ContentType.IFRAME
     iframe_url = Sequence(lambda n: f"https://example.com/embed/{n}")
     visibility = Report.Visibility.PUBLIC
+    report_type = Report.ReportType.REPORT
     uploaded_by = SubFactory(UserFactory)
     thematic_area = SubFactory(ThematicAreaFactory)
 
     class Meta:  # type: ignore[misc]
         model = Report
+
+
+class LinkFactory(DjangoModelFactory[Link]):
+    title = Sequence(lambda n: f"Link {n}")
+    url = Sequence(lambda n: f"https://example.com/link/{n}")
+    link_type = Link.LinkType.EXTERNAL
+
+    class Meta:  # type: ignore[misc]
+        model = Link
 
 
 class FileReportFactory(ReportFactory):

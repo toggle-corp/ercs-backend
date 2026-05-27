@@ -10,8 +10,11 @@ class NewsPostFilter:
     id: strawberry.ID | None = strawberry.UNSET
     is_published: bool | None = strawberry.UNSET
     author_id: strawberry.ID | None = strawberry.UNSET
-    region_id: strawberry.ID | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
         return Q(title__icontains=value)
+
+    @strawberry_django.filter_field
+    def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
+        return Q(region_id__in=value)
