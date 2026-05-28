@@ -782,6 +782,7 @@ input ReportFilter {
   visibility: Int
   thematicAreaId: ID
   disasterType: String
+  reportType: String
   AND: ReportFilter
   OR: ReportFilter
   NOT: ReportFilter
