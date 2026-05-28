@@ -6,6 +6,9 @@ from urllib.parse import urlparse as _urlparse
 
 import environ
 
+from main.logging import log_render_extra_context
+from main.sentry import SentryConfig
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -30,6 +33,7 @@ env = environ.Env(
     APP_ENVIRONMENT=str,
     APP_TYPE=str,
     APP_RELEASE=(str, None),
+    APP_LOG_LEVEL=(str, "INFO"),
     # Domain configs
     APP_DOMAIN=str,
     FRONTEND_DOMAIN=str,
@@ -55,6 +59,12 @@ env = environ.Env(
     AWS_S3_REGION_NAME=str,
     AWS_S3_MEDIA_BUCKET_NAME=str,
     AWS_S3_STATIC_BUCKET_NAME=str,
+    # Sentry
+    SENTRY_ENABLED=(bool, False),
+    SENTRY_DEBUG=(bool, False),
+    SENTRY_DSN=(str, None),
+    SENTRY_TRACES_SAMPLE_RATE=(float, 0.2),
+    SENTRY_PROFILE_SAMPLE_RATE=(float, 0.2),
     # -- Filesystem (default) XXX: Don't use in production
     MEDIA_ROOT=(str, BASE_DIR / "data/media"),
     STATIC_ROOT=(str, BASE_DIR / "data/static"),
@@ -66,6 +76,7 @@ APP_ENVIRONMENT = env("APP_ENVIRONMENT").upper()
 APP_TYPE = env("APP_TYPE").upper()
 SECRET_KEY = env("DJANGO_SECRET_KEY")
 DEBUG = env("DEBUG")
+APP_RELEASE = env("APP_RELEASE")
 
 ALLOWED_HOSTS = [
     APP_DOMAIN.hostname,
@@ -278,3 +289,96 @@ if DEBUG:
         *REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"],
         "rest_framework.renderers.BrowsableAPIRenderer",
     )
+
+# Sentry Config
+SENTRY_ENABLED = env("SENTRY_ENABLED")
+
+if SENTRY_ENABLED:
+    SENTRY_CONFIG = SentryConfig(
+        dsn=env("SENTRY_DSN"),
+        debug=env("SENTRY_DEBUG"),
+        app_type=APP_TYPE,
+        release=APP_RELEASE,
+        environment=APP_ENVIRONMENT,
+        send_default_pii=True,
+        traces_sample_rate=env("SENTRY_TRACES_SAMPLE_RATE"),
+        profiles_sample_rate=env("SENTRY_PROFILE_SAMPLE_RATE"),
+        # Custom configs
+        tags={"site": APP_DOMAIN.geturl()},
+    )
+    SENTRY_CONFIG.init_sentry()
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {
+        "render_extra_context": {
+            "()": "django.utils.log.CallbackFilter",
+            "callback": log_render_extra_context,
+        },
+    },
+    "formatters": {
+        "simple": {
+            "format": ("%(asctime)s: - %(customThreadName)s/%(levelname)s - %(name)s - %(message)s %(context)s"),
+            "datefmt": "%Y-%m-%dT%H:%M:%S",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "simple",
+            "filters": ["render_extra_context"],
+        },
+    },
+    "loggers": {
+        **{
+            app: {
+                "level": env("APP_LOG_LEVEL"),
+                "handlers": ["console"],
+                "propagate": False,
+            }
+            for app in ["apps", "main", "utils", "django"]
+        },
+    },
+    "root": {
+        "level": env("APP_LOG_LEVEL"),
+        "handlers": ["console"],
+    },
+}
+
+if DEBUG:
+    LOGGING = {
+        **LOGGING,
+        "formatters": {
+            **LOGGING["formatters"],
+            "colored_verbose": {
+                "()": "colorlog.ColoredFormatter",
+                "format": (
+                    "%(log_color)s%(asctime)s: %(customThreadName)s - %(levelname)-s%(red)s %(name)-s%(reset)s "
+                    "%(blue)s%(message)s %(context)s"
+                ),
+            },
+        },
+        "handlers": {
+            **LOGGING["handlers"],
+            "colored_console": {
+                "class": "logging.StreamHandler",
+                "formatter": "colored_verbose",
+                "filters": ["render_extra_context"],
+            },
+        },
+        "loggers": {
+            **{
+                key: {
+                    **logger,
+                    "handlers": ["colored_console"],
+                }
+                for key, logger in LOGGING["loggers"].items()
+            },
+        },
+        "root": {
+            "level": env("APP_LOG_LEVEL"),
+            "handlers": ["colored_console"],
+        },
+    }
