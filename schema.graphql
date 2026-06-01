@@ -199,6 +199,8 @@ union CreateTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
 union CreateThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
 
+union CreateUserPayload = UserTypeMutationResponseType | OperationInfo
+
 """A generic type to return error messages"""
 scalar CustomErrorType
 
@@ -215,6 +217,8 @@ union DeleteLinkPayload = LinkTypeMutationResponseType | OperationInfo
 union DeleteNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
 
 union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
+union DeleteUserPayload = UserTypeMutationResponseType | OperationInfo
 
 type DjangoFileType {
   name: String!
@@ -545,6 +549,11 @@ input LinkUpdateInput {
 type Mutation {
   login(email: String!, password: String!): UserMeType!
   logout: Boolean!
+  createUser(data: UserCreateInput!): CreateUserPayload!
+  updateUser(id: ID!, data: UserUpdateInput!): UpdateUserPayload!
+  deleteUser(id: ID!): DeleteUserPayload!
+  resetUserPassword(id: ID!, newPassword: String!): ResetUserPasswordPayload!
+  updateMyPassword(data: PasswordUpdateInput!): UpdateMyPasswordPayload!
   createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
   createReport(data: ReportCreateInput!): CreateReportPayload!
   updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
@@ -722,9 +731,16 @@ enum Ordering {
   DESC_NULLS_LAST
 }
 
+input PasswordUpdateInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
 type Query {
   adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, order: AdminAreaOrder): AdminAreaTypeOffsetPaginated!
   adminArea(id: ID!): AdminAreaType!
+  users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated!
+  user(id: ID!): UserType!
   me: UserMeType
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
   reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
@@ -859,6 +875,8 @@ input ReportUpdateInput {
   owner: String
   publishedAt: String
 }
+
+union ResetUserPasswordPayload = UserTypeMutationResponseType | OperationInfo
 
 input TeamCreateInput {
   name: String!
@@ -1044,6 +1062,8 @@ union UpdateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | Operati
 
 union UpdateLinkPayload = LinkTypeMutationResponseType | OperationInfo
 
+union UpdateMyPasswordPayload = UserTypeMutationResponseType | OperationInfo
+
 union UpdateNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
 
 union UpdateReportPayload = ReportTypeMutationResponseType | OperationInfo
@@ -1052,8 +1072,39 @@ union UpdateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationIn
 
 union UpdateTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
+union UpdateUserPayload = UserTypeMutationResponseType | OperationInfo
+
 """Represents a file upload."""
 scalar Upload
+
+input UserCreateInput {
+  email: String!
+  fullName: String!
+  password: String!
+  role: Int! = 50
+  region: ID
+  isActive: Boolean! = true
+}
+
+"""
+Custom user model with email as the login identifier.
+
+Roles drive access control throughout the app:
+- SUPER_ADMIN: full access across all regions
+- REGIONAL_ADMIN: access scoped to their assigned region
+- STAFF, PARTNER, VIEWER: read-access tiers
+"""
+input UserFilter {
+  id: ID
+  role: Int
+  isActive: Boolean
+  AND: UserFilter
+  OR: UserFilter
+  NOT: UserFilter
+  DISTINCT: Boolean
+  search: String
+  regions: [ID!]
+}
 
 """
 Custom user model with email as the login identifier.
@@ -1075,4 +1126,55 @@ type UserMeType {
   mfaEnabled: Boolean!
   createdAt: DateTime!
   roleDisplay: String!
+}
+
+input UserOrder @oneOf {
+  fullName: Ordering
+  email: Ordering
+  createdAt: Ordering
+}
+
+"""
+Custom user model with email as the login identifier.
+
+Roles drive access control throughout the app:
+- SUPER_ADMIN: full access across all regions
+- REGIONAL_ADMIN: access scoped to their assigned region
+- STAFF, PARTNER, VIEWER: read-access tiers
+"""
+type UserType {
+  id: ID!
+  email: String!
+  fullName: String!
+  role: Int!
+
+  """Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area."""
+  regionId: ID
+  isActive: Boolean!
+  mfaEnabled: Boolean!
+  createdAt: DateTime!
+  roleDisplay: String!
+}
+
+type UserTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: UserType
+}
+
+type UserTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [UserType!]!
+}
+
+input UserUpdateInput {
+  fullName: String
+  role: Int
+  region: ID
+  isActive: Boolean
 }
