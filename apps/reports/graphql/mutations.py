@@ -72,3 +72,13 @@ class Mutation:
         instance = await Link.objects.aget(id=id)
         await instance.adelete()
         return MutationResponseType(ok=True)
+
+    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    async def delete_report(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[ReportType]:
+        instance = await Report.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)

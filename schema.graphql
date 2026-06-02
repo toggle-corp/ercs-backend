@@ -210,13 +210,25 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+union DeleteCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
+
+union DeleteExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
+
+union DeleteGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
+
 union DeleteGalleryImagePayload = GalleryImageTypeMutationResponseType | OperationInfo
 
 union DeleteLinkPayload = LinkTypeMutationResponseType | OperationInfo
 
+union DeleteNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
+
 union DeleteNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
 
+union DeleteReportPayload = ReportTypeMutationResponseType | OperationInfo
+
 union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
+union DeleteTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
 union DeleteUserPayload = UserTypeMutationResponseType | OperationInfo
 
@@ -560,23 +572,29 @@ type Mutation {
   createLink(data: LinkCreateInput!): CreateLinkPayload!
   updateLink(id: ID!, data: LinkUpdateInput!): UpdateLinkPayload!
   deleteLink(id: ID!): DeleteLinkPayload!
+  deleteReport(id: ID!): DeleteReportPayload!
   createNewsPost(data: NewsPostCreateInput!): CreateNewsPostPayload!
   updateNewsPost(id: ID!, data: NewsPostUpdateInput!): UpdateNewsPostPayload!
   createNewsPostReport(data: NewsPostReportInput!): CreateNewsPostReportPayload!
   deleteNewsPostReport(newspost: ID!, report: ID!): DeleteNewsPostReportPayload!
+  deleteNewsPost(id: ID!): DeleteNewsPostPayload!
   createExternalDashboard(data: ExternalDashboardCreateInput!): CreateExternalDashboardPayload!
   updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
   createCapacityAndResource(data: CapacityAndResourceCreateInput!): CreateCapacityAndResourcePayload!
   updateCapacityAndResource(id: ID!, data: CapacityAndResourceUpdateInput!): UpdateCapacityAndResourcePayload!
+  deleteExternalDashboard(id: ID!): DeleteExternalDashboardPayload!
+  deleteCapacityAndResource(id: ID!): DeleteCapacityAndResourcePayload!
   createGalleryAlbum(data: GalleryAlbumCreateInput!): CreateGalleryAlbumPayload!
   updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): UpdateGalleryAlbumPayload!
   createGalleryImage(data: GalleryImageCreateInput!): CreateGalleryImagePayload!
   deleteGalleryImage(id: ID!): DeleteGalleryImagePayload!
+  deleteGalleryAlbum(id: ID!): DeleteGalleryAlbumPayload!
   createTeam(data: TeamCreateInput!): CreateTeamPayload!
   updateTeam(id: ID!, data: TeamUpdateInput!): UpdateTeamPayload!
   createTeamMember(data: TeamMemberCreateInput!): CreateTeamMemberPayload!
   updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): UpdateTeamMemberPayload!
   deleteTeamMember(id: ID!): DeleteTeamMemberPayload!
+  deleteTeam(id: ID!): DeleteTeamPayload!
 }
 
 input NewsPostCreateInput {

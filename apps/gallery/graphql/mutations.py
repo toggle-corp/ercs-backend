@@ -62,3 +62,13 @@ class Mutation:
                 return MutationResponseType(ok=False)
 
         return await _delete()
+
+    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    async def delete_gallery_album(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[GalleryAlbumType]:
+        instance = await GalleryAlbum.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)
