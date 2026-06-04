@@ -19,6 +19,10 @@ class ExternalDashboardType:
     created_at: strawberry.auto
     updated_at: strawberry.auto
 
+    @strawberry.field
+    def page_display(self) -> str:
+        return self.get_page_display()  # type: ignore[reportAttributeAccessIssue]
+
 
 @strawberry_django.type(CapacityAndResource)
 class CapacityAndResourceType:

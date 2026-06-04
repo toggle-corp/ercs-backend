@@ -73,3 +73,13 @@ class Mutation:
                 return MutationResponseType(ok=False)
 
         return await _delete()
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def delete_team(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[TeamType]:
+        instance = await Team.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)

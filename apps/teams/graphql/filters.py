@@ -19,9 +19,15 @@ class TeamFilter:
 class TeamMemberFilter:
     id: strawberry.ID | None = strawberry.UNSET
     team_id: strawberry.ID | None = strawberry.UNSET
-    region_id: strawberry.ID | None = strawberry.UNSET
-    woreda_id: strawberry.ID | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
         return Q(name__icontains=value)
+
+    @strawberry_django.filter_field
+    def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
+        return Q(region_id__in=value)
+
+    @strawberry_django.filter_field
+    def woredas(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
+        return Q(woreda_id__in=value)

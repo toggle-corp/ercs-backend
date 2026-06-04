@@ -38,6 +38,7 @@ type AdminAreaType {
   pcode: String
   centroidLat: Float
   centroidLon: Float
+  levelDisplay: String!
 }
 
 type AdminAreaTypeOffsetPaginated {
@@ -53,7 +54,10 @@ type AdminAreaTypeOffsetPaginated {
 type AppEnumCollection {
   AdminAreaLevel: [AppEnumCollectionAdminAreaLevel!]!
   UserRole: [AppEnumCollectionUserRole!]!
+  DocumentExtractionStatus: [AppEnumCollectionDocumentExtractionStatus!]!
+  LinkType: [AppEnumCollectionLinkType!]!
   ReportContentType: [AppEnumCollectionReportContentType!]!
+  ReportType: [AppEnumCollectionReportType!]!
   ReportVisibility: [AppEnumCollectionReportVisibility!]!
   DashboardPage: [AppEnumCollectionDashboardPage!]!
   TeamMemberSex: [AppEnumCollectionTeamMemberSex!]!
@@ -71,7 +75,25 @@ type AppEnumCollectionDashboardPage {
   value: Int!
 }
 
+type AppEnumCollectionDocumentExtractionStatus {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionLinkType {
+  key: String!
+  label: String!
+  value: Int!
+}
+
 type AppEnumCollectionReportContentType {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionReportType {
   key: String!
   label: String!
   value: Int!
@@ -109,12 +131,12 @@ input CapacityAndResourceCreateInput {
 input CapacityAndResourceFilter {
   id: ID
   isActive: Boolean
-  regionId: ID
   AND: CapacityAndResourceFilter
   OR: CapacityAndResourceFilter
   NOT: CapacityAndResourceFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
 }
 
 input CapacityAndResourceOrder @oneOf {
@@ -170,6 +192,8 @@ union CreateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | Operati
 
 union CreateGalleryImagePayload = GalleryImageTypeMutationResponseType | OperationInfo
 
+union CreateLinkPayload = LinkTypeMutationResponseType | OperationInfo
+
 union CreateNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
 
 union CreateNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
@@ -182,6 +206,8 @@ union CreateTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
 union CreateThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
 
+union CreateUserPayload = UserTypeMutationResponseType | OperationInfo
+
 """A generic type to return error messages"""
 scalar CustomErrorType
 
@@ -191,11 +217,27 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+union DeleteCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
+
+union DeleteExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
+
+union DeleteGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
+
 union DeleteGalleryImagePayload = GalleryImageTypeMutationResponseType | OperationInfo
+
+union DeleteLinkPayload = LinkTypeMutationResponseType | OperationInfo
+
+union DeleteNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
 
 union DeleteNewsPostReportPayload = NewsPostReportTypeMutationResponseType | OperationInfo
 
+union DeleteReportPayload = ReportTypeMutationResponseType | OperationInfo
+
 union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
+
+union DeleteTeamPayload = TeamTypeMutationResponseType | OperationInfo
+
+union DeleteUserPayload = UserTypeMutationResponseType | OperationInfo
 
 type DjangoFileType {
   name: String!
@@ -214,15 +256,13 @@ input EmergencyFilter {
   id: ID
   disasterType: String
   status: String
-
-  """Matched by name/pcode during sync."""
-  regionId: ID
   goId: Int
   AND: EmergencyFilter
   OR: EmergencyFilter
   NOT: EmergencyFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
 }
 
 input EmergencyOrder @oneOf {
@@ -282,12 +322,12 @@ input ExternalDashboardFilter {
 
   """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean
-  regionId: ID
   AND: ExternalDashboardFilter
   OR: ExternalDashboardFilter
   NOT: ExternalDashboardFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
 }
 
 input ExternalDashboardOrder @oneOf {
@@ -312,6 +352,7 @@ type ExternalDashboardType {
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
+  pageDisplay: String!
 }
 
 type ExternalDashboardTypeMutationResponseType {
@@ -466,29 +507,101 @@ type GalleryImageTypeOffsetPaginated {
   results: [GalleryImageType!]!
 }
 
+input LinkCreateInput {
+  title: String!
+  url: String!
+  linkType: Int!
+  description: String
+}
+
+"""Internal or external resource links associated with reports."""
+input LinkFilter {
+  id: ID
+  linkType: Int
+  AND: LinkFilter
+  OR: LinkFilter
+  NOT: LinkFilter
+  DISTINCT: Boolean
+  search: String
+}
+
+input LinkOrder @oneOf {
+  title: Ordering
+  createdAt: Ordering
+}
+
+"""Internal or external resource links associated with reports."""
+type LinkType {
+  id: ID!
+  title: String!
+  description: String
+  url: String!
+  linkType: Int!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  linkTypeDisplay: String!
+}
+
+type LinkTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: LinkType
+}
+
+type LinkTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [LinkType!]!
+}
+
+input LinkUpdateInput {
+  title: String
+  url: String
+  linkType: Int
+  description: String
+}
+
 type Mutation {
   login(email: String!, password: String!): UserMeType!
   logout: Boolean!
+  createUser(data: UserCreateInput!): CreateUserPayload!
+  updateUser(id: ID!, data: UserUpdateInput!): UpdateUserPayload!
+  deleteUser(id: ID!): DeleteUserPayload!
+  resetUserPassword(id: ID!, newPassword: String!): ResetUserPasswordPayload!
+  updateMyPassword(data: PasswordUpdateInput!): UpdateMyPasswordPayload!
   createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
   createReport(data: ReportCreateInput!): CreateReportPayload!
   updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
+  createLink(data: LinkCreateInput!): CreateLinkPayload!
+  updateLink(id: ID!, data: LinkUpdateInput!): UpdateLinkPayload!
+  deleteLink(id: ID!): DeleteLinkPayload!
+  deleteReport(id: ID!): DeleteReportPayload!
   createNewsPost(data: NewsPostCreateInput!): CreateNewsPostPayload!
   updateNewsPost(id: ID!, data: NewsPostUpdateInput!): UpdateNewsPostPayload!
   createNewsPostReport(data: NewsPostReportInput!): CreateNewsPostReportPayload!
   deleteNewsPostReport(newspost: ID!, report: ID!): DeleteNewsPostReportPayload!
+  deleteNewsPost(id: ID!): DeleteNewsPostPayload!
   createExternalDashboard(data: ExternalDashboardCreateInput!): CreateExternalDashboardPayload!
   updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
   createCapacityAndResource(data: CapacityAndResourceCreateInput!): CreateCapacityAndResourcePayload!
   updateCapacityAndResource(id: ID!, data: CapacityAndResourceUpdateInput!): UpdateCapacityAndResourcePayload!
+  deleteExternalDashboard(id: ID!): DeleteExternalDashboardPayload!
+  deleteCapacityAndResource(id: ID!): DeleteCapacityAndResourcePayload!
   createGalleryAlbum(data: GalleryAlbumCreateInput!): CreateGalleryAlbumPayload!
   updateGalleryAlbum(id: ID!, data: GalleryAlbumUpdateInput!): UpdateGalleryAlbumPayload!
   createGalleryImage(data: GalleryImageCreateInput!): CreateGalleryImagePayload!
   deleteGalleryImage(id: ID!): DeleteGalleryImagePayload!
+  deleteGalleryAlbum(id: ID!): DeleteGalleryAlbumPayload!
   createTeam(data: TeamCreateInput!): CreateTeamPayload!
   updateTeam(id: ID!, data: TeamUpdateInput!): UpdateTeamPayload!
   createTeamMember(data: TeamMemberCreateInput!): CreateTeamMemberPayload!
   updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): UpdateTeamMemberPayload!
   deleteTeamMember(id: ID!): DeleteTeamMemberPayload!
+  deleteTeam(id: ID!): DeleteTeamPayload!
 }
 
 input NewsPostCreateInput {
@@ -510,12 +623,12 @@ input NewsPostFilter {
   id: ID
   isPublished: Boolean
   authorId: ID
-  regionId: ID
   AND: NewsPostFilter
   OR: NewsPostFilter
   NOT: NewsPostFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
 }
 
 input NewsPostOrder @oneOf {
@@ -643,13 +756,23 @@ enum Ordering {
   DESC_NULLS_LAST
 }
 
+input PasswordUpdateInput {
+  currentPassword: String!
+  newPassword: String!
+}
+
 type Query {
   adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, order: AdminAreaOrder): AdminAreaTypeOffsetPaginated!
   adminArea(id: ID!): AdminAreaType!
+  users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated!
+  user(id: ID!): UserType!
   me: UserMeType
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
   reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
   report(id: ID!): ReportType!
+  publicLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
+  internalLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
+  link(id: ID!): LinkType!
   newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
   newsPost(id: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
@@ -675,6 +798,7 @@ input ReportCreateInput {
   file: Upload
   iframeUrl: String
   visibility: Int! = 10
+  reportType: Int! = 10
   thematicArea: ID!
   region: ID
   disasterType: String
@@ -698,13 +822,14 @@ input ReportFilter {
   contentType: Int
   visibility: Int
   thematicAreaId: ID
-  regionId: ID
   disasterType: String
+  reportType: String
   AND: ReportFilter
   OR: ReportFilter
   NOT: ReportFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
 }
 
 input ReportOrder @oneOf {
@@ -733,6 +858,7 @@ type ReportType {
   file: DjangoFileType
   iframeUrl: String
   visibility: Int!
+  reportType: Int!
   thematicAreaId: ID!
   regionId: ID
   disasterType: String
@@ -741,6 +867,9 @@ type ReportType {
   publishedAt: DateTime
   createdAt: DateTime!
   updatedAt: DateTime!
+  contentTypeDisplay: String!
+  visibilityDisplay: String!
+  reportTypeDisplay: String!
 }
 
 type ReportTypeMutationResponseType {
@@ -763,13 +892,17 @@ input ReportUpdateInput {
   title: String
   description: String
   coverImage: Upload
+  file: Upload
   visibility: Int
+  reportType: Int
   thematicArea: ID
   region: ID
   disasterType: String
   owner: String
   publishedAt: String
 }
+
+union ResetUserPasswordPayload = UserTypeMutationResponseType | OperationInfo
 
 input TeamCreateInput {
   name: String!
@@ -805,17 +938,13 @@ input TeamMemberCreateInput {
 input TeamMemberFilter {
   id: ID
   teamId: ID
-
-  """AdminArea at region level (level=20)."""
-  regionId: ID
-
-  """AdminArea at woreda level (level=40)."""
-  woredaId: ID
   AND: TeamMemberFilter
   OR: TeamMemberFilter
   NOT: TeamMemberFilter
   DISTINCT: Boolean
   search: String
+  regions: [ID!]
+  woredas: [ID!]
 }
 
 input TeamMemberOrder @oneOf {
@@ -843,6 +972,7 @@ type TeamMemberType {
   order: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
+  sexDisplay: String
 }
 
 type TeamMemberTypeMutationResponseType {
@@ -956,6 +1086,10 @@ union UpdateExternalDashboardPayload = ExternalDashboardTypeMutationResponseType
 
 union UpdateGalleryAlbumPayload = GalleryAlbumTypeMutationResponseType | OperationInfo
 
+union UpdateLinkPayload = LinkTypeMutationResponseType | OperationInfo
+
+union UpdateMyPasswordPayload = UserTypeMutationResponseType | OperationInfo
+
 union UpdateNewsPostPayload = NewsPostTypeMutationResponseType | OperationInfo
 
 union UpdateReportPayload = ReportTypeMutationResponseType | OperationInfo
@@ -964,8 +1098,39 @@ union UpdateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationIn
 
 union UpdateTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
+union UpdateUserPayload = UserTypeMutationResponseType | OperationInfo
+
 """Represents a file upload."""
 scalar Upload
+
+input UserCreateInput {
+  email: String!
+  fullName: String!
+  password: String!
+  role: Int! = 50
+  region: ID
+  isActive: Boolean! = true
+}
+
+"""
+Custom user model with email as the login identifier.
+
+Roles drive access control throughout the app:
+- SUPER_ADMIN: full access across all regions
+- REGIONAL_ADMIN: access scoped to their assigned region
+- STAFF, PARTNER, VIEWER: read-access tiers
+"""
+input UserFilter {
+  id: ID
+  role: Int
+  isActive: Boolean
+  AND: UserFilter
+  OR: UserFilter
+  NOT: UserFilter
+  DISTINCT: Boolean
+  search: String
+  regions: [ID!]
+}
 
 """
 Custom user model with email as the login identifier.
@@ -986,4 +1151,56 @@ type UserMeType {
   isActive: Boolean!
   mfaEnabled: Boolean!
   createdAt: DateTime!
+  roleDisplay: String!
+}
+
+input UserOrder @oneOf {
+  fullName: Ordering
+  email: Ordering
+  createdAt: Ordering
+}
+
+"""
+Custom user model with email as the login identifier.
+
+Roles drive access control throughout the app:
+- SUPER_ADMIN: full access across all regions
+- REGIONAL_ADMIN: access scoped to their assigned region
+- STAFF, PARTNER, VIEWER: read-access tiers
+"""
+type UserType {
+  id: ID!
+  email: String!
+  fullName: String!
+  role: Int!
+
+  """Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area."""
+  regionId: ID
+  isActive: Boolean!
+  mfaEnabled: Boolean!
+  createdAt: DateTime!
+  roleDisplay: String!
+}
+
+type UserTypeMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: UserType
+}
+
+type UserTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [UserType!]!
+}
+
+input UserUpdateInput {
+  fullName: String
+  role: Int
+  region: ID
+  isActive: Boolean
 }

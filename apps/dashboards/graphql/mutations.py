@@ -54,3 +54,23 @@ class Mutation:
     ) -> MutationResponseType[CapacityAndResourceType]:
         instance = await CapacityAndResource.objects.aget(id=id)
         return await ModelMutation(CapacityAndResourceSerializer).handle_update_mutation(data, info, instance)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def delete_external_dashboard(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[ExternalDashboardType]:
+        instance = await ExternalDashboard.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def delete_capacity_and_resource(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[CapacityAndResourceType]:
+        instance = await CapacityAndResource.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)

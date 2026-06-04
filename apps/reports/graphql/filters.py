@@ -2,7 +2,17 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.reports.models import Report, ThematicArea
+from apps.reports.models import Link, Report, ThematicArea
+
+
+@strawberry_django.filters.filter(Link, lookups=True)
+class LinkFilter:
+    id: strawberry.ID | None = strawberry.UNSET
+    link_type: int | None = strawberry.UNSET
+
+    @strawberry_django.filter_field
+    def search(self, value: str, prefix: str) -> Q:
+        return Q(title__icontains=value) | Q(description__icontains=value)
 
 
 @strawberry_django.filters.filter(ThematicArea, lookups=True)
@@ -21,9 +31,13 @@ class ReportFilter:
     content_type: int | None = strawberry.UNSET
     visibility: int | None = strawberry.UNSET
     thematic_area_id: strawberry.ID | None = strawberry.UNSET
-    region_id: strawberry.ID | None = strawberry.UNSET
     disaster_type: str | None = strawberry.UNSET
+    report_type: str | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
         return Q(title__icontains=value)
+
+    @strawberry_django.filter_field
+    def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
+        return Q(region_id__in=value)

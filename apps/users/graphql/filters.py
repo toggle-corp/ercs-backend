@@ -2,18 +2,18 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.content.models import NewsPost
+from apps.users.models import User
 
 
-@strawberry_django.filters.filter(NewsPost, lookups=True)
-class NewsPostFilter:
+@strawberry_django.filters.filter(User, lookups=True)
+class UserFilter:
     id: strawberry.ID | None = strawberry.UNSET
-    is_published: bool | None = strawberry.UNSET
-    author_id: strawberry.ID | None = strawberry.UNSET
+    role: int | None = strawberry.UNSET
+    is_active: bool | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
-        return Q(title__icontains=value)
+        return Q(full_name__icontains=value) | Q(email__icontains=value)
 
     @strawberry_django.filter_field
     def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
