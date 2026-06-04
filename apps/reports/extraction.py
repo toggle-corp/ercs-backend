@@ -24,7 +24,7 @@ async def trigger_document_extraction(report: Report) -> None:
         },
     )
 
-    file_path: str = report.file.name if report.file else ""
+    file_path = report.file.name if report.file else ""
     report_id: str = str(report.pk)
 
     logger.info("Triggering document extraction for report_id=%s file_path=%s", report_id, file_path)

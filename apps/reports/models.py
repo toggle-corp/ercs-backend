@@ -159,13 +159,10 @@ class DocumentExtraction(BaseModel):
         on_delete=models.CASCADE,
         related_name="document_extraction",
     )
-    extracted_contents = models.JSONField[dict | None, dict | None](null=True, blank=True)
+    extracted_contents = models.JSONField[dict[str, typing.Any] | None, dict[str, typing.Any] | None](null=True, blank=True)
     search_text = models.TextField[str, str](blank=True, default="")
     summary = models.TextField[str, str](blank=True, default="")
-    status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
-        choices_enum=DocumentExtractionStatus,
-        default=DocumentExtractionStatus.PENDING,
-    )
+    status: int = IntegerChoicesField(choices_enum=DocumentExtractionStatus, default=DocumentExtractionStatus.PENDING)  # type: ignore[reportAssignmentType]
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Document Extraction"

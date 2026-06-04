@@ -1,0 +1,308 @@
+import typing
+
+from apps.users.factories import UserFactory
+from apps.users.models import User
+from main.tests import TestCase
+
+
+class TestUserMutations(TestCase):
+    class Mutation:
+        CREATE_USER = """
+            mutation CreateUser($data: UserCreateInput!) {
+                createUser(data: $data) {
+                    ... on UserTypeMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            email
+                            fullName
+                            role
+                            isActive
+                        }
+                    }
+                }
+            }
+        """
+
+        UPDATE_USER = """
+            mutation UpdateUser($id: ID!, $data: UserUpdateInput!) {
+                updateUser(id: $id, data: $data) {
+                    ... on UserTypeMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            email
+                            fullName
+                            role
+                            isActive
+                        }
+                    }
+                }
+            }
+        """
+
+        DELETE_USER = """
+            mutation DeleteUser($id: ID!) {
+                deleteUser(id: $id) {
+                    ... on UserTypeMutationResponseType {
+                        ok
+                        errors
+                    }
+                }
+            }
+        """
+
+        RESET_USER_PASSWORD = """
+            mutation ResetUserPassword($id: ID!, $newPassword: String!) {
+                resetUserPassword(id: $id, newPassword: $newPassword) {
+                    ... on UserTypeMutationResponseType {
+                        ok
+                        errors
+                    }
+                }
+            }
+        """
+
+        UPDATE_MY_PASSWORD = """
+            mutation UpdateMyPassword($data: PasswordUpdateInput!) {
+                updateMyPassword(data: $data) {
+                    ... on UserTypeMutationResponseType {
+                        ok
+                        errors
+                    }
+                }
+            }
+        """
+
+        LOGIN = """
+            mutation Login($email: String!, $password: String!) {
+                login(email: $email, password: $password) {
+                    id
+                    email
+                    role
+                }
+            }
+        """
+
+    @typing.override
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.super_admin = UserFactory.create(role=User.Role.SUPER_ADMIN)
+        cls.staff = UserFactory.create(role=User.Role.STAFF)
+        cls.viewer = UserFactory.create(role=User.Role.VIEWER)
+
+    # ------------------------------------------------------------------
+    # login
+    # ------------------------------------------------------------------
+
+    def test_login_valid_credentials(self):
+        user = UserFactory.create(role=User.Role.STAFF, password="correcthorsebattery")
+        content = self.query_check(
+            self.Mutation.LOGIN,
+            variables={"email": user.email, "password": "correcthorsebattery"},
+        )
+        result = content["data"]["login"]
+        assert result["email"] == user.email
+        assert result["role"] == User.Role.STAFF
+
+    def test_login_invalid_credentials(self):
+        self.query_check(
+            self.Mutation.LOGIN,
+            assert_errors=True,
+            variables={"email": "nobody@ercs.org", "password": "wrongpassword"},
+        )
+
+    # ------------------------------------------------------------------
+    # createUser
+    # ------------------------------------------------------------------
+
+    def test_super_admin_can_create_user(self):
+        self.force_login(self.super_admin)
+        content = self.query_check(
+            self.Mutation.CREATE_USER,
+            variables={
+                "data": {
+                    "email": "newstaff@ercs.org",
+                    "fullName": "New Staff",
+                    "password": "securepassword123",
+                    "role": User.Role.STAFF,
+                },
+            },
+        )
+        resp = content["data"]["createUser"]
+        assert resp["ok"] is True
+        assert resp["errors"] is None
+        assert resp["result"]["email"] == "newstaff@ercs.org"
+        assert resp["result"]["fullName"] == "New Staff"
+        assert resp["result"]["role"] == User.Role.STAFF
+        assert resp["result"]["isActive"] is True
+        assert User.objects.filter(email="newstaff@ercs.org").exists()
+
+    def test_staff_cannot_create_user(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.CREATE_USER,
+            assert_errors=True,
+            variables={
+                "data": {
+                    "email": "blocked@ercs.org",
+                    "fullName": "Blocked",
+                    "password": "password123",
+                    "role": User.Role.VIEWER,
+                },
+            },
+        )
+        assert "errors" in content
+
+    def test_unauthenticated_cannot_create_user(self):
+        self.logout()
+        content = self.query_check(
+            self.Mutation.CREATE_USER,
+            assert_errors=True,
+            variables={
+                "data": {
+                    "email": "anon@ercs.org",
+                    "fullName": "Anon",
+                    "password": "password123",
+                    "role": User.Role.VIEWER,
+                },
+            },
+        )
+        assert "errors" in content
+
+    # ------------------------------------------------------------------
+    # updateUser
+    # ------------------------------------------------------------------
+
+    def test_super_admin_can_update_user(self):
+        self.force_login(self.super_admin)
+        target = UserFactory.create(role=User.Role.VIEWER, is_active=True)
+        content = self.query_check(
+            self.Mutation.UPDATE_USER,
+            variables={
+                "id": self.gID(target.pk),
+                "data": {"fullName": "Updated Name", "isActive": False},
+            },
+        )
+        resp = content["data"]["updateUser"]
+        assert resp["ok"] is True
+        assert resp["result"]["fullName"] == "Updated Name"
+        assert resp["result"]["isActive"] is False
+
+    def test_staff_cannot_update_user(self):
+        self.force_login(self.staff)
+        target = UserFactory.create(role=User.Role.VIEWER)
+        content = self.query_check(
+            self.Mutation.UPDATE_USER,
+            assert_errors=True,
+            variables={"id": self.gID(target.pk), "data": {"fullName": "Hacked"}},
+        )
+        assert "errors" in content
+
+    # ------------------------------------------------------------------
+    # deleteUser
+    # ------------------------------------------------------------------
+
+    def test_super_admin_can_delete_user(self):
+        self.force_login(self.super_admin)
+        target = UserFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_USER,
+            variables={"id": self.gID(target.pk)},
+        )
+        resp = content["data"]["deleteUser"]
+        assert resp["ok"] is True
+        assert not User.objects.filter(pk=target.pk).exists()
+
+    def test_staff_cannot_delete_user(self):
+        self.force_login(self.staff)
+        target = UserFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_USER,
+            assert_errors=True,
+            variables={"id": self.gID(target.pk)},
+        )
+        assert "errors" in content
+
+    # ------------------------------------------------------------------
+    # resetUserPassword
+    # ------------------------------------------------------------------
+
+    def test_super_admin_can_reset_password(self):
+        self.force_login(self.super_admin)
+        target = UserFactory.create(password="oldpassword")
+        content = self.query_check(
+            self.Mutation.RESET_USER_PASSWORD,
+            variables={"id": self.gID(target.pk), "newPassword": "brandnewpassword"},
+        )
+        resp = content["data"]["resetUserPassword"]
+        assert resp["ok"] is True
+        target.refresh_from_db()
+        assert target.check_password("brandnewpassword")
+
+    def test_staff_cannot_reset_password(self):
+        self.force_login(self.staff)
+        target = UserFactory.create(password="oldpassword")
+        content = self.query_check(
+            self.Mutation.RESET_USER_PASSWORD,
+            assert_errors=True,
+            variables={"id": self.gID(target.pk), "newPassword": "newpassword"},
+        )
+        assert "errors" in content
+
+    # ------------------------------------------------------------------
+    # updateMyPassword
+    # ------------------------------------------------------------------
+
+    def test_user_can_update_own_password(self):
+        user = UserFactory.create(password="currentpassword")
+        self.force_login(user)
+        content = self.query_check(
+            self.Mutation.UPDATE_MY_PASSWORD,
+            variables={
+                "data": {
+                    "currentPassword": "currentpassword",
+                    "newPassword": "updatedpassword",
+                },
+            },
+        )
+        resp = content["data"]["updateMyPassword"]
+        assert resp["ok"] is True
+        assert resp["errors"] is None
+        user.refresh_from_db()
+        assert user.check_password("updatedpassword")
+
+    def test_wrong_current_password_is_rejected(self):
+        user = UserFactory.create(password="realpassword")
+        self.force_login(user)
+        content = self.query_check(
+            self.Mutation.UPDATE_MY_PASSWORD,
+            variables={
+                "data": {
+                    "currentPassword": "wrongpassword",
+                    "newPassword": "newpassword",
+                },
+            },
+        )
+        resp = content["data"]["updateMyPassword"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+        user.refresh_from_db()
+        assert user.check_password("realpassword")
+
+    def test_unauthenticated_cannot_update_password(self):
+        self.logout()
+        content = self.query_check(
+            self.Mutation.UPDATE_MY_PASSWORD,
+            assert_errors=True,
+            variables={
+                "data": {
+                    "currentPassword": "any",
+                    "newPassword": "any",
+                },
+            },
+        )
+        assert "errors" in content

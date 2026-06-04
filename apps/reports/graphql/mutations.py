@@ -2,7 +2,8 @@ import strawberry
 import strawberry_django
 
 from apps.reports.extraction import trigger_document_extraction
-from apps.reports.models import Link, Report, ReportType
+from apps.reports.models import Link, Report
+from apps.reports.models import ReportType as ReportTypeEnum
 from apps.reports.serializers import LinkSerializer, ReportSerializer, ThematicAreaSerializer
 from main.graphql.context import Info
 from main.graphql.permissions import IsAuthenticated, IsStaffOrAbove
@@ -35,8 +36,8 @@ class Mutation:
         data: ReportCreateInput,
     ) -> MutationResponseType[ReportType]:
         response = await ModelMutation(ReportSerializer).handle_create_mutation(data, info)
-        if response.ok and response.result and response.result.report_type == ReportType.REPORT:  # type: ignore[reportAttributeAccessIssue]
-            await trigger_document_extraction(response.result)  # type: ignore[reportArgumentType]
+        if response.ok and response.result and response.result.report_type == ReportTypeEnum.REPORT:
+            await trigger_document_extraction(response.result)
         return response
 
     @strawberry_django.mutation(permission_classes=[IsAuthenticated])
@@ -49,8 +50,8 @@ class Mutation:
         instance = await Report.objects.aget(id=id)
         response = await ModelMutation(ReportSerializer).handle_update_mutation(data, info, instance)
         file_replaced = data.file is not strawberry.UNSET and data.file is not None
-        if response.ok and response.result and file_replaced and response.result.report_type == ReportType.REPORT:  # type: ignore[reportAttributeAccessIssue]
-            await trigger_document_extraction(response.result)  # type: ignore[reportArgumentType]
+        if response.ok and response.result and file_replaced and response.result.report_type == ReportTypeEnum.REPORT:
+            await trigger_document_extraction(response.result)
         return response
 
     @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
