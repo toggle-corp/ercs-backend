@@ -1,0 +1,7 @@
+[[allowlists]]
+description = "Ignore generated files"
+
+paths = [
+  '''seed_data/db\.json''',
+  '''helm/snapshots/.*'''
+]
