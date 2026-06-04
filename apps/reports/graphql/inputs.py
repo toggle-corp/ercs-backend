@@ -42,6 +42,7 @@ class ReportUpdateInput:
     title: str | None = strawberry.UNSET
     description: str | None = strawberry.UNSET
     cover_image: Upload | None = strawberry.UNSET
+    file: Upload | None = strawberry.UNSET
     visibility: int | None = strawberry.UNSET
     report_type: int | None = strawberry.UNSET
     thematic_area: strawberry.ID | None = strawberry.UNSET

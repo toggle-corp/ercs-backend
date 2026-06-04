@@ -32,6 +32,15 @@ class ReportVisibility(models.IntegerChoices):
     PRIVATE = 20, "Private"
 
 
+class DocumentExtractionStatus(models.IntegerChoices):
+    """Lifecycle state of an AI document extraction job."""
+
+    PENDING = 10, "Pending"
+    IN_PROGRESS = 20, "In Progress"
+    SUCCESS = 30, "Success"
+    FAILURE = 40, "Failure"
+
+
 class LinkType(models.IntegerChoices):
     """Distinguishes internal resources from external ones."""
 
@@ -133,6 +142,38 @@ class Report(BaseModel):
             except Report.DoesNotExist:
                 pass
         super().save(*args, **kwargs)
+
+
+class DocumentExtraction(BaseModel):
+    """Tracks the AI extraction lifecycle for a FILE-type Report.
+
+    Created/reset whenever a REPORT-type report is created or its file replaced.
+    The AI tool populates extracted_contents, search_text, summary, and status
+    directly in the database once processing is complete.
+    """
+
+    Status = DocumentExtractionStatus  # convenience alias
+
+    report = models.OneToOneField(
+        Report,
+        on_delete=models.CASCADE,
+        related_name="document_extraction",
+    )
+    extracted_contents = models.JSONField[dict | None, dict | None](null=True, blank=True)
+    search_text = models.TextField[str, str](blank=True, default="")
+    summary = models.TextField[str, str](blank=True, default="")
+    status: int = IntegerChoicesField(  # type: ignore[reportAssignmentType]
+        choices_enum=DocumentExtractionStatus,
+        default=DocumentExtractionStatus.PENDING,
+    )
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        verbose_name = "Document Extraction"
+        verbose_name_plural = "Document Extractions"
+
+    @typing.override
+    def __str__(self) -> str:
+        return f"Extraction for {self.report} ({self.get_status_display()})"  # type: ignore[reportAttributeAccessIssue]
 
 
 class Link(BaseModel):

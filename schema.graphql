@@ -54,6 +54,7 @@ type AdminAreaTypeOffsetPaginated {
 type AppEnumCollection {
   AdminAreaLevel: [AppEnumCollectionAdminAreaLevel!]!
   UserRole: [AppEnumCollectionUserRole!]!
+  DocumentExtractionStatus: [AppEnumCollectionDocumentExtractionStatus!]!
   LinkType: [AppEnumCollectionLinkType!]!
   ReportContentType: [AppEnumCollectionReportContentType!]!
   ReportType: [AppEnumCollectionReportType!]!
@@ -69,6 +70,12 @@ type AppEnumCollectionAdminAreaLevel {
 }
 
 type AppEnumCollectionDashboardPage {
+  key: String!
+  label: String!
+  value: Int!
+}
+
+type AppEnumCollectionDocumentExtractionStatus {
   key: String!
   label: String!
   value: Int!
@@ -885,6 +892,7 @@ input ReportUpdateInput {
   title: String
   description: String
   coverImage: Upload
+  file: Upload
   visibility: Int
   reportType: Int
   thematicArea: ID

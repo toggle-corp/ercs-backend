@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Link, Report, ThematicArea
+from .models import DocumentExtraction, Link, Report, ThematicArea
 
 
 @admin.register(ThematicArea)
@@ -8,6 +8,14 @@ class ThematicAreaAdmin(admin.ModelAdmin):
     list_display = ["name", "created_at"]
     search_fields = ["name"]
     ordering = ["name"]
+
+
+@admin.register(DocumentExtraction)
+class DocumentExtractionAdmin(admin.ModelAdmin):
+    list_display = ["report", "status", "created_at", "updated_at"]
+    list_filter = ["status"]
+    readonly_fields = ["report", "created_at", "updated_at"]
+    ordering = ["-created_at"]
 
 
 @admin.register(Link)
