@@ -42,5 +42,5 @@ class TestUserQueries(TestCase):
         me = content["data"]["me"]
         assert me["email"] == "test@ercs.org"
         assert me["fullName"] == "Test User"
-        assert me["role"] == User.Role.STAFF
+        assert me["role"] == User.Role.STAFF.name
         assert me["isActive"] is True

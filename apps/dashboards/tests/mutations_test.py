@@ -60,14 +60,14 @@ class TestExternalDashboardMutations(TestCase):
                 "data": {
                     "title": "Operations KPIs",
                     "url": "https://app.powerbi.com/embed/ops",
-                    "page": ExternalDashboard.Page.OPERATIONS,
+                    "page": ExternalDashboard.Page.OPERATIONS.name,
                 },
             },
         )
         resp = content["data"]["createExternalDashboard"]
         assert resp["ok"] is True
         assert resp["result"]["title"] == "Operations KPIs"
-        assert resp["result"]["page"] == ExternalDashboard.Page.OPERATIONS
+        assert resp["result"]["page"] == ExternalDashboard.Page.OPERATIONS.name
 
     def test_viewer_cannot_create(self):
         self.force_login(self.viewer)
@@ -78,7 +78,7 @@ class TestExternalDashboardMutations(TestCase):
                 "data": {
                     "title": "Blocked",
                     "url": "https://example.com",
-                    "page": ExternalDashboard.Page.HOME,
+                    "page": ExternalDashboard.Page.HOME.name,
                 },
             },
         )

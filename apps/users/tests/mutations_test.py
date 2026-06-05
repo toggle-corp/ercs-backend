@@ -106,7 +106,7 @@ class TestUserMutations(TestCase):
         )
         result = content["data"]["login"]
         assert result["email"] == user.email
-        assert result["role"] == User.Role.STAFF
+        assert result["role"] == User.Role.STAFF.name
 
     def test_login_invalid_credentials(self):
         self.query_check(
@@ -128,7 +128,7 @@ class TestUserMutations(TestCase):
                     "email": "newstaff@ercs.org",
                     "fullName": "New Staff",
                     "password": "securepassword123",
-                    "role": User.Role.STAFF,
+                    "role": User.Role.STAFF.name,
                 },
             },
         )
@@ -137,7 +137,7 @@ class TestUserMutations(TestCase):
         assert resp["errors"] is None
         assert resp["result"]["email"] == "newstaff@ercs.org"
         assert resp["result"]["fullName"] == "New Staff"
-        assert resp["result"]["role"] == User.Role.STAFF
+        assert resp["result"]["role"] == User.Role.STAFF.name
         assert resp["result"]["isActive"] is True
         assert User.objects.filter(email="newstaff@ercs.org").exists()
 
@@ -151,7 +151,7 @@ class TestUserMutations(TestCase):
                     "email": "blocked@ercs.org",
                     "fullName": "Blocked",
                     "password": "password123",
-                    "role": User.Role.VIEWER,
+                    "role": User.Role.VIEWER.name,
                 },
             },
         )
@@ -167,7 +167,7 @@ class TestUserMutations(TestCase):
                     "email": "anon@ercs.org",
                     "fullName": "Anon",
                     "password": "password123",
-                    "role": User.Role.VIEWER,
+                    "role": User.Role.VIEWER.name,
                 },
             },
         )

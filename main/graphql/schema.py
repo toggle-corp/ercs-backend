@@ -21,7 +21,10 @@ from apps.users.graphql import mutations as user_mutations
 from apps.users.graphql import queries as user_queries
 
 from .context import GraphQLContext
-from .enums import AppEnumCollection, AppEnumCollectionData
+
+# Must be imported before any app graphql modules so strawberry.enum() name
+# overrides are registered before type annotations are processed.
+from .enums import AppEnumCollection, AppEnumCollectionData  # noqa: E402
 
 
 class CustomAsyncGraphQLView(AsyncGraphQLView):

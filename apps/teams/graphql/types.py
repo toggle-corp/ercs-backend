@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.teams.models import Team, TeamMember
+from apps.teams.models import Team, TeamMember, TeamMemberSex
 
 
 @strawberry_django.type(TeamMember)
@@ -12,7 +12,7 @@ class TeamMemberType:
     position: strawberry.auto
     email: strawberry.auto
     phone_number: strawberry.auto
-    sex: int | None
+    sex: TeamMemberSex | None
     region_id: strawberry.ID | None
 
     @strawberry.field

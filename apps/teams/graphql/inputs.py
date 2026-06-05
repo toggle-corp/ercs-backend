@@ -1,5 +1,7 @@
 import strawberry
 
+from apps.teams.models import TeamMemberSex
+
 
 @strawberry.input
 class TeamCreateInput:
@@ -20,7 +22,7 @@ class TeamMemberCreateInput:
     position: str
     email: str | None = strawberry.UNSET
     phone_number: str | None = strawberry.UNSET
-    sex: int | None = strawberry.UNSET
+    sex: TeamMemberSex | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
     woreda: strawberry.ID | None = strawberry.UNSET
     training: str | None = strawberry.UNSET
@@ -35,7 +37,7 @@ class TeamMemberUpdateInput:
     position: str | None = strawberry.UNSET
     email: str | None = strawberry.UNSET
     phone_number: str | None = strawberry.UNSET
-    sex: int | None = strawberry.UNSET
+    sex: TeamMemberSex | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
     woreda: strawberry.ID | None = strawberry.UNSET
     training: str | None = strawberry.UNSET

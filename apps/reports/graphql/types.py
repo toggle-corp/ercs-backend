@@ -1,7 +1,9 @@
 import strawberry
 import strawberry_django
 
-from apps.reports.models import Link, Report, ThematicArea
+from apps.reports.models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+from apps.reports.models import LinkType as LinkTypeEnum
+from apps.reports.models import ReportType as ReportTypeEnum
 from utils.graphql.types import DjangoFileType
 
 
@@ -11,7 +13,7 @@ class LinkType:
     title: strawberry.auto
     description: strawberry.auto
     url: strawberry.auto
-    link_type: int
+    link_type: LinkTypeEnum
     created_at: strawberry.auto
     updated_at: strawberry.auto
 
@@ -34,11 +36,11 @@ class ReportType:
     title: strawberry.auto
     description: strawberry.auto
     cover_image: DjangoFileType | None
-    content_type: int
+    content_type: ReportContentType
     file: DjangoFileType | None
     iframe_url: strawberry.auto
-    visibility: int
-    report_type: int
+    visibility: ReportVisibility
+    report_type: ReportTypeEnum
     thematic_area_id: strawberry.ID
 
     @strawberry.field

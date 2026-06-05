@@ -2,13 +2,15 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.reports.models import Link, Report, ThematicArea
+from apps.reports.models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+from apps.reports.models import LinkType as LinkTypeEnum
+from apps.reports.models import ReportType as ReportTypeEnum
 
 
 @strawberry_django.filters.filter(Link, lookups=True)
 class LinkFilter:
     id: strawberry.ID | None = strawberry.UNSET
-    link_type: int | None = strawberry.UNSET
+    link_type: LinkTypeEnum | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
@@ -28,11 +30,11 @@ class ThematicAreaFilter:
 @strawberry_django.filters.filter(Report, lookups=True)
 class ReportFilter:
     id: strawberry.ID | None = strawberry.UNSET
-    content_type: int | None = strawberry.UNSET
-    visibility: int | None = strawberry.UNSET
+    content_type: ReportContentType | None = strawberry.UNSET
+    visibility: ReportVisibility | None = strawberry.UNSET
     thematic_area_id: strawberry.ID | None = strawberry.UNSET
     disaster_type: str | None = strawberry.UNSET
-    report_type: str | None = strawberry.UNSET
+    report_type: ReportTypeEnum | None = strawberry.UNSET
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:

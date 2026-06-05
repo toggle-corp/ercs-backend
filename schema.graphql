@@ -8,7 +8,7 @@ Seeded via import script; no admin mutations expected.
 """
 input AdminAreaFilter {
   id: ID
-  level: String
+  level: AdminAreaLevel
   parentId: ID
   pcode: String
   AND: AdminAreaFilter
@@ -16,6 +16,13 @@ input AdminAreaFilter {
   NOT: AdminAreaFilter
   DISTINCT: Boolean
   search: String
+}
+
+enum AdminAreaLevel {
+  COUNTRY
+  REGION
+  ZONE
+  WOREDA
 }
 
 input AdminAreaOrder @oneOf {
@@ -33,7 +40,7 @@ type AdminAreaType {
   id: ID!
   name: String!
   nameAm: String
-  level: Int!
+  level: AdminAreaLevel!
   parentId: ID
   pcode: String
   centroidLat: Float
@@ -66,55 +73,46 @@ type AppEnumCollection {
 type AppEnumCollectionAdminAreaLevel {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionDashboardPage {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionDocumentExtractionStatus {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionLinkType {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionReportContentType {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionReportType {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionReportVisibility {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionTeamMemberSex {
   key: String!
   label: String!
-  value: Int!
 }
 
 type AppEnumCollectionUserRole {
   key: String!
   label: String!
-  value: Int!
 }
 
 """Links multiple ExternalDashboards to a Capacity & Resources entry."""
@@ -211,6 +209,16 @@ union CreateUserPayload = UserTypeMutationResponseType | OperationInfo
 """A generic type to return error messages"""
 scalar CustomErrorType
 
+enum DashboardPage {
+  HOME
+  OPERATIONS
+  PROJECT_MAPPING
+  CAPACITY_RESOURCES
+  EMERGENCY_ALERTS
+  DISASTER_RESPONSE
+  EMERGENCY_RESPONSE
+}
+
 """Date (isoformat)"""
 scalar Date
 
@@ -306,7 +314,7 @@ type EmergencyTypeOffsetPaginated {
 input ExternalDashboardCreateInput {
   title: String!
   url: String!
-  page: Int!
+  page: DashboardPage!
   description: String
   region: ID
   showOnHome: Boolean! = false
@@ -317,7 +325,7 @@ input ExternalDashboardCreateInput {
 """Power BI / iframe dashboards embedded across site pages via CMS."""
 input ExternalDashboardFilter {
   id: ID
-  page: String
+  page: DashboardPage
   isActive: Boolean
 
   """Surface this dashboard as a quick link on the homepage."""
@@ -342,7 +350,7 @@ type ExternalDashboardType {
   title: String!
   description: String
   url: String!
-  page: Int!
+  page: DashboardPage!
   regionId: ID
 
   """Surface this dashboard as a quick link on the homepage."""
@@ -374,7 +382,7 @@ type ExternalDashboardTypeOffsetPaginated {
 input ExternalDashboardUpdateInput {
   title: String
   url: String
-  page: Int
+  page: DashboardPage
   description: String
   region: ID
   showOnHome: Boolean
@@ -510,14 +518,14 @@ type GalleryImageTypeOffsetPaginated {
 input LinkCreateInput {
   title: String!
   url: String!
-  linkType: Int!
+  linkType: LinkTypeEnum!
   description: String
 }
 
 """Internal or external resource links associated with reports."""
 input LinkFilter {
   id: ID
-  linkType: Int
+  linkType: LinkTypeEnum
   AND: LinkFilter
   OR: LinkFilter
   NOT: LinkFilter
@@ -536,10 +544,15 @@ type LinkType {
   title: String!
   description: String
   url: String!
-  linkType: Int!
+  linkType: LinkTypeEnum!
   createdAt: DateTime!
   updatedAt: DateTime!
   linkTypeDisplay: String!
+}
+
+enum LinkTypeEnum {
+  INTERNAL
+  EXTERNAL
 }
 
 type LinkTypeMutationResponseType {
@@ -561,7 +574,7 @@ type LinkTypeOffsetPaginated {
 input LinkUpdateInput {
   title: String
   url: String
-  linkType: Int
+  linkType: LinkTypeEnum
   description: String
 }
 
@@ -790,15 +803,20 @@ type Query {
   enums: AppEnumCollection!
 }
 
+enum ReportContentType {
+  FILE
+  IFRAME
+}
+
 input ReportCreateInput {
   title: String!
-  contentType: Int!
+  contentType: ReportContentType!
   description: String
   coverImage: Upload
   file: Upload
   iframeUrl: String
-  visibility: Int! = 10
-  reportType: Int! = 10
+  visibility: ReportVisibility! = PUBLIC
+  reportType: ReportTypeEnum! = REPORT
   thematicArea: ID!
   region: ID
   disasterType: String
@@ -819,11 +837,11 @@ Content-type rules:
 """
 input ReportFilter {
   id: ID
-  contentType: Int
-  visibility: Int
+  contentType: ReportContentType
+  visibility: ReportVisibility
   thematicAreaId: ID
   disasterType: String
-  reportType: String
+  reportType: ReportTypeEnum
   AND: ReportFilter
   OR: ReportFilter
   NOT: ReportFilter
@@ -854,11 +872,11 @@ type ReportType {
   title: String!
   description: String
   coverImage: DjangoFileType
-  contentType: Int!
+  contentType: ReportContentType!
   file: DjangoFileType
   iframeUrl: String
-  visibility: Int!
-  reportType: Int!
+  visibility: ReportVisibility!
+  reportType: ReportTypeEnum!
   thematicAreaId: ID!
   regionId: ID
   disasterType: String
@@ -870,6 +888,14 @@ type ReportType {
   contentTypeDisplay: String!
   visibilityDisplay: String!
   reportTypeDisplay: String!
+}
+
+enum ReportTypeEnum {
+  REPORT
+  MANUAL
+  POLICY
+  GUIDELINE
+  ONLINE_INTERACTIVE
 }
 
 type ReportTypeMutationResponseType {
@@ -893,13 +919,18 @@ input ReportUpdateInput {
   description: String
   coverImage: Upload
   file: Upload
-  visibility: Int
-  reportType: Int
+  visibility: ReportVisibility
+  reportType: ReportTypeEnum
   thematicArea: ID
   region: ID
   disasterType: String
   owner: String
   publishedAt: String
+}
+
+enum ReportVisibility {
+  PUBLIC
+  PRIVATE
 }
 
 union ResetUserPasswordPayload = UserTypeMutationResponseType | OperationInfo
@@ -926,7 +957,7 @@ input TeamMemberCreateInput {
   position: String!
   email: String
   phoneNumber: String
-  sex: Int
+  sex: TeamMemberSex
   region: ID
   woreda: ID
   training: String
@@ -952,6 +983,12 @@ input TeamMemberOrder @oneOf {
   name: Ordering
 }
 
+enum TeamMemberSex {
+  MALE
+  FEMALE
+  OTHER
+}
+
 """Individual member belonging to a Team."""
 type TeamMemberType {
   id: ID!
@@ -960,7 +997,7 @@ type TeamMemberType {
   position: String!
   email: String
   phoneNumber: String
-  sex: Int
+  sex: TeamMemberSex
 
   """AdminArea at region level (level=20)."""
   regionId: ID
@@ -997,7 +1034,7 @@ input TeamMemberUpdateInput {
   position: String
   email: String
   phoneNumber: String
-  sex: Int
+  sex: TeamMemberSex
   region: ID
   woreda: ID
   training: String
@@ -1107,7 +1144,7 @@ input UserCreateInput {
   email: String!
   fullName: String!
   password: String!
-  role: Int! = 50
+  role: UserRole! = VIEWER
   region: ID
   isActive: Boolean! = true
 }
@@ -1122,7 +1159,7 @@ Roles drive access control throughout the app:
 """
 input UserFilter {
   id: ID
-  role: Int
+  role: UserRole
   isActive: Boolean
   AND: UserFilter
   OR: UserFilter
@@ -1144,7 +1181,7 @@ type UserMeType {
   id: ID!
   email: String!
   fullName: String!
-  role: Int!
+  role: UserRole!
 
   """Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area."""
   regionId: ID
@@ -1160,6 +1197,14 @@ input UserOrder @oneOf {
   createdAt: Ordering
 }
 
+enum UserRole {
+  SUPER_ADMIN
+  REGIONAL_ADMIN
+  STAFF
+  PARTNER
+  VIEWER
+}
+
 """
 Custom user model with email as the login identifier.
 
@@ -1172,7 +1217,7 @@ type UserType {
   id: ID!
   email: String!
   fullName: String!
-  role: Int!
+  role: UserRole!
 
   """Only meaningful for REGIONAL_ADMIN role; must be a REGION-level area."""
   regionId: ID
@@ -1200,7 +1245,7 @@ type UserTypeOffsetPaginated {
 
 input UserUpdateInput {
   fullName: String
-  role: Int
+  role: UserRole
   region: ID
   isActive: Boolean
 }

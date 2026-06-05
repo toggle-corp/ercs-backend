@@ -8,7 +8,7 @@ class UserCreateInput:
     email: str
     full_name: str
     password: str
-    role: int = UserRole.VIEWER
+    role: UserRole = UserRole.VIEWER
     region: strawberry.ID | None = strawberry.UNSET
     is_active: bool = True
 
@@ -16,7 +16,7 @@ class UserCreateInput:
 @strawberry.input
 class UserUpdateInput:
     full_name: str | None = strawberry.UNSET
-    role: int | None = strawberry.UNSET
+    role: UserRole | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
     is_active: bool | None = strawberry.UNSET
 

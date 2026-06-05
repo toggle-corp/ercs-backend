@@ -45,13 +45,13 @@ class TestAdminAreaQueries(TestCase):
             self.Query.ADMIN_AREAS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"level": str(AdminArea.Level.REGION)},
+                "filters": {"level": AdminArea.Level.REGION.name},
             },
         )
         results = content["data"]["adminAreas"]["results"]
         assert len(results) == 1
         assert results[0]["name"] == "Oromia"
-        assert results[0]["level"] == AdminArea.Level.REGION
+        assert results[0]["level"] == AdminArea.Level.REGION.name
 
     def test_filter_by_pcode(self):
         content = self.query_check(

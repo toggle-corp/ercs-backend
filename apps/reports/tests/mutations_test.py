@@ -116,7 +116,7 @@ class TestReportMutations(TestCase):
             variables={
                 "data": {
                     "title": "Test Report",
-                    "contentType": Report.ContentType.IFRAME,
+                    "contentType": Report.ContentType.IFRAME.name,
                     "iframeUrl": "https://app.powerbi.com/embed/123",
                     "thematicArea": str(self.thematic_area.pk),
                 },
@@ -126,8 +126,8 @@ class TestReportMutations(TestCase):
         assert resp["ok"] is True
         assert resp["errors"] is None
         assert resp["result"]["title"] == "Test Report"
-        assert resp["result"]["contentType"] == Report.ContentType.IFRAME
-        assert resp["result"]["visibility"] == Report.Visibility.PUBLIC
+        assert resp["result"]["contentType"] == Report.ContentType.IFRAME.name
+        assert resp["result"]["visibility"] == Report.Visibility.PUBLIC.name
 
     def test_create_report_requires_auth(self):
         self.logout()
@@ -137,7 +137,7 @@ class TestReportMutations(TestCase):
             variables={
                 "data": {
                     "title": "Unauthorized",
-                    "contentType": Report.ContentType.IFRAME,
+                    "contentType": Report.ContentType.IFRAME.name,
                     "iframeUrl": "https://example.com/embed",
                     "thematicArea": str(self.thematic_area.pk),
                 },
@@ -155,7 +155,7 @@ class TestReportMutations(TestCase):
             self.Mutation.UPDATE_REPORT,
             variables={
                 "id": str(private_report.pk),
-                "data": {"visibility": Report.Visibility.PUBLIC},
+                "data": {"visibility": Report.Visibility.PUBLIC.name},
             },
         )
         resp = content["data"]["updateReport"]
@@ -200,10 +200,10 @@ class TestReportMutations(TestCase):
                 variables={
                     "data": {
                         "title": "AI Report",
-                        "contentType": Report.ContentType.IFRAME,
+                        "contentType": Report.ContentType.IFRAME.name,
                         "iframeUrl": "https://example.com/embed",
                         "thematicArea": str(self.thematic_area.pk),
-                        "reportType": Report.ReportType.REPORT,
+                        "reportType": Report.ReportType.REPORT.name,
                     },
                 },
             )
@@ -220,10 +220,10 @@ class TestReportMutations(TestCase):
                 variables={
                     "data": {
                         "title": "A Manual",
-                        "contentType": Report.ContentType.IFRAME,
+                        "contentType": Report.ContentType.IFRAME.name,
                         "iframeUrl": "https://example.com/embed",
                         "thematicArea": str(self.thematic_area.pk),
-                        "reportType": Report.ReportType.MANUAL,
+                        "reportType": Report.ReportType.MANUAL.name,
                     },
                 },
             )
@@ -243,14 +243,14 @@ class TestReportMutations(TestCase):
                 "data": {
                     "title": "IFRC GO",
                     "url": "https://go.ifrc.org",
-                    "linkType": Link.LinkType.EXTERNAL,
+                    "linkType": Link.LinkType.EXTERNAL.name,
                 },
             },
         )
         resp = content["data"]["createLink"]
         assert resp["ok"] is True
         assert resp["result"]["title"] == "IFRC GO"
-        assert resp["result"]["linkType"] == Link.LinkType.EXTERNAL
+        assert resp["result"]["linkType"] == Link.LinkType.EXTERNAL.name
 
     def test_viewer_cannot_create_link(self):
         self.force_login(self.user)
@@ -261,7 +261,7 @@ class TestReportMutations(TestCase):
                 "data": {
                     "title": "Blocked",
                     "url": "https://example.com",
-                    "linkType": Link.LinkType.EXTERNAL,
+                    "linkType": Link.LinkType.EXTERNAL.name,
                 },
             },
         )

@@ -8,6 +8,11 @@ from apps.reports.models import DocumentExtractionStatus, LinkType, ReportConten
 from apps.teams.models import TeamMemberSex
 from apps.users.models import UserRole
 
+# LinkType and ReportType share names with GraphQL object types in the reports app.
+# Register them under distinct schema names before the schema is assembled.
+strawberry.enum(LinkType, name="LinkTypeEnum")
+strawberry.enum(ReportType, name="ReportTypeEnum")
+
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     AdminAreaLevel,
     UserRole,
@@ -33,10 +38,6 @@ class AppEnumData:
     def label(self):
         return str(self.enum.label)
 
-    @property
-    def value(self):
-        return int(self.enum.value)
-
 
 def generate_app_enum_collection_data(name: str):
     return type(
@@ -58,7 +59,6 @@ def generate_type_for_enum(name: str, Enum):  # type: ignore[reportMissingParame
             [
                 ("key", str),
                 ("label", str),
-                ("value", int),
             ],
         ),
     )
@@ -73,7 +73,6 @@ def _enum_type(name: str, Enum):  # type: ignore[reportMissingParameterType]
             EnumType(
                 key=e.name,
                 label=e.label,
-                value=e.value,
             )
             for e in Enum
         ]

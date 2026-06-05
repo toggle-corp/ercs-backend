@@ -1,14 +1,14 @@
 import strawberry
 import strawberry_django
 
-from apps.dashboards.models import CapacityAndResource
+from apps.dashboards.models import CapacityAndResource, DashboardPage
 
 
 @strawberry.input
 class ExternalDashboardCreateInput:
     title: str
     url: str
-    page: int
+    page: DashboardPage
     description: str | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
     show_on_home: bool = False
@@ -20,7 +20,7 @@ class ExternalDashboardCreateInput:
 class ExternalDashboardUpdateInput:
     title: str | None = strawberry.UNSET
     url: str | None = strawberry.UNSET
-    page: int | None = strawberry.UNSET
+    page: DashboardPage | None = strawberry.UNSET
     description: str | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
     show_on_home: bool | None = strawberry.UNSET
