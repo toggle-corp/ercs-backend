@@ -8,11 +8,6 @@ from apps.reports.models import DocumentExtractionStatus, LinkType, ReportConten
 from apps.teams.models import TeamMemberSex
 from apps.users.models import UserRole
 
-# LinkType and ReportType share names with GraphQL object types in the reports app.
-# Register them under distinct schema names before the schema is assembled.
-strawberry.enum(LinkType, name="LinkTypeEnum")
-strawberry.enum(ReportType, name="ReportTypeEnum")
-
 ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     AdminAreaLevel,
     UserRole,

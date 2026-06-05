@@ -1188,6 +1188,7 @@ type UserMeType {
   isActive: Boolean!
   mfaEnabled: Boolean!
   createdAt: DateTime!
+  lastLogin: DateTime
   roleDisplay: String!
 }
 
@@ -1224,6 +1225,7 @@ type UserType {
   isActive: Boolean!
   mfaEnabled: Boolean!
   createdAt: DateTime!
+  lastLogin: DateTime
   roleDisplay: String!
 }
 

@@ -6,6 +6,13 @@ from apps.reports.models import LinkType as LinkTypeEnum
 from apps.reports.models import ReportType as ReportTypeEnum
 from utils.graphql.types import DjangoFileType
 
+# Register collision-prone enums under distinct GraphQL names before the
+# @strawberry_django.type decorators below process the field annotations.
+# Without this, strawberry would auto-register both as "LinkType"/"ReportType",
+# clashing with the object types of the same name defined in this file.
+strawberry.enum(LinkTypeEnum, name="LinkTypeEnum")
+strawberry.enum(ReportTypeEnum, name="ReportTypeEnum")
+
 
 @strawberry_django.type(Link)
 class LinkType:

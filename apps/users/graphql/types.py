@@ -19,6 +19,7 @@ class UserType:
     is_active: strawberry.auto
     mfa_enabled: strawberry.auto
     created_at: strawberry.auto
+    last_login: strawberry.auto
 
 
 @strawberry_django.type(User)
