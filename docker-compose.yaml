@@ -18,6 +18,10 @@ x-server: &base_server_setup
     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     POSTGRES_HOST: ${POSTGRES_HOST:-db}
     POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    # Redis / Celery
+    CELERY_REDIS_URL: ${CELERY_REDIS_URL:-redis://redis:6379/0}
+    CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
+    TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
   env_file:
     - path: ${BACKEND_ENV_FILE:-.env}
       required: false
@@ -28,6 +32,14 @@ x-server: &base_server_setup
     - ipython_data_local:/root/.ipython/profile_default # persist ipython data, including ipython history
   depends_on:
     - db
+    - redis
+
+x-worker: &base_worker_setup
+  <<: *base_server_setup
+  restart: unless-stopped
+  environment:
+    <<: *base_server_environments
+    APP_TYPE: "WORKER"
 
 services:
   db:
@@ -39,6 +51,12 @@ services:
     volumes:
       - postgres_data17:/var/lib/postgresql/data
 
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+
+
   web:
     <<: *base_server_setup
     command: ["/code/misc/dev/run_web.sh"]
@@ -49,7 +67,16 @@ services:
       - 127.0.0.1:8000:8000
     depends_on:
       - db
+      - redis
+
+  worker:
+    <<: *base_worker_setup
+    command: ["/code/misc/dev/run_worker.sh"]
+    environment:
+      <<: *base_server_environments
+      APP_TYPE: "WORKER"
 
 volumes:
   postgres_data17:
+  redis_data:
   ipython_data_local:

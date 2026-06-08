@@ -35,6 +35,9 @@ services:
       POSTGRES_PORT: 5432
       LANGUAGE_CODE: en-us
       TIME_ZONE: Asia/Kathmandu
+      CELERY_REDIS_URL: redis://redis:6379/0
+      CACHE_REDIS_URL: redis://redis:6379/1
+      TEST_CACHE_REDIS_URL: redis://redis:6379/11
     volumes:
       - ./ci-share/:/ci-share/
     depends_on:

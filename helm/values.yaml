@@ -77,6 +77,34 @@ app:
 
   worker:
     enabled: false
+    beat:
+      enabled: false
+      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 0.5Gi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+    queueCommandPrefix:
+      - "celery"
+      - "-A"
+      - "main"
+      - "worker"
+      - "-l"
+      - "INFO"
+    queues:
+      default:
+        enabled: true
+        replicaCount: 1
+        celeryArgs:
+          - "-Q"
+          - "default"
+          - "--concurrency"
+          - "4"
+          - "--max-tasks-per-child"
+          - "10"
 
   argoHook:
     enabled: true
@@ -129,3 +157,6 @@ app:
     AWS_S3_REGION_NAME: "us-east-1"
     AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
     AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
+    # Redis
+    CELERY_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/0"
+    CACHE_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/1"

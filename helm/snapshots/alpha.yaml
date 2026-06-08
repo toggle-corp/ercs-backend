@@ -208,6 +208,8 @@ stringData:
   AWS_S3_REGION_NAME: "us-east-1"
   AWS_S3_SECRET_ACCESS_KEY: "test-password"
   AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
+  CACHE_REDIS_URL: "redis://redis:6379/1"
+  CELERY_REDIS_URL: "redis://redis:6379/0"
   DJANGO_SECRET_KEY: "django-secret-key"
   POSTGRES_DB: "ercs"
   POSTGRES_HOST: "ercs-postgresql"
@@ -559,7 +561,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
         checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
@@ -591,6 +593,128 @@ spec:
           env:
             - name: APP_TYPE
               value: "web"
+
+---
+# Source: ercs-backend-helm/charts/app/templates/worker-beat/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-app-worker-beat
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: release-name-app
+    component: worker-beat
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 1  # This should only 1
+  selector:
+    matchLabels:
+      app: release-name-app
+      component: worker-beat
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
+        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+      labels:
+        app: release-name-app
+        component: worker-beat
+    spec:
+      containers:
+        - name: worker-beat
+          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          imagePullPolicy: IfNotPresent
+          command:
+            - celery
+            - -A
+            - main
+            - beat
+            - -l
+            - INFO
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1Gi
+            requests:
+              cpu: "0.1"
+              memory: 0.5Gi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "worker"
+
+---
+# Source: ercs-backend-helm/charts/app/templates/worker/deployment.yaml
+# Queue: default
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: release-name-app-worker-default
+  annotations:
+    reloader.stakater.com/auto: "true"
+  labels:
+    app: release-name-app
+    component: worker
+    queue: default
+    environment: ALPHA
+    release: release-name
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: release-name-app
+      component: worker
+      queue: default
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
+        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+      labels:
+        app: release-name-app
+        component: worker
+        queue: default
+    spec:
+      containers:
+        - name: worker
+          command:
+            - celery
+            - -A
+            - main
+            - worker
+            - -l
+            - INFO
+            - -Q
+            - default
+            - --concurrency
+            - "4"
+            - --max-tasks-per-child
+            - "10"
+          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          imagePullPolicy: IfNotPresent
+          # TODO: livenessProbe
+          resources:
+            limits:
+              cpu: "1"
+              memory: 2Gi
+            requests:
+              cpu: "1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: release-name-app-secret
+            - configMapRef:
+                name: release-name-app-env-name
+          env:
+            - name: APP_TYPE
+              value: "worker"
 
 ---
 # Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/statefulset.yaml
@@ -789,7 +913,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
         checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
@@ -832,7 +956,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 1ad55f8c03222d2a99c9840df29d0fa81c59edb59d76f0a2f8602725c3d7981b
+        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
         checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
       labels:
         app: release-name-app
