@@ -59,6 +59,8 @@ env = environ.Env(
     AWS_S3_REGION_NAME=str,
     AWS_S3_MEDIA_BUCKET_NAME=str,
     AWS_S3_STATIC_BUCKET_NAME=str,
+    # Celery / Redis
+    CELERY_REDIS_URL=str,
     # Sentry
     SENTRY_ENABLED=(bool, False),
     SENTRY_DEBUG=(bool, False),
@@ -262,6 +264,11 @@ CORS_ALLOW_HEADERS = (
     "x-csrftoken",
     "x-requested-with",
 )
+# Celery
+CELERY_REDIS_URL = env("CELERY_REDIS_URL")
+CELERY_BROKER_URL = CELERY_REDIS_URL
+CELERY_RESULT_BACKEND = CELERY_REDIS_URL
+
 # Strawberry
 STRAWBERRY_DJANGO = {
     "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,

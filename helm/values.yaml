@@ -77,6 +77,33 @@ app:
 
   worker:
     enabled: false
+    beat:
+      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 0.5Gi
+        limits:
+          cpu: "1"
+          memory: 1Gi
+    queueCommandPrefix:
+      - "celery"
+      - "-A"
+      - "main"
+      - "worker"
+      - "-l"
+      - "INFO"
+    queues:
+      default:
+        enabled: true
+        replicaCount: 1
+        celeryArgs:
+          - "-Q"
+          - "default"
+          - "--concurrency"
+          - "4"
+          - "--max-tasks-per-child"
+          - "10"
 
   argoHook:
     enabled: true
