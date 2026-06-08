@@ -45,6 +45,7 @@ class AdminArea(BaseModel):
     )
     geo_shape = models.JSONField[dict | None, dict | None](null=True, blank=True)
     pcode = models.CharField[str | None, str | None](max_length=50, unique=True, null=True, blank=True)
+    ifrc_id = models.IntegerField[int | None, int | None](unique=True, null=True, blank=True, db_index=True)
     centroid_lat = models.FloatField[float | None, float | None](null=True, blank=True)
     centroid_lon = models.FloatField[float | None, float | None](null=True, blank=True)
 
