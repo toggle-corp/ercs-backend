@@ -330,6 +330,7 @@ input ExternalDashboardFilter {
 
   """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean
+  region_Level: AdminAreaLevel
   AND: ExternalDashboardFilter
   OR: ExternalDashboardFilter
   NOT: ExternalDashboardFilter
