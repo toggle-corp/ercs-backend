@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.geo.models import AdminArea
+from apps.geo.models import AdminArea, AdminAreaLevel
 
 
 @strawberry_django.type(AdminArea)
@@ -9,7 +9,7 @@ class AdminAreaType:
     id: strawberry.ID
     name: strawberry.auto
     name_am: strawberry.auto
-    level: int
+    level: AdminAreaLevel
     parent_id: strawberry.ID | None
 
     @strawberry.field

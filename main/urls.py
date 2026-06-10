@@ -27,6 +27,7 @@ urlpatterns = [
                 # 3rd party checks
                 "health_check.contrib.psutil.Disk",
                 "health_check.contrib.psutil.Memory",
+                "health_check.contrib.celery.Ping",
             ],
         ),
     ),

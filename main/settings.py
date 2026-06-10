@@ -59,6 +59,12 @@ env = environ.Env(
     AWS_S3_REGION_NAME=str,
     AWS_S3_MEDIA_BUCKET_NAME=str,
     AWS_S3_STATIC_BUCKET_NAME=str,
+    # Celery / Redis
+    # Celery
+    CELERY_REDIS_URL=str,  # redis://redis:6379/0
+    # Cache
+    CACHE_REDIS_URL=str,  # redis://redis:6379/1
+    TEST_CACHE_REDIS_URL=(str, None),
     # Sentry
     SENTRY_ENABLED=(bool, False),
     SENTRY_DEBUG=(bool, False),
@@ -262,6 +268,48 @@ CORS_ALLOW_HEADERS = (
     "x-csrftoken",
     "x-requested-with",
 )
+
+# Redis lock
+DEFAULT_REDIS_LOCK_EXPIRE = 60 * 10  # Lock expires in 10min (in seconds)
+
+# Cache
+CACHE_REDIS_URL = env("CACHE_REDIS_URL")
+TEST_CACHE_REDIS_URL = env("TEST_CACHE_REDIS_URL")
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": CACHE_REDIS_URL,
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+        "KEY_PREFIX": "djc-",
+    },
+    "local-memory": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    },
+}
+# Celery
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env("CELERY_REDIS_URL")
+CELERY_TASK_SOFT_TIME_LIMIT = 30 * 60
+CELERY_TASK_TIME_LIMIT = 35 * 60
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+
+# HEALTH-CHECK
+REDIS_URL = CACHE_REDIS_URL
+HEALTHCHECK_CACHE_KEY = "ercs_healthcheck_key"
+
+# NOTE: For non-alpha instances, look at 50 as we have other resources like db/media on the same host
+# We will need to add additional disk if usages are high on the main disk
+HEALTH_CHECK = {
+    "DISK_USAGE_MAX": 50,  # percent
+}
+
+if "alpha" in APP_ENVIRONMENT.lower():
+    HEALTH_CHECK = {
+        "DISK_USAGE_MAX": 90,
+    }
+
 # Strawberry
 STRAWBERRY_DJANGO = {
     "FIELD_DESCRIPTION_FROM_HELP_TEXT": True,

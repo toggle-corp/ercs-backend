@@ -1,7 +1,7 @@
 import strawberry
 import strawberry_django
 
-from apps.users.models import User
+from apps.users.models import User, UserRole
 
 
 @strawberry_django.type(User)
@@ -9,7 +9,7 @@ class UserType:
     id: strawberry.ID
     email: strawberry.auto
     full_name: strawberry.auto
-    role: int
+    role: UserRole
     region_id: strawberry.ID | None
 
     @strawberry.field
@@ -19,6 +19,7 @@ class UserType:
     is_active: strawberry.auto
     mfa_enabled: strawberry.auto
     created_at: strawberry.auto
+    last_login: strawberry.auto
 
 
 @strawberry_django.type(User)

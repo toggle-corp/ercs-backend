@@ -2,13 +2,13 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.geo.models import AdminArea
+from apps.geo.models import AdminArea, AdminAreaLevel
 
 
 @strawberry_django.filters.filter(AdminArea, lookups=True)
 class AdminAreaFilter:
     id: strawberry.ID | None = strawberry.UNSET
-    level: str | None = strawberry.UNSET
+    level: AdminAreaLevel | None = strawberry.UNSET
     parent_id: strawberry.ID | None = strawberry.UNSET
     pcode: str | None = strawberry.UNSET
 

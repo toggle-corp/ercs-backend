@@ -33,10 +33,6 @@ class AppEnumData:
     def label(self):
         return str(self.enum.label)
 
-    @property
-    def value(self):
-        return int(self.enum.value)
-
 
 def generate_app_enum_collection_data(name: str):
     return type(
@@ -58,7 +54,6 @@ def generate_type_for_enum(name: str, Enum):  # type: ignore[reportMissingParame
             [
                 ("key", str),
                 ("label", str),
-                ("value", int),
             ],
         ),
     )
@@ -73,7 +68,6 @@ def _enum_type(name: str, Enum):  # type: ignore[reportMissingParameterType]
             EnumType(
                 key=e.name,
                 label=e.label,
-                value=e.value,
             )
             for e in Enum
         ]

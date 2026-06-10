@@ -1,8 +1,17 @@
 import strawberry
 import strawberry_django
 
-from apps.reports.models import Link, Report, ThematicArea
+from apps.reports.models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+from apps.reports.models import LinkType as LinkTypeEnum
+from apps.reports.models import ReportType as ReportTypeEnum
 from utils.graphql.types import DjangoFileType
+
+# Register collision-prone enums under distinct GraphQL names before the
+# @strawberry_django.type decorators below process the field annotations.
+# Without this, strawberry would auto-register both as "LinkType"/"ReportType",
+# clashing with the object types of the same name defined in this file.
+strawberry.enum(LinkTypeEnum, name="LinkTypeEnum")
+strawberry.enum(ReportTypeEnum, name="ReportTypeEnum")
 
 
 @strawberry_django.type(Link)
@@ -11,7 +20,7 @@ class LinkType:
     title: strawberry.auto
     description: strawberry.auto
     url: strawberry.auto
-    link_type: int
+    link_type: LinkTypeEnum
     created_at: strawberry.auto
     updated_at: strawberry.auto
 
@@ -34,11 +43,11 @@ class ReportType:
     title: strawberry.auto
     description: strawberry.auto
     cover_image: DjangoFileType | None
-    content_type: int
+    content_type: ReportContentType
     file: DjangoFileType | None
     iframe_url: strawberry.auto
-    visibility: int
-    report_type: int
+    visibility: ReportVisibility
+    report_type: ReportTypeEnum
     thematic_area_id: strawberry.ID
 
     @strawberry.field

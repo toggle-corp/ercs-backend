@@ -59,12 +59,12 @@ class TestExternalDashboardQueries(TestCase):
             self.Query.DASHBOARDS,
             variables={
                 "pagination": {"limit": 10, "offset": 0},
-                "filters": {"page": str(ExternalDashboard.Page.HOME)},
+                "filters": {"page": ExternalDashboard.Page.HOME.name},
             },
         )
         results = content["data"]["externalDashboards"]["results"]
         assert len(results) == 1
-        assert results[0]["page"] == ExternalDashboard.Page.HOME
+        assert results[0]["page"] == ExternalDashboard.Page.HOME.name
 
 
 class TestCapacityAndResourceQueries(TestCase):

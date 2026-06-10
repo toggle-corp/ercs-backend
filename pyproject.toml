@@ -20,7 +20,10 @@ dependencies = [
     "django-stubs-ext>=5.0",
     "requests>=2.33.1",
     "sentry-sdk>=2.60.0",
-    "colorlog>=6.10.1",
+    "colorlog>=6.10.0",
+    "celery>=5.0",
+    "redis>=5.0",
+    "django-redis>=7.0.0",
 ]
 
 [dependency-groups]
@@ -118,6 +121,7 @@ extend-select = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/tests/*.py" = ["S101", "S105", "S106"]
+"apps/common/management/commands/run_celery_dev.py" = ["S603"]
 "!./apps/**/models.py" = ["D101"]
 
 [tool.pyright]

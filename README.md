@@ -46,6 +46,7 @@ The following variables are required and have defaults set in `docker-compose.ym
 | `FRONTEND_DOMAIN` | `http://localhost:3000` | |
 | `SESSION_COOKIE_DOMAIN` | `localhost` | |
 | `CSRF_COOKIE_DOMAIN` | `localhost` | |
+| `CELERY_REDIS_URL` | `redis://redis:6379/0` | Required when running the Celery worker |
 
 ### 2. Start services
 
@@ -53,7 +54,7 @@ The following variables are required and have defaults set in `docker-compose.ym
 docker compose up
 ```
 
-This starts the web server on `http://localhost:8000` and a PostgreSQL database.
+This starts the web server on `http://localhost:8000`, a PostgreSQL database, a Redis instance, and a Celery worker.
 
 ### 3. Run migrations
 
@@ -82,6 +83,26 @@ docker compose run --rm web ./manage.py loaddata seed_data/db.json
 ```
 
 > **Note:** The fixture includes a pre-created admin account (`admin@togglecorp.com`). If you have already created a superuser with the same email, the load will fail due to a conflict — either delete the existing user first or skip loading the user fixture.
+
+---
+
+## Syncing Geographic Data
+
+Administrative areas (country, regions, zones) are sourced from the [IFRC GO API](https://goadmin.ifrc.org) and must be synced before the app is fully functional.
+
+```bash
+docker compose run --rm web ./manage.py sync_geo
+```
+
+This upserts Ethiopia's administrative hierarchy (COUNTRY → REGION → ZONE) keyed on IFRC GO IDs. It is safe to re-run — existing rows are updated in place.
+
+To preview changes without writing to the database:
+
+```bash
+docker compose run --rm web ./manage.py sync_geo --dry-run
+```
+
+> **Note:** Woreda-level areas are not available from IFRC GO and must be seeded separately.
 
 ---
 
