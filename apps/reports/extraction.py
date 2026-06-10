@@ -18,7 +18,8 @@ async def trigger_document_extraction(report: Report) -> None:
     and status directly in the database once processing completes.
     """
     if not report.file.name:
-        raise ValueError("Report file is missing")
+        logger.warning("Report file is missing")
+        return
 
     with default_storage.open(report.file.name, "rb") as f:
         pdf_bytes = f.read()
