@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
+from pgvector.django import VectorField
 
 from apps.common.models import BaseModel
 
@@ -154,14 +155,25 @@ class DocumentExtraction(BaseModel):
 
     Status = DocumentExtractionStatus  # convenience alias
 
-    report = models.OneToOneField(
+    class ExtractionType(models.IntegerChoices):
+        """Extraction Types."""
+
+        EXTRACTED_CONTENT = 1, "Extracted Content"
+        DOCUMENT_SUMMARY = 2, "Document Summary"
+        PAGE_SUMMARY = 3, "Page Summary"
+        KEYWORDS = 4, "Keywords"
+        TABLE = 5, "Table"
+        CHART = 6, "Chart"
+
+    report = models.ForeignKey(
         Report,
         on_delete=models.CASCADE,
-        related_name="document_extraction",
+        related_name="document_extractions",
     )
-    extracted_contents = models.JSONField[dict[str, typing.Any] | None, dict[str, typing.Any] | None](null=True, blank=True)
-    search_text = models.TextField[str, str](blank=True, default="")
-    summary = models.TextField[str, str](blank=True, default="")
+    text = models.TextField[str, str](blank=True, default="")
+    page_number = models.IntegerField(null=True, blank=True, db_index=True)
+    chunk_type = IntegerChoicesField(choices_enum=ExtractionType, default=ExtractionType.DOCUMENT_SUMMARY)
+    embedding = VectorField(dimensions=768, null=True, blank=True)
     status: int = IntegerChoicesField(choices_enum=DocumentExtractionStatus, default=DocumentExtractionStatus.PENDING)  # type: ignore[reportAssignmentType]
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
