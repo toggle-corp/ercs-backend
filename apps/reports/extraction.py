@@ -2,9 +2,9 @@
 
 import logging
 
-from .models import DocumentExtraction, DocumentExtractionStatus, Report
-from .summarization import PdfExtraction
+from apps.reports.models import Report
 from django.core.files.storage import default_storage
+from apps.reports.tasks.task import handle_documents
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +36,5 @@ async def trigger_document_extraction(report: Report) -> None:
 
     # TODO: Send extraction request to AI tool.
     # Example payload: {"report_id": report_id, "file_path": file_path}
-
-    ext = PdfExtraction(report=report, source_file_path=pdf_bytes)
-    await ext.pdf_to_images()
+    handle_documents.delay(report.pk, pdf_bytes)
+    # Move the LLM part to another file
