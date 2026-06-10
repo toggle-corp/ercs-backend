@@ -172,7 +172,7 @@ class DocumentExtraction(BaseModel):
     )
     text = models.TextField[str, str](blank=True, default="")
     page_number = models.IntegerField(null=True, blank=True, db_index=True)
-    chunk_type = IntegerChoicesField(choices_enum=ExtractionType, default=ExtractionType.DOCUMENT_SUMMARY)
+    chunk_type = IntegerChoicesField(choices_enum=ExtractionType, default=ExtractionType.DOCUMENT_SUMMARY)  # type: ignore[reportAssignmentType]
     embedding = VectorField(dimensions=768, null=True, blank=True)
     status: int = IntegerChoicesField(choices_enum=DocumentExtractionStatus, default=DocumentExtractionStatus.PENDING)  # type: ignore[reportAssignmentType]
 

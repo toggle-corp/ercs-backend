@@ -17,12 +17,14 @@ async def trigger_document_extraction(report: Report) -> None:
     The AI tool is expected to update extracted_contents, search_text, summary,
     and status directly in the database once processing completes.
     """
+    if not report.file.name:
+        raise ValueError("Report file is missing")
+
     with default_storage.open(report.file.name, "rb") as f:
         pdf_bytes = f.read()
     logger.info(
         "Triggering document extraction for report_id=%s file_path=%s",
         report.file.name,
         str(report.pk),
-    )  # report_id, file_path)
-
-    handle_documents.delay(report.pk, pdf_bytes)
+    )
+    handle_documents.apply_async(args=[report.pk, pdf_bytes])  # pyright: ignore[reportFunctionMemberAccess]

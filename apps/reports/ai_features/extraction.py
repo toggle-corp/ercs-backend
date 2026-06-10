@@ -1,9 +1,10 @@
 import base64
 import json
-import typing
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import fitz
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI
 
 from apps.reports.ai_features.llms import OllamaHandler
 from apps.reports.ai_features.prompts import get_doc_summary_prompt
@@ -13,7 +14,11 @@ from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Re
 @dataclass
 class PdfExtraction:
     report: Report
-    source_file_path: typing.Any
+    data: bytes
+
+    llm_handler: OllamaHandler = field(init=False)
+    llm_chat_model: ChatOllama | ChatOpenAI = field(init=False)
+    llm_embedding_model: OllamaEmbeddings = field(init=False)
 
     def __post_init__(self):
         try:
@@ -23,14 +28,13 @@ class PdfExtraction:
         except Exception as e:
             raise e
 
-    def img_to_base64(self, data: fitz.Pixmap):
+    def img_to_base64(self, data: fitz.Pixmap) -> str:
         img_bytes = data.tobytes("png")
         return base64.b64encode(img_bytes).decode("utf-8")
 
     def pdf_to_images(self, zoom: float = 2.0):
-        # doc = fitz.open(self.source_file_path)
         page_summaries = []
-        doc = fitz.open(stream=self.source_file_path, filetype="pdf")
+        doc = fitz.open(stream=self.data, filetype="pdf")
 
         for page_idx in range(len(doc)):
             page = doc[page_idx]
@@ -41,6 +45,8 @@ class PdfExtraction:
             message = self.llm_handler.construct_extraction_message(img_b64=img_b64)
 
             response = self.llm_chat_model.invoke([message])
+            if not isinstance(response.content, str):
+                continue
             result = json.loads(response.content)
 
             if "summary" in result and result["summary"]:
@@ -85,6 +91,8 @@ class PdfExtraction:
 
         doc_summary_prompt = get_doc_summary_prompt(page_summaries=page_summaries)
         doc_summary = self.llm_chat_model.invoke(doc_summary_prompt)
+        if not isinstance(doc_summary.content, str):
+            return
         doc_summary_json = json.loads(doc_summary.content)
 
         if doc_summary_json:
