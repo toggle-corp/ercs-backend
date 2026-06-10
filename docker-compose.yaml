@@ -22,6 +22,10 @@ x-server: &base_server_setup
     CELERY_REDIS_URL: ${CELERY_REDIS_URL:-redis://redis:6379/0}
     CACHE_REDIS_URL: ${CACHE_REDIS_URL:-redis://redis:6379/1}
     TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
+    # LLM
+    LLM_MODEL_NAME: ${LLM_MODEL_NAME:-qwen2.5vl:7b}
+    LLM_OLLAMA_BASE_URL: ${LLM_OLLAMA_BASE_URL:-https://ollama.k8s.local.togglecorp.com}
+    LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:v1.5}
   env_file:
     - path: ${BACKEND_ENV_FILE:-.env}
       required: false
