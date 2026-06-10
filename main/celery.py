@@ -1,7 +1,8 @@
 import logging
 import os
+from logging.config import dictConfig
 
-from celery import Celery
+from celery import Celery, signals
 
 logger = logging.getLogger(__name__)
 
@@ -19,3 +20,10 @@ app.autodiscover_tasks()
 @app.task(bind=True)
 def debug_task(self):
     logger.info("Request: %s", self.request)
+
+
+@signals.setup_logging.connect
+def config_loggers(**_):
+    from django.conf import settings  # noqa: PLC0415
+
+    dictConfig(settings.LOGGING)

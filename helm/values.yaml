@@ -15,6 +15,15 @@ app:
 
   redis:
     enabled: false
+    architecture: standalone
+    fullnameOverride: ercs-redis
+    auth:
+      enabled: false
+    master:
+      persistence:
+        enabled: true
+        size: .5Gi
+        storageClass:
 
 
   postgresql:
