@@ -2,7 +2,10 @@
 
 import logging
 
-from .models import DocumentExtraction, DocumentExtractionStatus, Report
+from django.core.files.storage import default_storage
+
+from apps.reports.models import Report
+from apps.reports.tasks.task import handle_documents
 
 logger = logging.getLogger(__name__)
 
@@ -14,20 +17,12 @@ async def trigger_document_extraction(report: Report) -> None:
     The AI tool is expected to update extracted_contents, search_text, summary,
     and status directly in the database once processing completes.
     """
-    await DocumentExtraction.objects.aupdate_or_create(
-        report=report,
-        defaults={
-            "status": DocumentExtractionStatus.PENDING,
-            "extracted_contents": None,
-            "search_text": "",
-            "summary": "",
-        },
-    )
+    with default_storage.open(report.file.name, "rb") as f:
+        pdf_bytes = f.read()
+    logger.info(
+        "Triggering document extraction for report_id=%s file_path=%s",
+        report.file.name,
+        str(report.pk),
+    )  # report_id, file_path)
 
-    file_path = report.file.name if report.file else ""
-    report_id: str = str(report.pk)
-
-    logger.info("Triggering document extraction for report_id=%s file_path=%s", report_id, file_path)
-
-    # TODO: Send extraction request to AI tool.
-    # Example payload: {"report_id": report_id, "file_path": file_path}
+    handle_documents.delay(report.pk, pdf_bytes)
