@@ -1,5 +1,6 @@
 import base64
 import json
+import logging
 from dataclasses import dataclass, field
 
 import fitz
@@ -9,6 +10,8 @@ from langchain_openai import ChatOpenAI
 from apps.reports.ai_features.llms import OllamaHandler
 from apps.reports.ai_features.prompts import get_doc_summary_prompt
 from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -94,13 +97,14 @@ class PdfExtraction:
         if not isinstance(doc_summary.content, str):
             return
         doc_summary_json = json.loads(doc_summary.content)
-
-        if doc_summary_json:
+        if doc_summary_json and "doc_summary" in doc_summary_json:
             DocumentExtraction.objects.update_or_create(
                 report=self.report,
                 status=DocumentExtractionStatus.SUCCESS,
-                text=doc_summary_json["Executive Summary"],
+                text=doc_summary_json["doc_summary"],
                 page_number=None,
                 chunk_type=DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY,
-                embedding=self.llm_embedding_model.embed_query(doc_summary_json["Executive Summary"]),
+                embedding=self.llm_embedding_model.embed_query(doc_summary_json["doc_summary"]),
             )
+        else:
+            logger.warning("The key doc_summary is missing in the output")

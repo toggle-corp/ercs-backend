@@ -50,5 +50,6 @@ def get_doc_summary_prompt(page_summaries: list[str]):
 
     {chr(10).join(f"Page {i + 1} : {summary}" for i, summary in enumerate(page_summaries))}
 
-    Return only a concise executive summary of the above given texts in 2-4 paragraphs.
+    Return only a concise executive summary of the above given texts in 2-4 paragraphs
+    exactly in a dict with key 'doc_summary'.
 """
