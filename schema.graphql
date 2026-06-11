@@ -800,6 +800,7 @@ type Query {
   teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
   team(id: ID!): TeamType!
   teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+  teamMember(id: ID!): TeamMemberType!
   enums: AppEnumCollection!
 }
 
