@@ -56,7 +56,7 @@ class PdfExtraction:
                 page_summaries.append(result["summary"])
 
             if "extracted_text" in result and result["extracted_text"]:
-                DocumentExtraction.objects.update_or_create(
+                DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
                     text=result["extracted_text"],
@@ -65,7 +65,7 @@ class PdfExtraction:
                     embedding=self.llm_embedding_model.embed_query(result["extracted_text"]),
                 )
             if "key_findings" in result and result["key_findings"]:
-                DocumentExtraction.objects.update_or_create(
+                DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
                     text=result["key_findings"],
@@ -74,7 +74,7 @@ class PdfExtraction:
                     embedding=self.llm_embedding_model.embed_query(result["key_findings"]),
                 )
             if "tables" in result and result["tables"]:
-                DocumentExtraction.objects.update_or_create(
+                DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
                     text=result["tables"],
@@ -83,7 +83,7 @@ class PdfExtraction:
                     embedding=self.llm_embedding_model.embed_query(json.dumps(result["tables"])),
                 )
             if "charts" in result and result["charts"]:
-                DocumentExtraction.objects.update_or_create(
+                DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
                     text=result["charts"],
@@ -98,7 +98,7 @@ class PdfExtraction:
             return
         doc_summary_json = json.loads(doc_summary.content)
         if doc_summary_json and "doc_summary" in doc_summary_json:
-            DocumentExtraction.objects.update_or_create(
+            DocumentExtraction.objects.create(
                 report=self.report,
                 status=DocumentExtractionStatus.SUCCESS,
                 text=doc_summary_json["doc_summary"],

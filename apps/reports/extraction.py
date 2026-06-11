@@ -25,7 +25,7 @@ async def trigger_document_extraction(report: Report) -> None:
         pdf_bytes = f.read()
     logger.info(
         "Triggering document extraction for report_id=%s file_path=%s",
-        report.file.name,
         str(report.pk),
+        report.file.name,
     )
     handle_documents.apply_async(args=[report.pk, pdf_bytes])  # pyright: ignore[reportFunctionMemberAccess]
