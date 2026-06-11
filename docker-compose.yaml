@@ -24,7 +24,7 @@ x-server: &base_server_setup
     TEST_CACHE_REDIS_URL: ${TEST_CACHE_REDIS_URL:-redis://redis:6379/11}
     # LLM
     LLM_MODEL_NAME: ${LLM_MODEL_NAME:-qwen2.5vl:7b}
-    LLM_OLLAMA_BASE_URL: ${LLM_OLLAMA_BASE_URL:-https://ollama.k8s.local.togglecorp.com}
+    LLM_OLLAMA_BASE_URL: ${LLM_OLLAMA_BASE_URL:-https://test.ollama.com}
     LLM_EMBEDDING_MODEL: ${LLM_EMBEDDING_MODEL:-nomic-embed-text:v1.5}
   env_file:
     - path: ${BACKEND_ENV_FILE:-.env}
