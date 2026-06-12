@@ -4,7 +4,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django_choices_field import IntegerChoicesField
 from django_stubs_ext.db.models.manager import RelatedManager
-from pgvector.django import VectorField
+from pgvector.django import HnswIndex, VectorField
 
 from apps.common.models import BaseModel
 
@@ -179,6 +179,16 @@ class DocumentExtraction(BaseModel):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Document Extraction"
         verbose_name_plural = "Document Extractions"
+        indexes = [
+            HnswIndex(
+                name="doc_embedding_hnsw_idx",
+                fields=["embedding"],
+                m=16,
+                ef_construction=64,
+                opclasses=["vector_cosine_ops"],
+                condition=models.Q(embedding__isnull=False),
+            ),
+        ]
 
     @typing.override
     def __str__(self) -> str:
