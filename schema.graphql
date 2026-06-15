@@ -71,47 +71,47 @@ type AppEnumCollection {
 }
 
 type AppEnumCollectionAdminAreaLevel {
-  key: String!
+  key: AdminAreaLevel!
   label: String!
 }
 
 type AppEnumCollectionDashboardPage {
-  key: String!
+  key: DashboardPage!
   label: String!
 }
 
 type AppEnumCollectionDocumentExtractionStatus {
-  key: String!
+  key: DocumentExtractionStatus!
   label: String!
 }
 
 type AppEnumCollectionLinkType {
-  key: String!
+  key: LinkTypeEnum!
   label: String!
 }
 
 type AppEnumCollectionReportContentType {
-  key: String!
+  key: ReportContentType!
   label: String!
 }
 
 type AppEnumCollectionReportType {
-  key: String!
+  key: ReportTypeEnum!
   label: String!
 }
 
 type AppEnumCollectionReportVisibility {
-  key: String!
+  key: ReportVisibility!
   label: String!
 }
 
 type AppEnumCollectionTeamMemberSex {
-  key: String!
+  key: TeamMemberSex!
   label: String!
 }
 
 type AppEnumCollectionUserRole {
-  key: String!
+  key: UserRole!
   label: String!
 }
 
@@ -251,6 +251,13 @@ type DjangoFileType {
   name: String!
   size: Int!
   url: String!
+}
+
+enum DocumentExtractionStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  FAILURE
 }
 
 """
@@ -950,6 +957,8 @@ input TeamFilter {
   NOT: TeamFilter
   DISTINCT: Boolean
   search: String
+  createdAtGte: DateTime
+  createdAtLte: DateTime
 }
 
 input TeamMemberCreateInput {
@@ -999,18 +1008,14 @@ type TeamMemberType {
   email: String
   phoneNumber: String
   sex: TeamMemberSex
-
-  """AdminArea at region level (level=20)."""
-  regionId: ID
-
-  """AdminArea at woreda level (level=40)."""
-  woredaId: ID
   training: String
   fieldOfStudy: String
   order: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
   sexDisplay: String
+  region: ID
+  woreda: ID
 }
 
 type TeamMemberTypeMutationResponseType {

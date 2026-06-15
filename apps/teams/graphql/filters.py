@@ -1,3 +1,5 @@
+import datetime
+
 import strawberry
 import strawberry_django
 from django.db.models import Q
@@ -13,6 +15,14 @@ class TeamFilter:
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:
         return Q(name__icontains=value)
+
+    @strawberry_django.filter_field
+    def created_at_gte(self, queryset, value: datetime.datetime, prefix: str) -> Q:
+        return Q(created_at__gte=value)
+
+    @strawberry_django.filter_field
+    def created_at_lte(self, queryset, value: datetime.datetime, prefix: str) -> Q:
+        return Q(created_at__lte=value)
 
 
 @strawberry_django.filters.filter(TeamMember, lookups=True)

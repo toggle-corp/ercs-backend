@@ -13,7 +13,6 @@ class TeamMemberType:
     email: strawberry.auto
     phone_number: strawberry.auto
     sex: TeamMemberSex | None
-    region_id: strawberry.ID | None
 
     @strawberry.field
     def sex_display(self) -> str | None:
@@ -21,7 +20,14 @@ class TeamMemberType:
             return None
         return self.get_sex_display()  # type: ignore[reportAttributeAccessIssue]
 
-    woreda_id: strawberry.ID | None
+    @strawberry.field
+    def region(self) -> strawberry.ID | None:
+        return self.region_id  # type: ignore[reportAttributeAccessIssue]
+
+    @strawberry.field
+    def woreda(self) -> strawberry.ID | None:
+        return self.woreda_id  # type: ignore[reportAttributeAccessIssue]
+
     training: strawberry.auto
     field_of_study: strawberry.auto
     order: strawberry.auto

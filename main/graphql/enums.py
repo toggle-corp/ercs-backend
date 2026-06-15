@@ -27,7 +27,7 @@ class AppEnumData:
 
     @property
     def key(self):
-        return self.enum.name
+        return self.enum
 
     @property
     def label(self):
@@ -52,7 +52,7 @@ def generate_type_for_enum(name: str, Enum):  # type: ignore[reportMissingParame
         dataclasses.make_dataclass(
             f"AppEnumCollection{name}",
             [
-                ("key", str),
+                ("key", Enum),
                 ("label", str),
             ],
         ),
@@ -66,7 +66,7 @@ def _enum_type(name: str, Enum):  # type: ignore[reportMissingParameterType]
     def _field() -> list[EnumType]:  # type: ignore[reportGeneralTypeIssues]
         return [
             EnumType(
-                key=e.name,
+                key=e,
                 label=e.label,
             )
             for e in Enum
