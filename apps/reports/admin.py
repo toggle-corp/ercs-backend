@@ -12,9 +12,9 @@ class ThematicAreaAdmin(admin.ModelAdmin):
 
 @admin.register(DocumentExtraction)
 class DocumentExtractionAdmin(admin.ModelAdmin):
-    list_display = ["report", "status", "created_at", "updated_at"]
+    list_display = ["report", "status", "chunk_type", "page_number", "created_at", "updated_at"]
     list_filter = ["status"]
-    readonly_fields = ["report", "created_at", "updated_at"]
+    readonly_fields = ["report", "created_at", "chunk_type", "page_number", "updated_at"]
     ordering = ["-created_at"]
 
 

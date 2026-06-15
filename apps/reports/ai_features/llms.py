@@ -1,0 +1,63 @@
+from dataclasses import dataclass
+
+from django.conf import settings
+from langchain_core.messages import HumanMessage
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI
+
+from apps.reports.ai_features.prompts import PAGE_PROMPT
+
+
+@dataclass
+class LLMHandler:
+    temperature: float = 0.2
+
+    def construct_extraction_message(self, img_b64: str) -> HumanMessage:
+        return HumanMessage(
+            content=[
+                {
+                    "type": "text",
+                    "text": PAGE_PROMPT,
+                },
+                {
+                    "type": "image_url",
+                    "image_url": f"data:image/png;base64,{img_b64}",
+                },
+            ],
+        )
+
+
+@dataclass
+class OpenAIHandler(LLMHandler):
+    """LLM inference using OpenAI."""
+
+    def __init__(self):
+        try:
+            self.llm_model = ChatOpenAI(model=settings.LLM_MODEL_NAME, temperature=self.temperature)
+        except Exception as e:
+            raise Exception(f"OpenAI LLM model is not successfully loaded. {str(e)}") from e
+
+
+@dataclass
+class OllamaHandler(LLMHandler):
+    """LLM Handler using Ollama."""
+
+    def load_chat_model(self):
+        try:
+            return ChatOllama(
+                model=settings.LLM_MODEL_NAME,
+                base_url=settings.LLM_OLLAMA_BASE_URL,
+                temperature=self.temperature,
+                format="json",
+            )
+        except Exception as e:
+            raise Exception(f"Ollama LLM model is not successfully loaded. {str(e)}") from e
+
+    def load_embedding_model(self):
+        try:
+            return OllamaEmbeddings(
+                model=settings.LLM_EMBEDDING_MODEL,
+                base_url=settings.LLM_OLLAMA_BASE_URL,
+            )
+        except Exception as e:
+            raise Exception(f"Ollama LLM model is not successfully loaded. {str(e)}") from e

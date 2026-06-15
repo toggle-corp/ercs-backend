@@ -74,6 +74,10 @@ env = environ.Env(
     # -- Filesystem (default) XXX: Don't use in production
     MEDIA_ROOT=(str, BASE_DIR / "data/media"),
     STATIC_ROOT=(str, BASE_DIR / "data/static"),
+    # LLM
+    LLM_MODEL_NAME=(str, None),
+    LLM_OLLAMA_BASE_URL=(str, None),
+    LLM_EMBEDDING_MODEL=(str, None),
 )
 
 APP_DOMAIN = urlparse(env("APP_DOMAIN"))
@@ -96,6 +100,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     # Third-party
     "corsheaders",
     "rest_framework",
@@ -294,6 +299,11 @@ CELERY_RESULT_BACKEND = CELERY_BROKER_URL = env("CELERY_REDIS_URL")
 CELERY_TASK_SOFT_TIME_LIMIT = 30 * 60
 CELERY_TASK_TIME_LIMIT = 35 * 60
 CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
+
+# LLM
+LLM_MODEL_NAME = env("LLM_MODEL_NAME")
+LLM_OLLAMA_BASE_URL = env("LLM_OLLAMA_BASE_URL")
+LLM_EMBEDDING_MODEL = env("LLM_EMBEDDING_MODEL")
 
 # HEALTH-CHECK
 REDIS_URL = CACHE_REDIS_URL
