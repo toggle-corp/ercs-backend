@@ -3,9 +3,9 @@ import time
 import typing
 from urllib.parse import urljoin
 
-import redis as redis_lib
 import requests
 from django.conf import settings
+from django.core.cache import cache
 from django.core.management.base import BaseCommand, CommandParser
 from django.db import connections
 from django.db.utils import OperationalError
@@ -41,19 +41,18 @@ class Command(BaseCommand):
 
     def wait_for_redis(self):
         self.stdout.write("Waiting for Redis...")
-        redis_url = getattr(settings, "CELERY_REDIS_URL", None)
-        if not redis_url:
-            self.stdout.write(self.style.WARNING("CELERY_REDIS_URL is not configured. Skipping wait"))
-            return
-
+        redis_conn = None
         start_time = time.time()
-        client = redis_lib.from_url(redis_url)
         while True:
             try:
-                client.ping()
+                cache.set("wait-for-it-ping", "pong", timeout=1)  # Set a key to check Redis availability
+                redis_conn = cache.get("wait-for-it-ping")  # Try to get the value back from Redis
+                if redis_conn != "pong":
+                    raise TypeError
                 break
-            except RedisConnectionError:
+            except (RedisConnectionError, TypeError):
                 ...
+            # Try again
             self.stdout.write(self.style.WARNING("Redis not available, waiting..."))
             time.sleep(1)
 
