@@ -9,6 +9,7 @@ from apps.teams.models import Team, TeamMember
 class TeamFilter:
     id: strawberry.ID | None = strawberry.UNSET
     name: str | None = strawberry.UNSET
+    created_at: strawberry.auto
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:

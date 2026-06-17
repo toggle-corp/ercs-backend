@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 
 from apps.teams.models import Team, TeamMember, TeamMemberSex
 
@@ -13,7 +14,6 @@ class TeamMemberType:
     email: strawberry.auto
     phone_number: strawberry.auto
     sex: TeamMemberSex | None
-    region_id: strawberry.ID | None
 
     @strawberry.field
     def sex_display(self) -> str | None:
@@ -21,7 +21,16 @@ class TeamMemberType:
             return None
         return self.get_sex_display()  # type: ignore[reportAttributeAccessIssue]
 
-    woreda_id: strawberry.ID | None
+    @strawberry.field
+    @sync_to_async
+    def region(self) -> strawberry.ID | None:
+        return self.region_id  # type: ignore[reportAttributeAccessIssue]
+
+    @strawberry.field
+    @sync_to_async
+    def woreda(self) -> strawberry.ID | None:
+        return self.woreda_id  # type: ignore[reportAttributeAccessIssue]
+
     training: strawberry.auto
     field_of_study: strawberry.auto
     order: strawberry.auto

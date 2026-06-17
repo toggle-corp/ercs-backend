@@ -26,3 +26,7 @@ class Query:
         order=TeamMemberOrder,
         permission_classes=[IsAuthenticated],
     )
+
+    team_member: TeamMemberType = strawberry_django.field(
+        permission_classes=[IsAuthenticated],
+    )

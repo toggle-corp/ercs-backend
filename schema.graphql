@@ -71,47 +71,47 @@ type AppEnumCollection {
 }
 
 type AppEnumCollectionAdminAreaLevel {
-  key: String!
+  key: AdminAreaLevel!
   label: String!
 }
 
 type AppEnumCollectionDashboardPage {
-  key: String!
+  key: DashboardPage!
   label: String!
 }
 
 type AppEnumCollectionDocumentExtractionStatus {
-  key: String!
+  key: DocumentExtractionStatus!
   label: String!
 }
 
 type AppEnumCollectionLinkType {
-  key: String!
+  key: LinkTypeEnum!
   label: String!
 }
 
 type AppEnumCollectionReportContentType {
-  key: String!
+  key: ReportContentType!
   label: String!
 }
 
 type AppEnumCollectionReportType {
-  key: String!
+  key: ReportTypeEnum!
   label: String!
 }
 
 type AppEnumCollectionReportVisibility {
-  key: String!
+  key: ReportVisibility!
   label: String!
 }
 
 type AppEnumCollectionTeamMemberSex {
-  key: String!
+  key: TeamMemberSex!
   label: String!
 }
 
 type AppEnumCollectionUserRole {
-  key: String!
+  key: UserRole!
   label: String!
 }
 
@@ -225,6 +225,52 @@ scalar Date
 """Date with time (isoformat)"""
 scalar DateTime
 
+input DatetimeDatetimeFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: DateTime
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [DateTime!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: DateTime
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: DateTime
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: DateTime
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: DateTime
+
+  """Inclusive range test (between)"""
+  range: DatetimeRangeLookup
+  year: IntComparisonFilterLookup
+  month: IntComparisonFilterLookup
+  day: IntComparisonFilterLookup
+  weekDay: IntComparisonFilterLookup
+  isoWeekDay: IntComparisonFilterLookup
+  week: IntComparisonFilterLookup
+  isoYear: IntComparisonFilterLookup
+  quarter: IntComparisonFilterLookup
+  hour: IntComparisonFilterLookup
+  minute: IntComparisonFilterLookup
+  second: IntComparisonFilterLookup
+  date: IntComparisonFilterLookup
+  time: IntComparisonFilterLookup
+}
+
+input DatetimeRangeLookup {
+  start: DateTime = null
+  end: DateTime = null
+}
+
 union DeleteCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
 
 union DeleteExternalDashboardPayload = ExternalDashboardTypeMutationResponseType | OperationInfo
@@ -251,6 +297,13 @@ type DjangoFileType {
   name: String!
   size: Int!
   url: String!
+}
+
+enum DocumentExtractionStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  FAILURE
 }
 
 """
@@ -514,6 +567,39 @@ type GalleryImageTypeOffsetPaginated {
 
   """List of paginated results."""
   results: [GalleryImageType!]!
+}
+
+input IntComparisonFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: Int
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [Int!]
+
+  """Greater than. Filter will be skipped on `null` value"""
+  gt: Int
+
+  """Greater than or equal to. Filter will be skipped on `null` value"""
+  gte: Int
+
+  """Less than. Filter will be skipped on `null` value"""
+  lt: Int
+
+  """Less than or equal to. Filter will be skipped on `null` value"""
+  lte: Int
+
+  """Inclusive range test (between)"""
+  range: IntRangeLookup
+}
+
+input IntRangeLookup {
+  start: Int = null
+  end: Int = null
 }
 
 input LinkCreateInput {
@@ -801,6 +887,7 @@ type Query {
   teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
   team(id: ID!): TeamType!
   teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+  teamMember(id: ID!): TeamMemberType!
   enums: AppEnumCollection!
 }
 
@@ -945,6 +1032,7 @@ input TeamCreateInput {
 input TeamFilter {
   id: ID
   name: String
+  createdAt: DatetimeDatetimeFilterLookup
   AND: TeamFilter
   OR: TeamFilter
   NOT: TeamFilter
@@ -999,18 +1087,14 @@ type TeamMemberType {
   email: String
   phoneNumber: String
   sex: TeamMemberSex
-
-  """AdminArea at region level (level=20)."""
-  regionId: ID
-
-  """AdminArea at woreda level (level=40)."""
-  woredaId: ID
   training: String
   fieldOfStudy: String
   order: Int!
   createdAt: DateTime!
   updatedAt: DateTime!
   sexDisplay: String
+  region: ID
+  woreda: ID
 }
 
 type TeamMemberTypeMutationResponseType {
