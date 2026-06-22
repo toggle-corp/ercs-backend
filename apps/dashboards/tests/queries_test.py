@@ -23,6 +23,7 @@ class TestExternalDashboardQueries(TestCase):
                         showOnHome
                         order
                         createdAt
+                        capacityAndResourceId
                     }
                 }
             }
@@ -98,21 +99,26 @@ class TestCapacityAndResourceQueries(TestCase):
         super().setUpClass()
         cls.user = UserFactory.create()
 
+        cls.capacity_1 = CapacityAndResourceFactory.create(order=0, is_active=True)
+        cls.capacity_2 = CapacityAndResourceFactory.create(order=1, is_active=True)
+        cls.capacity_inactive = CapacityAndResourceFactory.create(order=2, is_active=False)
+
         cls.dashboard_1 = ExternalDashboardFactory.create(
             page=ExternalDashboard.Page.CAPACITY_RESOURCES,
+            capacity_and_resource=cls.capacity_1,
             order=0,
         )
         cls.dashboard_2 = ExternalDashboardFactory.create(
             page=ExternalDashboard.Page.CAPACITY_RESOURCES,
+            capacity_and_resource=cls.capacity_2,
             order=1,
         )
-
-        cls.capacity_1 = CapacityAndResourceFactory.create(order=0, is_active=True)
-        cls.capacity_1.dashboards.set([cls.dashboard_1])
-        cls.capacity_2 = CapacityAndResourceFactory.create(order=1, is_active=True)
-        cls.capacity_2.dashboards.set([cls.dashboard_2])
-        cls.capacity_inactive = CapacityAndResourceFactory.create(order=2, is_active=False)
-        cls.capacity_inactive.dashboards.set([cls.dashboard_1])
+        # dashboard_1 also appears under capacity_inactive
+        ExternalDashboardFactory.create(
+            page=ExternalDashboard.Page.CAPACITY_RESOURCES,
+            capacity_and_resource=cls.capacity_inactive,
+            order=2,
+        )
 
     def test_all_capacity_and_resources(self):
         content = self.query_check(
@@ -130,6 +136,16 @@ class TestCapacityAndResourceQueries(TestCase):
             },
         )
         assert content["data"]["capacityAndResources"]["totalCount"] == 2
+
+    def test_dashboards_nested_in_capacity(self):
+        content = self.query_check(
+            self.Query.CAPACITY_AND_RESOURCES,
+            variables={"pagination": {"limit": 10, "offset": 0}},
+        )
+        results = content["data"]["capacityAndResources"]["results"]
+        capacity_1_result = next(r for r in results if r["id"] == str(self.capacity_1.pk))
+        assert len(capacity_1_result["dashboards"]) == 1
+        assert capacity_1_result["dashboards"][0]["id"] == str(self.dashboard_1.pk)
 
     def test_search(self):
         content = self.query_check(

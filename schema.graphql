@@ -115,17 +115,16 @@ type AppEnumCollectionUserRole {
   label: String!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceCreateInput {
   title: String!
   description: String
   region: ID
   isActive: Boolean
   order: Int!
-  dashboards: [ID!]!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceFilter {
   id: ID
   isActive: Boolean
@@ -142,7 +141,7 @@ input CapacityAndResourceOrder @oneOf {
   title: Ordering
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 type CapacityAndResourceType {
   id: ID!
   title: String!
@@ -150,10 +149,11 @@ type CapacityAndResourceType {
   regionId: ID
   isActive: Boolean!
   order: Int!
-  dashboards: [ExternalDashboardType!]
+  dashboards: [ExternalDashboardType!]!
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
+  dashboardsCount: Int!
 }
 
 type CapacityAndResourceTypeMutationResponseType {
@@ -172,14 +172,13 @@ type CapacityAndResourceTypeOffsetPaginated {
   results: [CapacityAndResourceType!]!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceUpdateInput {
   title: String
   description: String
   isActive: Boolean
   order: Int
   region: ID
-  dashboards: [ID!]
 }
 
 union CreateCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
@@ -370,6 +369,7 @@ input ExternalDashboardCreateInput {
   page: DashboardPage!
   description: String
   region: ID
+  capacityAndResource: ID
   showOnHome: Boolean! = false
   order: Int! = 0
   isActive: Boolean! = true
@@ -390,6 +390,7 @@ input ExternalDashboardFilter {
   DISTINCT: Boolean
   search: String
   regions: [ID!]
+  capacityAndResources: [ID!]
 }
 
 input ExternalDashboardOrder @oneOf {
@@ -406,6 +407,7 @@ type ExternalDashboardType {
   url: String!
   page: DashboardPage!
   regionId: ID
+  capacityAndResourceId: ID
 
   """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean!
@@ -439,6 +441,7 @@ input ExternalDashboardUpdateInput {
   page: DashboardPage
   description: String
   region: ID
+  capacityAndResource: ID
   showOnHome: Boolean
   order: Int
   isActive: Boolean
