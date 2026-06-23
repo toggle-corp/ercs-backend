@@ -3,6 +3,7 @@ import typing
 
 from apps.dashboards.factories import CapacityAndResourceFactory, ExternalDashboardFactory
 from apps.dashboards.models import CapacityAndResource, ExternalDashboard
+from apps.dashboards.serializers import ExternalDashboardSerializer
 from apps.users.factories import UserFactory
 from apps.users.models import User
 from main.tests import TestCase
@@ -10,6 +11,36 @@ from main.tests import TestCase
 
 class TestExternalDashboardMutations(TestCase):
     class Mutation:
+        ADD_TO_HOME = """
+            mutation AddDashboardToHome($id: ID!) {
+                addDashboardToHome(id: $id) {
+                    ... on ExternalDashboardTypeMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            showOnHome
+                        }
+                    }
+                }
+            }
+        """
+
+        REMOVE_FROM_HOME = """
+            mutation RemoveDashboardFromHome($id: ID!) {
+                removeDashboardFromHome(id: $id) {
+                    ... on ExternalDashboardTypeMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            showOnHome
+                        }
+                    }
+                }
+            }
+        """
+
         CREATE_DASHBOARD = """
             mutation CreateExternalDashboard($data: ExternalDashboardCreateInput!) {
                 createExternalDashboard(data: $data) {
@@ -94,6 +125,78 @@ class TestExternalDashboardMutations(TestCase):
         resp = content["data"]["updateExternalDashboard"]
         assert resp["ok"] is True
         assert resp["result"]["isActive"] is False
+
+    def test_add_dashboard_to_home(self):
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(show_on_home=False)
+        content = self.query_check(
+            self.Mutation.ADD_TO_HOME,
+            variables={"id": str(dashboard.pk)},
+        )
+        resp = content["data"]["addDashboardToHome"]
+        assert resp["ok"] is True
+        assert resp["result"]["showOnHome"] is True
+        dashboard.refresh_from_db()
+        assert dashboard.show_on_home is True
+
+    def test_add_dashboard_to_home_idempotent(self):
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(show_on_home=True)
+        content = self.query_check(
+            self.Mutation.ADD_TO_HOME,
+            variables={"id": str(dashboard.pk)},
+        )
+        resp = content["data"]["addDashboardToHome"]
+        assert resp["ok"] is True
+        assert resp["result"]["showOnHome"] is True
+
+    def test_add_dashboard_to_home_limit_exceeded(self):
+        self.force_login(self.staff)
+        for _ in range(ExternalDashboardSerializer.HOME_DASHBOARD_LIMIT):
+            ExternalDashboardFactory.create(show_on_home=True)
+        dashboard = ExternalDashboardFactory.create(show_on_home=False)
+        content = self.query_check(
+            self.Mutation.ADD_TO_HOME,
+            variables={"id": str(dashboard.pk)},
+        )
+        resp = content["data"]["addDashboardToHome"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+        dashboard.refresh_from_db()
+        assert dashboard.show_on_home is False
+
+    def test_viewer_cannot_add_to_home(self):
+        self.force_login(self.viewer)
+        dashboard = ExternalDashboardFactory.create(show_on_home=False)
+        content = self.query_check(
+            self.Mutation.ADD_TO_HOME,
+            assert_errors=True,
+            variables={"id": str(dashboard.pk)},
+        )
+        assert "errors" in content
+
+    def test_remove_dashboard_from_home(self):
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(show_on_home=True)
+        content = self.query_check(
+            self.Mutation.REMOVE_FROM_HOME,
+            variables={"id": str(dashboard.pk)},
+        )
+        resp = content["data"]["removeDashboardFromHome"]
+        assert resp["ok"] is True
+        assert resp["result"]["showOnHome"] is False
+        dashboard.refresh_from_db()
+        assert dashboard.show_on_home is False
+
+    def test_viewer_cannot_remove_from_home(self):
+        self.force_login(self.viewer)
+        dashboard = ExternalDashboardFactory.create(show_on_home=True)
+        content = self.query_check(
+            self.Mutation.REMOVE_FROM_HOME,
+            assert_errors=True,
+            variables={"id": str(dashboard.pk)},
+        )
+        assert "errors" in content
 
 
 class TestCapacityAndResourceMutations(TestCase):

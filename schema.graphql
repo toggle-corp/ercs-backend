@@ -1,5 +1,7 @@
 directive @oneOf on INPUT_OBJECT
 
+union AddDashboardToHomePayload = ExternalDashboardTypeMutationResponseType | OperationInfo
+
 """
 Central geo-reference model with a self-referential level hierarchy.
 
@@ -689,6 +691,8 @@ type Mutation {
   updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
   createCapacityAndResource(data: CapacityAndResourceCreateInput!): CreateCapacityAndResourcePayload!
   updateCapacityAndResource(id: ID!, data: CapacityAndResourceUpdateInput!): UpdateCapacityAndResourcePayload!
+  addDashboardToHome(id: ID!): AddDashboardToHomePayload!
+  removeDashboardFromHome(id: ID!): RemoveDashboardFromHomePayload!
   deleteExternalDashboard(id: ID!): DeleteExternalDashboardPayload!
   deleteCapacityAndResource(id: ID!): DeleteCapacityAndResourcePayload!
   createGalleryAlbum(data: GalleryAlbumCreateInput!): CreateGalleryAlbumPayload!
@@ -890,6 +894,8 @@ type Query {
   teamMember(id: ID!): TeamMemberType!
   enums: AppEnumCollection!
 }
+
+union RemoveDashboardFromHomePayload = ExternalDashboardTypeMutationResponseType | OperationInfo
 
 enum ReportContentType {
   FILE

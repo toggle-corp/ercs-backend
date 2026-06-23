@@ -25,6 +25,20 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
             "created_by": {"required": False},
         }
 
+    HOME_DASHBOARD_LIMIT = 6
+
+    @typing.override
+    def validate(self, attrs: dict) -> dict:
+        if attrs.get("show_on_home"):
+            qs = ExternalDashboard.objects.filter(show_on_home=True)
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            if qs.count() >= self.HOME_DASHBOARD_LIMIT:
+                raise serializers.ValidationError(
+                    {"show_on_home": f"Maximum of {self.HOME_DASHBOARD_LIMIT} dashboards can be shown on the home page."},
+                )
+        return attrs
+
     @typing.override
     def create(self, validated_data: dict) -> ExternalDashboard:
         request = self.context.get("request")
