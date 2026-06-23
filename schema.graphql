@@ -290,6 +290,8 @@ union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationIn
 
 union DeleteTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
+union DeleteThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
+
 union DeleteUserPayload = UserTypeMutationResponseType | OperationInfo
 
 type DjangoFileType {
@@ -677,6 +679,8 @@ type Mutation {
   resetUserPassword(id: ID!, newPassword: String!): ResetUserPasswordPayload!
   updateMyPassword(data: PasswordUpdateInput!): UpdateMyPasswordPayload!
   createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
+  updateThematicArea(id: ID!, data: ThematicAreaInput!): UpdateThematicAreaPayload!
+  deleteThematicArea(id: ID!): DeleteThematicAreaPayload!
   createReport(data: ReportCreateInput!): CreateReportPayload!
   updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
   createLink(data: LinkCreateInput!): CreateLinkPayload!
@@ -1222,6 +1226,8 @@ union UpdateReportPayload = ReportTypeMutationResponseType | OperationInfo
 union UpdateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
 
 union UpdateTeamPayload = TeamTypeMutationResponseType | OperationInfo
+
+union UpdateThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
 
 union UpdateUserPayload = UserTypeMutationResponseType | OperationInfo
 

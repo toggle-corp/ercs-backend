@@ -2,7 +2,7 @@ import strawberry
 import strawberry_django
 
 from apps.reports.extraction import trigger_document_extraction
-from apps.reports.models import Link, Report
+from apps.reports.models import Link, Report, ThematicArea
 from apps.reports.models import ReportType as ReportTypeEnum
 from apps.reports.serializers import LinkSerializer, ReportSerializer, ThematicAreaSerializer
 from main.graphql.context import Info
@@ -28,6 +28,26 @@ class Mutation:
         data: ThematicAreaInput,
     ) -> MutationResponseType[ThematicAreaType]:
         return await ModelMutation(ThematicAreaSerializer).handle_create_mutation(data, info)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def update_thematic_area(
+        self,
+        info: Info,
+        id: strawberry.ID,
+        data: ThematicAreaInput,
+    ) -> MutationResponseType[ThematicAreaType]:
+        instance = await ThematicArea.objects.aget(id=id)
+        return await ModelMutation(ThematicAreaSerializer).handle_update_mutation(data, info, instance)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def delete_thematic_area(
+        self,
+        info: Info,
+        id: strawberry.ID,
+    ) -> MutationResponseType[ThematicAreaType]:
+        instance = await ThematicArea.objects.aget(id=id)
+        await instance.adelete()
+        return MutationResponseType(ok=True)
 
     @strawberry_django.mutation(permission_classes=[IsAuthenticated])
     async def create_report(
