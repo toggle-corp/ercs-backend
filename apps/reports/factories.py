@@ -3,7 +3,7 @@ from factory.django import DjangoModelFactory
 
 from apps.users.factories import UserFactory
 
-from .models import Link, Report, ThematicArea
+from .models import DocumentExtraction, Link, Report, ThematicArea
 
 
 class ThematicAreaFactory(DjangoModelFactory[ThematicArea]):
@@ -38,3 +38,13 @@ class LinkFactory(DjangoModelFactory[Link]):
 class FileReportFactory(ReportFactory):
     content_type = Report.ContentType.FILE
     iframe_url = None
+
+
+class DocumentExtractionFactory(DjangoModelFactory[DocumentExtraction]):
+    report = SubFactory(ReportFactory)
+    text = Sequence(lambda n: f"Extracted text chunk {n}")
+    chunk_type = DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY
+    status = DocumentExtraction.Status.PENDING
+
+    class Meta:  # type: ignore[misc]
+        model = DocumentExtraction
