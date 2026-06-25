@@ -1,7 +1,15 @@
 import strawberry
 import strawberry_django
 
-from apps.reports.models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+from apps.reports.models import (
+    DocumentExtraction,
+    DocumentExtractionStatus,
+    Link,
+    Report,
+    ReportContentType,
+    ReportVisibility,
+    ThematicArea,
+)
 from apps.reports.models import LinkType as LinkTypeEnum
 from apps.reports.models import ReportType as ReportTypeEnum
 from utils.graphql.types import DjangoFileType
@@ -69,3 +77,13 @@ class ReportType:
     published_at: strawberry.auto
     created_at: strawberry.auto
     updated_at: strawberry.auto
+
+
+@strawberry_django.type(DocumentExtraction)
+class ReportSummaryType:
+    id: strawberry.ID
+    report: strawberry.auto
+    text: strawberry.auto
+    page_number: strawberry.auto
+    chunk_type: DocumentExtraction.ExtractionType
+    status: DocumentExtractionStatus

@@ -2,7 +2,15 @@ import strawberry
 import strawberry_django
 from django.db.models import Q
 
-from apps.reports.models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+from apps.reports.models import (
+    DocumentExtraction,
+    DocumentExtractionStatus,
+    Link,
+    Report,
+    ReportContentType,
+    ReportVisibility,
+    ThematicArea,
+)
 from apps.reports.models import LinkType as LinkTypeEnum
 from apps.reports.models import ReportType as ReportTypeEnum
 
@@ -43,3 +51,11 @@ class ReportFilter:
     @strawberry_django.filter_field
     def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
         return Q(region_id__in=value)
+
+
+@strawberry_django.filters.filter(DocumentExtraction)
+class ReportSummaryFilter:
+    id: strawberry.ID | None = strawberry.UNSET
+    chunk_type: DocumentExtraction.ExtractionType | None = strawberry.UNSET
+    status: DocumentExtractionStatus | None = strawberry.UNSET
+    report: strawberry.ID | None = strawberry.UNSET

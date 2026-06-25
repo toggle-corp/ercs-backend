@@ -4,9 +4,9 @@ from strawberry_django.pagination import OffsetPaginated
 
 from main.graphql.permissions import IsAuthenticated
 
-from .filters import LinkFilter, ReportFilter, ThematicAreaFilter
+from .filters import LinkFilter, ReportFilter, ReportSummaryFilter, ThematicAreaFilter
 from .orders import LinkOrder, ReportOrder
-from .types import LinkType, ReportType, ThematicAreaType
+from .types import LinkType, ReportSummaryType, ReportType, ThematicAreaType
 
 
 @strawberry.type
@@ -34,3 +34,10 @@ class Query:
     )
 
     link: LinkType = strawberry_django.field()
+
+    report_summaries: OffsetPaginated[ReportSummaryType] = strawberry_django.offset_paginated(
+        filters=ReportSummaryFilter,
+        permission_classes=[IsAuthenticated],
+    )
+
+    report_summary: ReportSummaryType = strawberry_django.field()

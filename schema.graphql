@@ -302,6 +302,10 @@ type DjangoFileType {
   url: String!
 }
 
+type DjangoModelType {
+  pk: ID!
+}
+
 enum DocumentExtractionStatus {
   PENDING
   IN_PROGRESS
@@ -449,6 +453,15 @@ input ExternalDashboardUpdateInput {
   showOnHome: Boolean
   order: Int
   isActive: Boolean
+}
+
+enum ExtractionType {
+  EXTRACTED_CONTENT
+  DOCUMENT_SUMMARY
+  PAGE_SUMMARY
+  KEYWORDS
+  TABLE
+  CHART
 }
 
 input GalleryAlbumCreateInput {
@@ -884,6 +897,8 @@ type Query {
   publicLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
   internalLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
   link(id: ID!): LinkType!
+  reportSummaries(pagination: OffsetPaginationInput, filters: ReportSummaryFilter): ReportSummaryTypeOffsetPaginated!
+  reportSummary(id: ID!): ReportSummaryType!
   newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
   newsPost(id: ID!): NewsPostType!
   externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
@@ -955,6 +970,50 @@ input ReportOrder @oneOf {
   title: Ordering
   createdAt: Ordering
   publishedAt: Ordering
+}
+
+"""
+Tracks the AI extraction lifecycle for a FILE-type Report.
+
+Created/reset whenever a REPORT-type report is created or its file replaced.
+The AI tool populates extracted_contents, search_text, summary, and status
+directly in the database once processing is complete.
+"""
+input ReportSummaryFilter {
+  id: ID
+  chunkType: ExtractionType
+  status: DocumentExtractionStatus
+  report: ID
+  AND: ReportSummaryFilter
+  OR: ReportSummaryFilter
+  NOT: ReportSummaryFilter
+  DISTINCT: Boolean
+}
+
+"""
+Tracks the AI extraction lifecycle for a FILE-type Report.
+
+Created/reset whenever a REPORT-type report is created or its file replaced.
+The AI tool populates extracted_contents, search_text, summary, and status
+directly in the database once processing is complete.
+"""
+type ReportSummaryType {
+  id: ID!
+  report: DjangoModelType!
+  text: String!
+  pageNumber: Int
+  chunkType: ExtractionType!
+  status: DocumentExtractionStatus!
+}
+
+type ReportSummaryTypeOffsetPaginated {
+  pageInfo: OffsetPaginationInfo!
+
+  """Total count of existing results."""
+  totalCount: Int!
+
+  """List of paginated results."""
+  results: [ReportSummaryType!]!
 }
 
 """
