@@ -1,7 +1,11 @@
+from concurrent.futures import ThreadPoolExecutor
+from uuid import UUID
+
 import strawberry
 import strawberry_django
 from django.db.models import Q
 
+from apps.reports.ai_features.search_docs import SearchReports
 from apps.reports.models import (
     DocumentExtraction,
     DocumentExtractionStatus,
@@ -13,6 +17,11 @@ from apps.reports.models import (
 )
 from apps.reports.models import LinkType as LinkTypeEnum
 from apps.reports.models import ReportType as ReportTypeEnum
+
+
+def _get_ranked_ids(value: str) -> list[UUID]:
+    ranked_reports = SearchReports(query=value).rank_reports()
+    return [r.id for r in ranked_reports]
 
 
 @strawberry_django.filters.filter(Link, lookups=True)
@@ -43,10 +52,20 @@ class ReportFilter:
     thematic_area_id: strawberry.ID | None = strawberry.UNSET
     disaster_type: str | None = strawberry.UNSET
     report_type: ReportTypeEnum | None = strawberry.UNSET
+    title: strawberry.auto
 
     @strawberry_django.filter_field
-    def search(self, value: str, prefix: str) -> Q:
-        return Q(title__icontains=value)
+    def search(self, queryset, value: str, prefix: str):
+        if not value or not value.strip():
+            return Q()
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            ids = executor.submit(_get_ranked_ids, value).result()
+
+        if not ids:
+            return Q(pk__in=[])  # if nothing matches
+
+        return Q(id__in=ids)
 
     @strawberry_django.filter_field
     def regions(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
