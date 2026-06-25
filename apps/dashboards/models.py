@@ -18,6 +18,36 @@ class DashboardPage(models.IntegerChoices):
     EMERGENCY_RESPONSE = 70, "Emergency Responses"
 
 
+class CapacityAndResource(BaseModel):
+    """A Capacity & Resources entry that groups multiple ExternalDashboards."""
+
+    title = models.CharField[str, str](max_length=500)
+    description = models.TextField[str | None, str | None](null=True, blank=True)
+    region = models.ForeignKey(
+        "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="capacity_and_resource",
+    )
+    is_active = models.BooleanField[bool, bool](default=False)
+    order = models.PositiveIntegerField[int, int](unique=True, default=1)
+    created_by = models.ForeignKey(
+        "users.User",
+        on_delete=models.PROTECT,
+        related_name="created_capacity_and_resource",
+    )
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        verbose_name = "Capacity And Resource"
+        verbose_name_plural = "Capacity And Resources"
+        ordering = ["order"]
+
+    @typing.override
+    def __str__(self) -> str:
+        return self.title
+
+
 class ExternalDashboard(BaseModel):
     """Power BI / iframe dashboards embedded across site pages via CMS."""
 
@@ -29,6 +59,13 @@ class ExternalDashboard(BaseModel):
     page: int = IntegerChoicesField(choices_enum=DashboardPage)  # type: ignore[reportAssignmentType]
     region = models.ForeignKey(
         "geo.AdminArea",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="dashboards",
+    )
+    capacity_and_resource = models.ForeignKey(
+        CapacityAndResource,
         null=True,
         blank=True,
         on_delete=models.SET_NULL,
@@ -54,38 +91,3 @@ class ExternalDashboard(BaseModel):
     @typing.override
     def __str__(self) -> str:
         return f"{self.title} ({self.get_page_display()})"  # type: ignore[reportAttributeAccessIssue]
-
-
-class CapacityAndResource(BaseModel):
-    """Links multiple ExternalDashboards to a Capacity & Resources entry."""
-
-    title = models.CharField[str, str](max_length=500)
-    description = models.TextField[str | None, str | None](null=True, blank=True)
-    region = models.ForeignKey(
-        "geo.AdminArea",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="capacity_and_resource",
-    )
-    is_active = models.BooleanField[bool, bool](default=False)
-    order = models.PositiveIntegerField[int, int](unique=True, default=1)
-    created_by = models.ForeignKey(
-        "users.User",
-        on_delete=models.PROTECT,
-        related_name="created_capacity_and_resource",
-    )
-    dashboards = models.ManyToManyField(
-        "ExternalDashboard",
-        related_name="capacity_resource_dashboard",
-        blank=True,
-    )
-
-    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
-        verbose_name = "Capacity And Resource"
-        verbose_name_plural = "Capacity And Resources"
-        ordering = ["order"]
-
-    @typing.override
-    def __str__(self) -> str:
-        return self.title

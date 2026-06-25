@@ -25,6 +25,10 @@ class ExternalDashboardFilter:
             return Q(region_id__isnull=True)
         return Q(region_id__in=value)
 
+    @strawberry_django.filter_field
+    def capacity_and_resources(self, queryset, value: list[strawberry.ID], prefix: str) -> Q:
+        return Q(capacity_and_resource_id__in=value)
+
 
 @strawberry_django.filters.filter(CapacityAndResource, lookups=True)
 class CapacityAndResourceFilter:

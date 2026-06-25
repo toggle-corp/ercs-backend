@@ -12,6 +12,7 @@ class ExternalDashboardType:
     url: strawberry.auto
     page: DashboardPage
     region_id: strawberry.ID | None
+    capacity_and_resource_id: strawberry.ID | None
     show_on_home: strawberry.auto
     order: strawberry.auto
     is_active: strawberry.auto
@@ -32,7 +33,12 @@ class CapacityAndResourceType:
     region_id: strawberry.ID | None
     is_active: strawberry.auto
     order: strawberry.auto
-    dashboards: list[ExternalDashboardType] | None
+    dashboards: list[ExternalDashboardType]
     created_by_id: strawberry.ID
+
+    @strawberry.field
+    def dashboards_count(self) -> int:
+        return self.dashboards.count()  # type: ignore[reportAttributeAccessIssue]
+
     created_at: strawberry.auto
     updated_at: strawberry.auto

@@ -11,6 +11,7 @@ class ExternalDashboardCreateInput:
     page: DashboardPage
     description: str | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
+    capacity_and_resource: strawberry.ID | None = strawberry.UNSET
     show_on_home: bool = False
     order: int = 0
     is_active: bool = True
@@ -23,6 +24,7 @@ class ExternalDashboardUpdateInput:
     page: DashboardPage | None = strawberry.UNSET
     description: str | None = strawberry.UNSET
     region: strawberry.ID | None = strawberry.UNSET
+    capacity_and_resource: strawberry.ID | None = strawberry.UNSET
     show_on_home: bool | None = strawberry.UNSET
     order: int | None = strawberry.UNSET
     is_active: bool | None = strawberry.UNSET
@@ -35,7 +37,6 @@ class CapacityAndResourceCreateInput:
     region: strawberry.ID | None = strawberry.UNSET
     is_active: strawberry.auto
     order: int
-    dashboards: list[strawberry.ID]
 
 
 @strawberry_django.partial(CapacityAndResource)
@@ -45,4 +46,3 @@ class CapacityAndResourceUpdateInput:
     is_active: strawberry.auto
     order: strawberry.auto
     region: strawberry.ID | None = strawberry.UNSET
-    dashboards: list[strawberry.ID] | None = strawberry.UNSET

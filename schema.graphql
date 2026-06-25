@@ -115,17 +115,16 @@ type AppEnumCollectionUserRole {
   label: String!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceCreateInput {
   title: String!
   description: String
   region: ID
   isActive: Boolean
   order: Int!
-  dashboards: [ID!]!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceFilter {
   id: ID
   isActive: Boolean
@@ -142,7 +141,7 @@ input CapacityAndResourceOrder @oneOf {
   title: Ordering
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 type CapacityAndResourceType {
   id: ID!
   title: String!
@@ -150,10 +149,11 @@ type CapacityAndResourceType {
   regionId: ID
   isActive: Boolean!
   order: Int!
-  dashboards: [ExternalDashboardType!]
+  dashboards: [ExternalDashboardType!]!
   createdById: ID!
   createdAt: DateTime!
   updatedAt: DateTime!
+  dashboardsCount: Int!
 }
 
 type CapacityAndResourceTypeMutationResponseType {
@@ -172,14 +172,13 @@ type CapacityAndResourceTypeOffsetPaginated {
   results: [CapacityAndResourceType!]!
 }
 
-"""Links multiple ExternalDashboards to a Capacity & Resources entry."""
+"""A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceUpdateInput {
   title: String
   description: String
   isActive: Boolean
   order: Int
   region: ID
-  dashboards: [ID!]
 }
 
 union CreateCapacityAndResourcePayload = CapacityAndResourceTypeMutationResponseType | OperationInfo
@@ -291,6 +290,8 @@ union DeleteTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationIn
 
 union DeleteTeamPayload = TeamTypeMutationResponseType | OperationInfo
 
+union DeleteThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
+
 union DeleteUserPayload = UserTypeMutationResponseType | OperationInfo
 
 type DjangoFileType {
@@ -370,6 +371,7 @@ input ExternalDashboardCreateInput {
   page: DashboardPage!
   description: String
   region: ID
+  capacityAndResource: ID
   showOnHome: Boolean! = false
   order: Int! = 0
   isActive: Boolean! = true
@@ -390,6 +392,7 @@ input ExternalDashboardFilter {
   DISTINCT: Boolean
   search: String
   regions: [ID!]
+  capacityAndResources: [ID!]
 }
 
 input ExternalDashboardOrder @oneOf {
@@ -406,6 +409,7 @@ type ExternalDashboardType {
   url: String!
   page: DashboardPage!
   regionId: ID
+  capacityAndResourceId: ID
 
   """Surface this dashboard as a quick link on the homepage."""
   showOnHome: Boolean!
@@ -439,6 +443,7 @@ input ExternalDashboardUpdateInput {
   page: DashboardPage
   description: String
   region: ID
+  capacityAndResource: ID
   showOnHome: Boolean
   order: Int
   isActive: Boolean
@@ -674,6 +679,8 @@ type Mutation {
   resetUserPassword(id: ID!, newPassword: String!): ResetUserPasswordPayload!
   updateMyPassword(data: PasswordUpdateInput!): UpdateMyPasswordPayload!
   createThematicArea(data: ThematicAreaInput!): CreateThematicAreaPayload!
+  updateThematicArea(id: ID!, data: ThematicAreaInput!): UpdateThematicAreaPayload!
+  deleteThematicArea(id: ID!): DeleteThematicAreaPayload!
   createReport(data: ReportCreateInput!): CreateReportPayload!
   updateReport(id: ID!, data: ReportUpdateInput!): UpdateReportPayload!
   createLink(data: LinkCreateInput!): CreateLinkPayload!
@@ -1219,6 +1226,8 @@ union UpdateReportPayload = ReportTypeMutationResponseType | OperationInfo
 union UpdateTeamMemberPayload = TeamMemberTypeMutationResponseType | OperationInfo
 
 union UpdateTeamPayload = TeamTypeMutationResponseType | OperationInfo
+
+union UpdateThematicAreaPayload = ThematicAreaTypeMutationResponseType | OperationInfo
 
 union UpdateUserPayload = UserTypeMutationResponseType | OperationInfo
 

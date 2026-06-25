@@ -11,6 +11,7 @@ class ExternalDashboardAdmin(admin.ModelAdmin):
         "title",
         "page",
         "region",
+        "capacity_and_resource",
         "order",
         "is_active",
         "show_on_home",
@@ -21,7 +22,8 @@ class ExternalDashboardAdmin(admin.ModelAdmin):
     search_fields = ["title", "description"]
     readonly_fields = ["created_at", "updated_at"]
     ordering = ["page", "order"]
-    list_select_related = ("created_by",)
+    list_select_related = ("created_by", "capacity_and_resource")
+    autocomplete_fields = ("region", "capacity_and_resource")
 
 
 @admin.register(CapacityAndResource)
@@ -39,20 +41,7 @@ class CapacityAndResourceAdmin(admin.ModelAdmin):
     readonly_fields = ["created_at", "updated_at"]
     ordering = ["order"]
     list_select_related = True
-    autocomplete_fields = (
-        "region",
-        "dashboards",
-    )
 
     @typing.override
     def get_queryset(self, request):
-        return (
-            super()
-            .get_queryset(request)
-            .select_related(
-                "region",
-            )
-            .prefetch_related(
-                "dashboards",
-            )
-        )
+        return super().get_queryset(request).select_related("region").prefetch_related("dashboards")
