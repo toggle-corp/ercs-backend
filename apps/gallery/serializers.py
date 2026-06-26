@@ -1,6 +1,9 @@
 import typing
 
+from django.core.files import File
 from rest_framework import serializers
+
+from utils.validators import validate_image_size
 
 from .models import GalleryAlbum, GalleryImage
 
@@ -31,3 +34,6 @@ class GalleryImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = GalleryImage
         fields = ["album", "image", "caption", "order"]
+
+    def validate_image(self, value: File) -> File:
+        return validate_image_size(value)

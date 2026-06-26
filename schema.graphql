@@ -505,7 +505,7 @@ type GalleryAlbumType {
   title: String!
   description: String
   coverImage: GalleryImageType
-  createdById: ID!
+  createdBy: UserType!
   createdAt: DateTime!
   updatedAt: DateTime!
   imagesCount: Int!

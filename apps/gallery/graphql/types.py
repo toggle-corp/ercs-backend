@@ -3,6 +3,7 @@ import strawberry_django
 from asgiref.sync import sync_to_async
 
 from apps.gallery.models import GalleryAlbum, GalleryImage
+from apps.users.graphql.types import UserType
 from utils.graphql.types import DjangoFileType
 
 
@@ -22,7 +23,7 @@ class GalleryAlbumType:
     title: strawberry.auto
     description: strawberry.auto
     cover_image: GalleryImageType | None
-    created_by_id: strawberry.ID
+    created_by: UserType
     created_at: strawberry.auto
     updated_at: strawberry.auto
 

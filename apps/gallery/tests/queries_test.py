@@ -16,7 +16,7 @@ class TestGalleryQueries(TestCase):
                         id
                         title
                         description
-                        createdById
+                        createdBy { id email fullName }
                         createdAt
                     }
                 }
