@@ -171,6 +171,35 @@ class TestExternalDashboardMutations(TestCase):
         assert resp["ok"] is False
         assert resp["errors"] is not None
 
+    def test_create_dashboard_show_on_home_requires_active(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.CREATE_DASHBOARD,
+            variables={
+                "data": {
+                    "title": "Inactive Home Dashboard",
+                    "url": "https://app.powerbi.com/embed/inactive",
+                    "page": ExternalDashboard.Page.HOME.name,
+                    "showOnHome": True,
+                    "isActive": False,
+                },
+            },
+        )
+        resp = content["data"]["createExternalDashboard"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+
+    def test_update_dashboard_deactivate_while_show_on_home(self):
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(is_active=True, show_on_home=True, created_by=self.staff)
+        content = self.query_check(
+            self.Mutation.UPDATE_DASHBOARD,
+            variables={"id": str(dashboard.pk), "data": {"isActive": False}},
+        )
+        resp = content["data"]["updateExternalDashboard"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+
     def test_viewer_cannot_create(self):
         self.force_login(self.viewer)
         content = self.query_check(

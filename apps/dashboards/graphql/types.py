@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 
 from apps.dashboards.models import CapacityAndResource, DashboardPage, ExternalDashboard
 
@@ -37,6 +38,7 @@ class CapacityAndResourceType:
     created_by_id: strawberry.ID
 
     @strawberry.field
+    @sync_to_async
     def dashboards_count(self) -> int:
         return self.dashboards.count()  # type: ignore[reportAttributeAccessIssue]
 

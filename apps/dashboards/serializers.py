@@ -36,11 +36,22 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
 
     @typing.override
     def validate(self, data: dict) -> dict:  # type: ignore[reportIncompatibleMethodOverride]
+        instance = self.instance
+        is_active = data.get("is_active", instance.is_active if instance else True)
+        show_on_home = data.get("show_on_home", instance.show_on_home if instance else False)
+
+        if show_on_home and not is_active:
+            raise serializers.ValidationError(
+                {
+                    "non_field_errors": "A dashboard must be active to be shown on the home page.",
+                },
+            )
+
         # Home dashboard limit validation
-        if data.get("show_on_home"):
+        if show_on_home:
             qs = ExternalDashboard.objects.filter(show_on_home=True)
-            if self.instance:
-                qs = qs.exclude(pk=self.instance.pk)
+            if instance:
+                qs = qs.exclude(pk=instance.pk)
             if qs.count() >= self.HOME_DASHBOARD_LIMIT:
                 raise serializers.ValidationError(
                     {
@@ -51,7 +62,6 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
                 )
 
         # Capacity & Resource validation
-        instance = self.instance
         capacity_and_resource = data.get(
             "capacity_and_resource",
             getattr(instance, "capacity_and_resource", None),
@@ -66,6 +76,7 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
                     ),
                 },
             )
+
         return data
 
     @typing.override
