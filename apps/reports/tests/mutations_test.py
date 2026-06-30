@@ -111,23 +111,26 @@ class TestReportMutations(TestCase):
 
     def test_create_iframe_report(self):
         self.force_login(self.user)
-        content = self.query_check(
-            self.Mutation.CREATE_REPORT,
-            variables={
-                "data": {
-                    "title": "Test Report",
-                    "contentType": Report.ContentType.IFRAME.name,
-                    "iframeUrl": "https://app.powerbi.com/embed/123",
-                    "thematicArea": str(self.thematic_area.pk),
+        with patch("apps.reports.graphql.mutations.trigger_document_extraction") as mock_trigger:
+            mock_trigger.return_value = None
+            content = self.query_check(
+                self.Mutation.CREATE_REPORT,
+                variables={
+                    "data": {
+                        "title": "Test Report",
+                        "contentType": Report.ContentType.IFRAME.name,
+                        "iframeUrl": "https://app.powerbi.com/embed/123",
+                        "thematicArea": str(self.thematic_area.pk),
+                    },
                 },
-            },
-        )
+            )
         resp = content["data"]["createReport"]
         assert resp["ok"] is True
         assert resp["errors"] is None
         assert resp["result"]["title"] == "Test Report"
         assert resp["result"]["contentType"] == Report.ContentType.IFRAME.name
         assert resp["result"]["visibility"] == Report.Visibility.PUBLIC.name
+        mock_trigger.assert_called_once()
 
     def test_create_report_requires_auth(self):
         self.logout()
