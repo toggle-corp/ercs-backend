@@ -3,25 +3,33 @@ import logging
 from celery import shared_task
 from django.core.files.storage import default_storage
 
-from apps.reports.ai_features.extraction import PdfExtraction
-from apps.reports.models import Report
+from apps.reports.ai_features.extraction import HeaderExtraction, PdfExtraction
+from apps.reports.models import Report, ReportContentType
 
 logger = logging.getLogger(__name__)
 
 
 @shared_task
-def handle_documents(report_id: int) -> None:
+def handle_documents(report_id: int, report_type: ReportContentType) -> None:
     report = Report.objects.filter(pk=report_id).first()
 
-    if report is None or report.file.name is None:
-        logger.warning("Report with id %s is set to None", report_id)
+    if report is None:
+        logger.warning("Report with id %s not found", report_id)
         return
 
-    with default_storage.open(report.file.name, "rb") as f:
-        pdf_bytes = f.read()
+    if report_type == ReportContentType.FILE and report.file.name is None:
+        logger.warning("Report with id %s has no file", report_id)
+        return
 
-    ext = PdfExtraction(
-        report=report,
-        data=pdf_bytes,
-    )
-    ext.pdf_to_images()
+    if report.file and (file_name := report.file.name) and report_type == ReportContentType.FILE:
+        with default_storage.open(file_name, "rb") as f:
+            pdf_bytes = f.read()
+
+        ext = PdfExtraction(
+            report=report,
+            data=pdf_bytes,
+        )
+        ext.pdf_to_images()
+    elif report_type == ReportContentType.IFRAME:
+        ext = HeaderExtraction(report=report)
+        ext.handle_meta_info()

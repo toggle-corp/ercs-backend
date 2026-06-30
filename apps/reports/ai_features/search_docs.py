@@ -35,6 +35,8 @@ class SearchReports:
             DocumentExtraction.ExtractionType.KEYWORDS: 0.9,
             DocumentExtraction.ExtractionType.TABLE: 0.3,
             DocumentExtraction.ExtractionType.CHART: 0.3,
+            DocumentExtraction.ExtractionType.TITLE: 0.2,
+            DocumentExtraction.ExtractionType.DESCRIPTION: 0.2,
         }
 
     def generate_query_embedding(self) -> list[float]:

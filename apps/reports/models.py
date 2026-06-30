@@ -166,6 +166,8 @@ class DocumentExtraction(BaseModel):
         KEYWORDS = 4, "Keywords"
         TABLE = 5, "Table"
         CHART = 6, "Chart"
+        TITLE = 7, "Title"
+        DESCRIPTION = 8, "Description"
 
     report = models.ForeignKey(
         Report,

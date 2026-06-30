@@ -15,9 +15,8 @@ logger = logging.getLogger(__name__)
 
 
 @dataclass
-class PdfExtraction:
+class BaseExtraction:
     report: Report
-    data: bytes
 
     llm_handler: OllamaHandler = field(init=False)
     llm_chat_model: ChatOllama | ChatOpenAI = field(init=False)
@@ -31,6 +30,34 @@ class PdfExtraction:
         except Exception as e:
             raise e
 
+    def handle_meta_info(self):
+        """Extract meta information of the report."""
+        title = self.report.title
+        description = self.report.description
+        if title and title.strip():
+            DocumentExtraction.objects.create(
+                report=self.report,
+                status=DocumentExtractionStatus.SUCCESS,
+                text=title,
+                page_number=None,
+                chunk_type=DocumentExtraction.ExtractionType.TITLE,
+                embedding=self.llm_embedding_model.embed_query(title),
+            )
+        if description and description.strip():
+            DocumentExtraction.objects.create(
+                report=self.report,
+                status=DocumentExtractionStatus.SUCCESS,
+                text=description,
+                page_number=None,
+                chunk_type=DocumentExtraction.ExtractionType.DESCRIPTION,
+                embedding=self.llm_embedding_model.embed_query(description),
+            )
+
+
+@dataclass
+class PdfExtraction(BaseExtraction):
+    data: bytes
+
     def img_to_base64(self, data: fitz.Pixmap) -> str:
         img_bytes = data.tobytes("png")
         return base64.b64encode(img_bytes).decode("utf-8")
@@ -38,6 +65,9 @@ class PdfExtraction:
     def pdf_to_images(self, zoom: float = 2.0):
         page_summaries = []
         doc = fitz.open(stream=self.data, filetype="pdf")
+
+        # Get the title and description
+        self.handle_meta_info()
 
         for page_idx in range(len(doc)):
             page = doc[page_idx]
@@ -108,3 +138,8 @@ class PdfExtraction:
             )
         else:
             logger.warning("The key doc_summary is missing in the output")
+
+
+@dataclass
+class HeaderExtraction(BaseExtraction):
+    """Get the basic meta information extraction."""

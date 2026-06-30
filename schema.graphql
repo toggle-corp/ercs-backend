@@ -462,6 +462,8 @@ enum ExtractionType {
   KEYWORDS
   TABLE
   CHART
+  TITLE
+  DESCRIPTION
 }
 
 input GalleryAlbumCreateInput {

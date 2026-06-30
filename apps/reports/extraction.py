@@ -2,7 +2,7 @@
 
 import logging
 
-from apps.reports.models import Report
+from apps.reports.models import Report, ReportContentType
 from apps.reports.tasks.task import handle_documents
 
 logger = logging.getLogger(__name__)
@@ -15,13 +15,12 @@ async def trigger_document_extraction(report: Report) -> None:
     The AI tool is expected to update extracted_contents, search_text, summary,
     and status directly in the database once processing completes.
     """
-    if not report.file.name:
+    if report.content_type == ReportContentType.FILE and not report.file.name:
         logger.warning("Report file is missing")
         return
 
     logger.info(
-        "Triggering document extraction for report_id=%s file_path=%s",
+        "Triggering document extraction for report_id=%s",
         str(report.pk),
-        report.file.name,
     )
-    handle_documents.apply_async(args=[report.pk])  # pyright: ignore[reportFunctionMemberAccess]
+    handle_documents.apply_async(args=(report.pk, report.content_type))  # pyright: ignore[reportFunctionMemberAccess]
