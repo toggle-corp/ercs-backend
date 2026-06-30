@@ -10,7 +10,7 @@ class TestReportQueries(TestCase):
     class Query:
         REPORTS = """
             query Reports($pagination: OffsetPaginationInput, $filters: ReportFilter) {
-                reports(pagination: $pagination, filters: $filters, order: {createdAt: DESC}) {
+                reports(pagination: $pagination, filters: $filters) {
                     totalCount
                     pageInfo { offset limit }
                     results {

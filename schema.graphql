@@ -892,7 +892,7 @@ type Query {
   user(id: ID!): UserType!
   me: UserMeType
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
-  reports(pagination: OffsetPaginationInput, filters: ReportFilter, order: ReportOrder): ReportTypeOffsetPaginated!
+  reports(pagination: OffsetPaginationInput, filters: ReportFilter): ReportTypeOffsetPaginated!
   report(id: ID!): ReportType!
   publicLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
   internalLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
@@ -933,7 +933,7 @@ input ReportCreateInput {
   iframeUrl: String
   visibility: ReportVisibility! = PUBLIC
   reportType: ReportTypeEnum! = REPORT
-  thematicArea: ID!
+  thematicArea: ID
   region: ID
   disasterType: String
   owner: String
@@ -958,18 +958,13 @@ input ReportFilter {
   thematicAreaId: ID
   disasterType: String
   reportType: ReportTypeEnum
+  title: StrFilterLookup
   AND: ReportFilter
   OR: ReportFilter
   NOT: ReportFilter
   DISTINCT: Boolean
   search: String
   regions: [ID!]
-}
-
-input ReportOrder @oneOf {
-  title: Ordering
-  createdAt: Ordering
-  publishedAt: Ordering
 }
 
 """
@@ -1094,6 +1089,54 @@ enum ReportVisibility {
 }
 
 union ResetUserPasswordPayload = UserTypeMutationResponseType | OperationInfo
+
+input StrFilterLookup {
+  """Exact match. Filter will be skipped on `null` value"""
+  exact: String
+
+  """Assignment test. Filter will be skipped on `null` value"""
+  isNull: Boolean
+
+  """
+  Exact match of items in a given list. Filter will be skipped on `null` value
+  """
+  inList: [String!]
+
+  """Case-insensitive exact match. Filter will be skipped on `null` value"""
+  iExact: String
+
+  """
+  Case-sensitive containment test. Filter will be skipped on `null` value
+  """
+  contains: String
+
+  """
+  Case-insensitive containment test. Filter will be skipped on `null` value
+  """
+  iContains: String
+
+  """Case-sensitive starts-with. Filter will be skipped on `null` value"""
+  startsWith: String
+
+  """Case-insensitive starts-with. Filter will be skipped on `null` value"""
+  iStartsWith: String
+
+  """Case-sensitive ends-with. Filter will be skipped on `null` value"""
+  endsWith: String
+
+  """Case-insensitive ends-with. Filter will be skipped on `null` value"""
+  iEndsWith: String
+
+  """
+  Case-sensitive regular expression match. Filter will be skipped on `null` value
+  """
+  regex: String
+
+  """
+  Case-insensitive regular expression match. Filter will be skipped on `null` value
+  """
+  iRegex: String
+}
 
 input TeamCreateInput {
   name: String!

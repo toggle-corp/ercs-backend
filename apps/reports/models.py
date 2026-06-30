@@ -92,6 +92,8 @@ class Report(BaseModel):
         ThematicArea,
         on_delete=models.PROTECT,
         related_name="reports",
+        blank=True,
+        null=True,
     )
     region = models.ForeignKey(
         "geo.AdminArea",

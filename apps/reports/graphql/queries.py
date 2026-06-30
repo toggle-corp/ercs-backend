@@ -5,7 +5,7 @@ from strawberry_django.pagination import OffsetPaginated
 from main.graphql.permissions import IsAuthenticated
 
 from .filters import LinkFilter, ReportFilter, ReportSummaryFilter, ThematicAreaFilter
-from .orders import LinkOrder, ReportOrder
+from .orders import LinkOrder
 from .types import LinkType, ReportSummaryType, ReportType, ThematicAreaType
 
 
@@ -17,7 +17,6 @@ class Query:
 
     reports: OffsetPaginated[ReportType] = strawberry_django.offset_paginated(
         filters=ReportFilter,
-        order=ReportOrder,
     )
 
     report: ReportType = strawberry_django.field()
