@@ -40,12 +40,11 @@ class ExternalDashboardSerializer(serializers.ModelSerializer):
         is_active = data.get("is_active", instance.is_active if instance else True)
         show_on_home = data.get("show_on_home", instance.show_on_home if instance else False)
 
-        if show_on_home and not is_active:
-            raise serializers.ValidationError(
-                {
-                    "non_field_errors": "A dashboard must be active to be shown on the home page.",
-                },
-            )
+        # NOTE: This is intentional. If a dashboard is marked inactive, we automatically
+        # remove it from the home page to keep it consistent with the frontend
+        # "Show on Home" logic.
+        if not is_active and show_on_home:
+            data["show_on_home"] = False
 
         # Home dashboard limit validation
         if show_on_home:

@@ -71,6 +71,7 @@ class TestExternalDashboardMutations(TestCase):
                         title
                         isActive
                         capacityAndResourceId
+                        showOnHome
                     }
                 }
             }
@@ -186,8 +187,7 @@ class TestExternalDashboardMutations(TestCase):
             },
         )
         resp = content["data"]["createExternalDashboard"]
-        assert resp["ok"] is False
-        assert resp["errors"] is not None
+        assert resp["ok"] is True
 
     def test_update_dashboard_deactivate_while_show_on_home(self):
         self.force_login(self.staff)
@@ -197,8 +197,9 @@ class TestExternalDashboardMutations(TestCase):
             variables={"id": str(dashboard.pk), "data": {"isActive": False}},
         )
         resp = content["data"]["updateExternalDashboard"]
-        assert resp["ok"] is False
-        assert resp["errors"] is not None
+        assert resp["ok"] is True
+        assert resp["result"]["isActive"] is False
+        assert resp["result"]["showOnHome"] is False
 
     def test_viewer_cannot_create(self):
         self.force_login(self.viewer)

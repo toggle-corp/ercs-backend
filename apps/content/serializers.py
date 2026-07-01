@@ -1,8 +1,10 @@
 import typing
 
+from django.core.files import File
 from rest_framework import serializers
 
 from apps.reports.models import Report, ReportVisibility
+from utils.validators import validate_image_size
 
 from .models import NewsPost, NewsPostReport
 
@@ -22,6 +24,9 @@ class NewsPostSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "author": {"required": False},
         }
+
+    def validate_cover_image(self, value: File) -> File:
+        return validate_image_size(value)
 
     @typing.override
     def create(self, validated_data: dict) -> NewsPost:

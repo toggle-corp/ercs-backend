@@ -1,6 +1,9 @@
 import typing
 
+from django.core.files import File
 from rest_framework import serializers
+
+from utils.validators import validate_image_size, validate_report_file_size
 
 from .models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
 
@@ -39,6 +42,12 @@ class ReportSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "uploaded_by": {"required": False},
         }
+
+    def validate_cover_image(self, value: File) -> File:
+        return validate_image_size(value)
+
+    def validate_file(self, value: File) -> File:
+        return validate_report_file_size(value)
 
     def validate_visibility(self, value: int) -> int:
         if self.instance and self.instance.visibility == ReportVisibility.PRIVATE and value == ReportVisibility.PUBLIC:
