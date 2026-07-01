@@ -17,6 +17,118 @@
   }
 },
 {
+  "model": "dashboards.capacityandresource",
+  "pk": "a1378004-7892-4d5b-b9a5-304cc7a2dbd6",
+  "fields": {
+    "created_at": "2026-05-15T04:42:31.563Z",
+    "updated_at": "2026-05-15T04:44:50.175Z",
+    "title": "Ethiopia Drug Store and Pharmacy",
+    "description": "Monitor and allocate capacity and resources effectively to support humanitarian operations and response efforts.",
+    "region": null,
+    "is_active": true,
+    "order": 1,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "25417636-5508-4b1d-9197-524c8a7817f3",
+  "fields": {
+    "created_at": "2026-05-15T04:45:09.319Z",
+    "updated_at": "2026-05-15T04:54:58.248Z",
+    "title": "Emergency Medical Service",
+    "description": "Monitor, coordinate, and manage emergency medical service operations and response activities.",
+    "region": null,
+    "is_active": true,
+    "order": 2,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "0339969d-a96f-4c1a-939d-cf03d42646a9",
+  "fields": {
+    "created_at": "2026-05-15T04:45:51.070Z",
+    "updated_at": "2026-05-15T04:55:06.866Z",
+    "title": "ERCS Fleet Tracking",
+    "description": "Track, monitor, and manage fleet movement, vehicle usage, and transportation efficiency in real time.",
+    "region": null,
+    "is_active": true,
+    "order": 3,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "eac83bc9-a29d-4f96-9a04-9abe0402f89b",
+  "fields": {
+    "created_at": "2026-05-15T04:46:20.391Z",
+    "updated_at": "2026-05-15T04:55:17.395Z",
+    "title": "Landholdings",
+    "description": "Maintain, organize, and monitor records of organizational land assets and property details.",
+    "region": null,
+    "is_active": true,
+    "order": 4,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "92f9ff2d-5c0d-4377-88d8-40ab0fe12309",
+  "fields": {
+    "created_at": "2026-05-15T04:46:43.083Z",
+    "updated_at": "2026-05-15T04:55:26.400Z",
+    "title": "Membership and Volunteer",
+    "description": "Manage member and volunteer profiles, engagement, and participation across programs and activities.",
+    "region": null,
+    "is_active": true,
+    "order": 5,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "1fa60c54-dbb6-4acf-8f85-0573d25f9dd3",
+  "fields": {
+    "created_at": "2026-05-15T04:47:04.204Z",
+    "updated_at": "2026-05-15T04:54:39.594Z",
+    "title": "Project Balance",
+    "description": "Track, review, and manage project budgets, expenses, and overall financial performance.",
+    "region": null,
+    "is_active": true,
+    "order": 6,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "b819a9b3-f4d2-4bd1-ba73-c2c504b0f7bf",
+  "fields": {
+    "created_at": "2026-05-15T04:47:52.551Z",
+    "updated_at": "2026-05-15T04:56:35.863Z",
+    "title": "Restoring Family Link (RFL)",
+    "description": "Support and manage processes for family tracing, reunification, and related humanitarian services.",
+    "region": null,
+    "is_active": true,
+    "order": 7,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.capacityandresource",
+  "pk": "846652f5-3277-416f-ace9-bca7142c1a96",
+  "fields": {
+    "created_at": "2026-05-15T04:48:20.347Z",
+    "updated_at": "2026-05-15T04:48:20.347Z",
+    "title": "Hospitals",
+    "description": "View, update, and manage hospital information, resources, and service availability across regions.",
+    "region": null,
+    "is_active": true,
+    "order": 8,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
   "model": "dashboards.externaldashboard",
   "pk": "a3728d9b-8421-4c83-8db4-73c4df0c242b",
   "fields": {
@@ -27,6 +139,7 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiMzQzYjk3M2EtZDQwMS00YzIyLWFlYjYtMTBkNmFhZWUxZTA0IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 30,
     "region": null,
+    "capacity_and_resource": null,
     "show_on_home": false,
     "order": 1,
     "is_active": true,
@@ -44,6 +157,7 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiMzQzYjk3M2EtZDQwMS00YzIyLWFlYjYtMTBkNmFhZWUxZTA0IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 30,
     "region": null,
+    "capacity_and_resource": null,
     "show_on_home": false,
     "order": 2,
     "is_active": true,
@@ -61,8 +175,27 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiZjFmNjczOTItNjU1Yy00ODE3LWI0NmUtZWQzNzgwZWY3OWE5IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 40,
     "region": null,
+    "capacity_and_resource": "a1378004-7892-4d5b-b9a5-304cc7a2dbd6",
     "show_on_home": false,
     "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "8e848a27-b8fb-4572-8dc4-6fffb9f83fdf",
+  "fields": {
+    "created_at": "2026-05-15T04:40:41.672Z",
+    "updated_at": "2026-05-15T04:40:41.672Z",
+    "title": "EDP-2",
+    "description": "",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiZDk1ZmU0OTgtOTc4Zi00OGY1LWFiN2EtOTRjZDYxY2VlZWI4IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "page": 40,
+    "region": null,
+    "capacity_and_resource": "a1378004-7892-4d5b-b9a5-304cc7a2dbd6",
+    "show_on_home": false,
+    "order": 2,
     "is_active": true,
     "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
   }
@@ -78,91 +211,7 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiZThiZWVlZmMtNzk1OS00N2IwLWJjNWMtZmY2ZjgyM2RkZjcxIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 40,
     "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "fdbf10f4-4582-4347-9b51-f4345b03fd81",
-  "fields": {
-    "created_at": "2026-05-15T04:56:16.606Z",
-    "updated_at": "2026-05-15T04:56:16.606Z",
-    "title": "RFL",
-    "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiZTViYjIwMmEtZWJmYy00MWJiLTg0NTYtMmU2YzQ1MjVlNjM5IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
-    "page": 40,
-    "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "8182f454-3912-4015-bec7-be2d9a976b52",
-  "fields": {
-    "created_at": "2026-05-15T04:51:48.218Z",
-    "updated_at": "2026-05-15T04:51:48.218Z",
-    "title": "EFT-1",
-    "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiMDg4ZmU5NjItZjFmNS00NTllLThmMzAtZDlmNWE0MTAyZjRiIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9&cacheUpdate=1778820678655",
-    "page": 40,
-    "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "f33e6d68-fcf5-4620-9008-e05dc3bc572b",
-  "fields": {
-    "created_at": "2026-05-15T04:53:35.022Z",
-    "updated_at": "2026-05-15T04:53:35.022Z",
-    "title": "MV",
-    "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiZGJjNTEwODQtNDMzYy00NDAwLTg2YWItMDlhMDQ0NTRhNWYyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
-    "page": 40,
-    "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "d57f6490-dbf1-426a-9074-9b2a9ddd4606",
-  "fields": {
-    "created_at": "2026-05-15T04:53:06.676Z",
-    "updated_at": "2026-05-15T04:53:06.676Z",
-    "title": "Land-1",
-    "description": "https://app.powerbi.com/view?r=eyJrIjoiZGE0ZGY5ZWUtNzFkMS00NGRhLTg0MmEtZmM4ZTEwYzcxMjIyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiZGE0ZGY5ZWUtNzFkMS00NGRhLTg0MmEtZmM4ZTEwYzcxMjIyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
-    "page": 40,
-    "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "be9569c0-09e7-4b2e-b71c-056d43ef4f22",
-  "fields": {
-    "created_at": "2026-05-15T04:54:11.266Z",
-    "updated_at": "2026-05-15T04:54:11.266Z",
-    "title": "PB",
-    "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiNTQ5MDRjZmQtZDUxZi00MTgxLWI0M2MtNzhhNTI1OTJmMTRkIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9&pageName=ReportSection",
-    "page": 40,
-    "region": null,
+    "capacity_and_resource": "25417636-5508-4b1d-9197-524c8a7817f3",
     "show_on_home": false,
     "order": 1,
     "is_active": true,
@@ -180,6 +229,7 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiZTFmMjZmN2ItMmJhZC00ZTU2LWJlY2UtYzdjOGUzZjdlZmY5IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 40,
     "region": null,
+    "capacity_and_resource": "25417636-5508-4b1d-9197-524c8a7817f3",
     "show_on_home": false,
     "order": 2,
     "is_active": true,
@@ -188,17 +238,90 @@
 },
 {
   "model": "dashboards.externaldashboard",
-  "pk": "8e848a27-b8fb-4572-8dc4-6fffb9f83fdf",
+  "pk": "8182f454-3912-4015-bec7-be2d9a976b52",
   "fields": {
-    "created_at": "2026-05-15T04:40:41.672Z",
-    "updated_at": "2026-05-15T04:40:41.672Z",
-    "title": "EDP-2",
+    "created_at": "2026-05-15T04:51:48.218Z",
+    "updated_at": "2026-05-15T04:51:48.218Z",
+    "title": "EFT-1",
     "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiZDk1ZmU0OTgtOTc4Zi00OGY1LWFiN2EtOTRjZDYxY2VlZWI4IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiMDg4ZmU5NjItZjFmNS00NTllLThmMzAtZDlmNWE0MTAyZjRiIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9&cacheUpdate=1778820678655",
     "page": 40,
     "region": null,
+    "capacity_and_resource": "0339969d-a96f-4c1a-939d-cf03d42646a9",
     "show_on_home": false,
-    "order": 2,
+    "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "f33e6d68-fcf5-4620-9008-e05dc3bc572b",
+  "fields": {
+    "created_at": "2026-05-15T04:53:35.022Z",
+    "updated_at": "2026-05-15T04:53:35.022Z",
+    "title": "MV",
+    "description": "",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiZGJjNTEwODQtNDMzYy00NDAwLTg2YWItMDlhMDQ0NTRhNWYyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "page": 40,
+    "region": null,
+    "capacity_and_resource": "92f9ff2d-5c0d-4377-88d8-40ab0fe12309",
+    "show_on_home": false,
+    "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "d57f6490-dbf1-426a-9074-9b2a9ddd4606",
+  "fields": {
+    "created_at": "2026-05-15T04:53:06.676Z",
+    "updated_at": "2026-05-15T04:53:06.676Z",
+    "title": "Land-1",
+    "description": "https://app.powerbi.com/view?r=eyJrIjoiZGE0ZGY5ZWUtNzFkMS00NGRhLTg0MmEtZmM4ZTEwYzcxMjIyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiZGE0ZGY5ZWUtNzFkMS00NGRhLTg0MmEtZmM4ZTEwYzcxMjIyIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "page": 40,
+    "region": null,
+    "capacity_and_resource": "eac83bc9-a29d-4f96-9a04-9abe0402f89b",
+    "show_on_home": false,
+    "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "be9569c0-09e7-4b2e-b71c-056d43ef4f22",
+  "fields": {
+    "created_at": "2026-05-15T04:54:11.266Z",
+    "updated_at": "2026-05-15T04:54:11.266Z",
+    "title": "PB",
+    "description": "",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiNTQ5MDRjZmQtZDUxZi00MTgxLWI0M2MtNzhhNTI1OTJmMTRkIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9&pageName=ReportSection",
+    "page": 40,
+    "region": null,
+    "capacity_and_resource": "1fa60c54-dbb6-4acf-8f85-0573d25f9dd3",
+    "show_on_home": false,
+    "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "fdbf10f4-4582-4347-9b51-f4345b03fd81",
+  "fields": {
+    "created_at": "2026-05-15T04:56:16.606Z",
+    "updated_at": "2026-05-15T04:56:16.606Z",
+    "title": "RFL",
+    "description": "",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiZTViYjIwMmEtZWJmYy00MWJiLTg0NTYtMmU2YzQ1MjVlNjM5IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "page": 40,
+    "region": null,
+    "capacity_and_resource": "b819a9b3-f4d2-4bd1-ba73-c2c504b0f7bf",
+    "show_on_home": false,
+    "order": 1,
     "is_active": true,
     "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
   }
@@ -214,23 +337,7 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiZGNlNjQxMTgtN2EzZS00NmE2LWExZTMtOTY3NTRmYjllYjczIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9&cacheUpdate=1778822328708",
     "page": 50,
     "region": null,
-    "show_on_home": false,
-    "order": 1,
-    "is_active": true,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.externaldashboard",
-  "pk": "fcf44273-7683-48fd-ac59-072ca4bd2632",
-  "fields": {
-    "created_at": "2026-05-15T05:24:31.499Z",
-    "updated_at": "2026-05-15T05:24:31.499Z",
-    "title": "DR-2",
-    "description": "",
-    "url": "https://app.powerbi.com/view?r=eyJrIjoiYTViNTJhMTItZTRhYi00MDVkLWIzYmQtMGY1Zjc4ZDhhZjUzIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
-    "page": 60,
-    "region": null,
+    "capacity_and_resource": null,
     "show_on_home": false,
     "order": 1,
     "is_active": true,
@@ -248,6 +355,25 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiNzJkYTUyOTgtN2IwNi00YTM0LWEwZGYtMjQ5NTk0MTI1OTc4IiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 60,
     "region": null,
+    "capacity_and_resource": null,
+    "show_on_home": false,
+    "order": 1,
+    "is_active": true,
+    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
+  }
+},
+{
+  "model": "dashboards.externaldashboard",
+  "pk": "fcf44273-7683-48fd-ac59-072ca4bd2632",
+  "fields": {
+    "created_at": "2026-05-15T05:24:31.499Z",
+    "updated_at": "2026-05-15T05:24:31.499Z",
+    "title": "DR-2",
+    "description": "",
+    "url": "https://app.powerbi.com/view?r=eyJrIjoiYTViNTJhMTItZTRhYi00MDVkLWIzYmQtMGY1Zjc4ZDhhZjUzIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
+    "page": 60,
+    "region": null,
+    "capacity_and_resource": null,
     "show_on_home": false,
     "order": 1,
     "is_active": true,
@@ -265,146 +391,11 @@
     "url": "https://app.powerbi.com/view?r=eyJrIjoiZjMyMTdiYWQtZTZmNi00OTQ3LWE2N2MtMWE0Mzk3NWU2ZDdkIiwidCI6ImY2NmI3ZDQ2LTA0OTktNDM1Mi1iOTc3LTIwNWJjOTgzNzI2MCIsImMiOjh9",
     "page": 70,
     "region": null,
+    "capacity_and_resource": null,
     "show_on_home": false,
     "order": 1,
     "is_active": true,
     "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d"
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "a1378004-7892-4d5b-b9a5-304cc7a2dbd6",
-  "fields": {
-    "created_at": "2026-05-15T04:42:31.563Z",
-    "updated_at": "2026-05-15T04:44:50.175Z",
-    "title": "Ethiopia Drug Store and Pharmacy",
-    "description": "Monitor and allocate capacity and resources effectively to support humanitarian operations and response efforts.",
-    "region": null,
-    "is_active": true,
-    "order": 1,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "5416c79d-0de2-4f69-8be4-d28565d54943",
-      "8e848a27-b8fb-4572-8dc4-6fffb9f83fdf"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "25417636-5508-4b1d-9197-524c8a7817f3",
-  "fields": {
-    "created_at": "2026-05-15T04:45:09.319Z",
-    "updated_at": "2026-05-15T04:54:58.248Z",
-    "title": "Emergency Medical Service",
-    "description": "Monitor, coordinate, and manage emergency medical service operations and response activities.",
-    "region": null,
-    "is_active": true,
-    "order": 2,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "5ac17c60-fdd3-4784-b665-f322399da438",
-      "16c4ba29-d8e3-4053-abf5-6a32b998aad7"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "0339969d-a96f-4c1a-939d-cf03d42646a9",
-  "fields": {
-    "created_at": "2026-05-15T04:45:51.070Z",
-    "updated_at": "2026-05-15T04:55:06.866Z",
-    "title": "ERCS Fleet Tracking",
-    "description": "Track, monitor, and manage fleet movement, vehicle usage, and transportation efficiency in real time.",
-    "region": null,
-    "is_active": true,
-    "order": 3,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "8182f454-3912-4015-bec7-be2d9a976b52"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "eac83bc9-a29d-4f96-9a04-9abe0402f89b",
-  "fields": {
-    "created_at": "2026-05-15T04:46:20.391Z",
-    "updated_at": "2026-05-15T04:55:17.395Z",
-    "title": "Landholdings",
-    "description": "Maintain, organize, and monitor records of organizational land assets and property details.",
-    "region": null,
-    "is_active": true,
-    "order": 4,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "d57f6490-dbf1-426a-9074-9b2a9ddd4606"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "92f9ff2d-5c0d-4377-88d8-40ab0fe12309",
-  "fields": {
-    "created_at": "2026-05-15T04:46:43.083Z",
-    "updated_at": "2026-05-15T04:55:26.400Z",
-    "title": "Membership and Volunteer",
-    "description": "Manage member and volunteer profiles, engagement, and participation across programs and activities.",
-    "region": null,
-    "is_active": true,
-    "order": 5,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "f33e6d68-fcf5-4620-9008-e05dc3bc572b"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "1fa60c54-dbb6-4acf-8f85-0573d25f9dd3",
-  "fields": {
-    "created_at": "2026-05-15T04:47:04.204Z",
-    "updated_at": "2026-05-15T04:54:39.594Z",
-    "title": "Project Balance",
-    "description": "Track, review, and manage project budgets, expenses, and overall financial performance.",
-    "region": null,
-    "is_active": true,
-    "order": 6,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "be9569c0-09e7-4b2e-b71c-056d43ef4f22"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "b819a9b3-f4d2-4bd1-ba73-c2c504b0f7bf",
-  "fields": {
-    "created_at": "2026-05-15T04:47:52.551Z",
-    "updated_at": "2026-05-15T04:56:35.863Z",
-    "title": "Restoring Family Link (RFL)",
-    "description": "Support and manage processes for family tracing, reunification, and related humanitarian services.",
-    "region": null,
-    "is_active": true,
-    "order": 7,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": [
-      "fdbf10f4-4582-4347-9b51-f4345b03fd81"
-    ]
-  }
-},
-{
-  "model": "dashboards.capacityandresource",
-  "pk": "846652f5-3277-416f-ace9-bca7142c1a96",
-  "fields": {
-    "created_at": "2026-05-15T04:48:20.347Z",
-    "updated_at": "2026-05-15T04:48:20.347Z",
-    "title": "Hospitals",
-    "description": "View, update, and manage hospital information, resources, and service availability across regions.",
-    "region": null,
-    "is_active": true,
-    "order": 8,
-    "created_by": "55173c82-1e55-4120-9aee-6a346db69c6d",
-    "dashboards": []
   }
 }
 ]
