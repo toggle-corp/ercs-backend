@@ -130,6 +130,7 @@ input CapacityAndResourceCreateInput {
 input CapacityAndResourceFilter {
   id: ID
   isActive: Boolean
+  title: StrFilterLookup
   AND: CapacityAndResourceFilter
   OR: CapacityAndResourceFilter
   NOT: CapacityAndResourceFilter
@@ -1034,7 +1035,7 @@ type ReportType {
   iframeUrl: String
   visibility: ReportVisibility!
   reportType: ReportTypeEnum!
-  thematicAreaId: ID!
+  thematicAreaId: ID
   regionId: ID
   disasterType: String
   owner: String
