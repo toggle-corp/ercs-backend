@@ -70,6 +70,7 @@ class PdfExtraction(BaseExtraction):
         self.handle_meta_info()
 
         for page_idx in range(len(doc)):
+            logger.info("Processing Page %s", page_idx + 1)
             page = doc[page_idx]
 
             pic = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)

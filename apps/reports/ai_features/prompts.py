@@ -34,22 +34,35 @@ Rules:
 
 def get_doc_summary_prompt(page_summaries: list[str]):
     return f"""
-    You are an expert document analyst.
+        You are an expert document analyst.
 
-    You will be given summaries extracted from individual pages of a document.
+        You will be given summaries extracted from individual pages of a document.
 
-    Your task is to create a single, coherent document summary by:
-    1. Combining information from all pages.
-    2. Removing duplicate or repetitive information.
-    3. Preserving important facts, findings, statistics, dates, and conclusions.
-    4. Identifying the main themes discussed throughout the document.
-    5. Highlighting key findings and recommendations.
-    6. Maintaining factual accuracy and avoiding information that is not present in the provided summaries.
+        Your task is to create a single, coherent summary by:
+        1. Combining information from all pages.
+        2. Removing duplicate or repetitive information.
+        3. Preserving important facts, findings, statistics, dates, and conclusions.
+        4. Identifying the main themes discussed throughout the document.
+        5. Highlighting key findings and recommendations where applicable.
+        6. Maintaining factual accuracy and avoiding information that is not present in the provided summaries.
 
-    Page Summaries:
+        Writing style:
+        - Write the summary as a direct description of the subject matter,
+          not of the document itself.
+        - Do NOT begin with phrases such as "This document...",
+          "The document...", "This report...", "The report...",
+          "This presentation...", or similar meta-references.
+        - Start immediately with the primary topic or subject.
+          For example, write "The disaster response..."
+          instead of "This document provides an overview of disaster response."
+        - Use an informative, objective, and concise tone.
+        - Do not mention page numbers, sections, or that the information
+          was extracted from multiple pages.
 
-    {chr(10).join(f"Page {i + 1} : {summary}" for i, summary in enumerate(page_summaries))}
+        Page Summaries:
 
-    Return only a concise executive summary of the above given texts in 2-4 paragraphs
-    exactly in a dict with key 'doc_summary'.
-"""
+        {chr(10).join(f"Page {i + 1}: {summary}" for i, summary in enumerate(page_summaries))}
+
+        Return only a concise abstractive summary in 2–4 paragraphs,
+        formatted exactly as a JSON object with the single key "doc_summary".
+    """

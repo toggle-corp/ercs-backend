@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+import httpx
 from django.conf import settings
 from langchain_core.messages import HumanMessage
 from langchain_ollama import ChatOllama, OllamaEmbeddings
@@ -49,6 +50,14 @@ class OllamaHandler(LLMHandler):
                 base_url=settings.LLM_OLLAMA_BASE_URL,
                 temperature=self.temperature,
                 format="json",
+                client_kwargs={
+                    "timeout": httpx.Timeout(
+                        connect=30.0,
+                        read=600.0,  # Allow up to 10 minutes for generation
+                        write=300.0,
+                        pool=30.0,
+                    ),
+                },
             )
         except Exception as e:
             raise Exception(f"Ollama LLM model is not successfully loaded. {str(e)}") from e
