@@ -34,6 +34,7 @@ class ExternalDashboardFilter:
 class CapacityAndResourceFilter:
     id: strawberry.ID | None = strawberry.UNSET
     is_active: bool | None = strawberry.UNSET
+    title: strawberry.auto
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:

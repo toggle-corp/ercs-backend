@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
 
 from apps.reports.models import (
     DocumentExtraction,
@@ -56,7 +57,7 @@ class ReportType:
     iframe_url: strawberry.auto
     visibility: ReportVisibility
     report_type: ReportTypeEnum
-    thematic_area_id: strawberry.ID
+    thematic_area_id: strawberry.ID | None
 
     @strawberry.field
     def content_type_display(self) -> str:
@@ -67,6 +68,7 @@ class ReportType:
         return self.get_visibility_display()  # type: ignore[reportAttributeAccessIssue]
 
     @strawberry.field
+    @sync_to_async
     def report_type_display(self) -> str:
         return self.get_report_type_display()  # type: ignore[reportAttributeAccessIssue]
 

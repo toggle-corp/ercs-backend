@@ -151,6 +151,8 @@ app:
     FRONTEND_DOMAIN: "{{ required \".app.env.FRONTEND_DOMAIN\" nil }}"
     SESSION_COOKIE_DOMAIN: "{{ required \".app.env.SESSION_COOKIE_DOMAIN\" nil }}"
     CSRF_COOKIE_DOMAIN: "{{ required \".app.env.CSRF_COOKIE_DOMAIN\" nil }}"
+    # Sentry
+    SENTRY_ENABLED: "false"
 
   secrets:
     DJANGO_SECRET_KEY: "{{ required \".Values.secrets.DJANGO_SECRET_KEY\" nil }}"
@@ -169,3 +171,5 @@ app:
     # Redis
     CELERY_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/0"
     CACHE_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/1"
+    # sentry
+    SENTRY_DSN: "{{ required \".app.secrets.SENTRY_DSN\" nil }}"

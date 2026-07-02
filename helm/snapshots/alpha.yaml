@@ -216,6 +216,7 @@ stringData:
   POSTGRES_PASSWORD: "test-password"
   POSTGRES_PORT: "5432"
   POSTGRES_USER: "postgres"
+  SENTRY_DSN: "https://sentry.test.com"
 
 ---
 # Source: ercs-backend-helm/charts/app/charts/minio/templates/provisioning-configmap.yaml
@@ -256,6 +257,7 @@ data:
   CSRF_COOKIE_DOMAIN: ".example.com"
   DJANGO_DEBUG: "false"
   FRONTEND_DOMAIN: "https://ercs-frontend.test.com"
+  SENTRY_ENABLED: "false"
   SESSION_COOKIE_DOMAIN: ".example.com"
 
 ---
@@ -561,8 +563,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
-        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
+        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
       labels:
         app: release-name-app
         component: api
@@ -616,8 +618,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
-        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
+        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
       labels:
         app: release-name-app
         component: worker-beat
@@ -675,8 +677,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
-        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
+        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
       labels:
         app: release-name-app
         component: worker
@@ -913,8 +915,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
-        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
+        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
       labels:
         app: release-name-app
         component: argo-hooks
@@ -956,8 +958,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/secret: 9323ef98ced6d9a505d3f0c1e990e52e7df25cb26d497b22d6150a5c6eb76abb
-        checksum/configmap: 6ba5453622d2a176dcdcf3399bdffaa20a6a38105a9e6a0654a92baa1a0da3fd
+        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
+        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
       labels:
         app: release-name-app
         component: argo-hooks
