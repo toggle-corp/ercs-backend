@@ -1,14 +1,17 @@
 import base64
+import io
 import json
 import logging
+import time
 from dataclasses import dataclass, field
 
 import fitz
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI
+from PIL import Image
 
 from apps.reports.ai_features.llms import OllamaHandler
-from apps.reports.ai_features.prompts import get_doc_summary_prompt
+from apps.reports.ai_features.prompts import DOC_SUMMARY_SCHEMA, PAGE_SCHEMA, get_doc_summary_prompt
 from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
 
 logger = logging.getLogger(__name__)
@@ -58,16 +61,70 @@ class BaseExtraction:
 class PdfExtraction(BaseExtraction):
     data: bytes
 
+    # Qwen2.5-VL uses a native dynamic-resolution vision encoder, so the number of
+    # vision tokens (and Ollama's memory/compute use) scales with input pixel count.
+    # Cap the longest side so oversized source pages can't blow up memory regardless
+    # of the render zoom.
+    MAX_IMAGE_DIMENSION = 1024
+
+    # Retries for a single page's LLM extraction call, covering transient network/
+    # timeout errors as well as malformed or truncated JSON in the model's response.
+    MAX_PAGE_ATTEMPTS = 3
+    PAGE_RETRY_DELAY_SECONDS = 3
+
     def img_to_base64(self, data: fitz.Pixmap) -> str:
         img_bytes = data.tobytes("png")
+
+        image = Image.open(io.BytesIO(img_bytes))
+        if max(image.size) > self.MAX_IMAGE_DIMENSION:
+            scale = self.MAX_IMAGE_DIMENSION / max(image.size)
+            new_size = (round(image.width * scale), round(image.height * scale))
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+            buffer = io.BytesIO()
+            image.save(buffer, format="PNG")
+            img_bytes = buffer.getvalue()
+
         return base64.b64encode(img_bytes).decode("utf-8")
 
-    def pdf_to_images(self, zoom: float = 2.0):
+    def extract_page(self, page_idx: int, img_b64: str) -> dict | None:
+        """Run the LLM extraction call for a single page, retrying on failure."""
+        message = self.llm_handler.construct_extraction_message(img_b64=img_b64)
+
+        for attempt in range(1, self.MAX_PAGE_ATTEMPTS + 1):
+            try:
+                response = self.llm_chat_model.invoke([message], format=PAGE_SCHEMA)
+                if not isinstance(response.content, str):
+                    raise TypeError("Response content is not a string")  # noqa: TRY301
+                return json.loads(response.content)
+            except Exception:
+                logger.warning(
+                    "Page %s extraction attempt %s/%s failed",
+                    page_idx + 1,
+                    attempt,
+                    self.MAX_PAGE_ATTEMPTS,
+                    exc_info=True,
+                )
+                if attempt < self.MAX_PAGE_ATTEMPTS:
+                    time.sleep(self.PAGE_RETRY_DELAY_SECONDS)
+
+        logger.error("Page %s extraction failed after %s attempts", page_idx + 1, self.MAX_PAGE_ATTEMPTS)
+        return None
+
+    def pdf_to_images(self, zoom: float = 1.1):
         page_summaries = []
         doc = fitz.open(stream=self.data, filetype="pdf")
 
         # Get the title and description
         self.handle_meta_info()
+        # Doc Summary In Pending State
+        doc_summary_obj = DocumentExtraction.objects.create(
+            report=self.report,
+            status=DocumentExtractionStatus.PENDING,
+            text="",
+            page_number=None,
+            chunk_type=DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY,
+            embedding=None,
+        )
 
         for page_idx in range(len(doc)):
             logger.info("Processing Page %s", page_idx + 1)
@@ -76,12 +133,15 @@ class PdfExtraction(BaseExtraction):
             pic = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
             img_b64 = self.img_to_base64(data=pic)
 
-            message = self.llm_handler.construct_extraction_message(img_b64=img_b64)
-
-            response = self.llm_chat_model.invoke([message])
-            if not isinstance(response.content, str):
+            result = self.extract_page(page_idx=page_idx, img_b64=img_b64)
+            if result is None:
+                DocumentExtraction.objects.create(
+                    report=self.report,
+                    status=DocumentExtractionStatus.FAILURE,
+                    page_number=page_idx + 1,
+                    chunk_type=DocumentExtraction.ExtractionType.EXTRACTED_CONTENT,
+                )
                 continue
-            result = json.loads(response.content)
 
             if "summary" in result and result["summary"]:
                 page_summaries.append(result["summary"])
@@ -124,21 +184,29 @@ class PdfExtraction(BaseExtraction):
                 )
 
         doc_summary_prompt = get_doc_summary_prompt(page_summaries=page_summaries)
-        doc_summary = self.llm_chat_model.invoke(doc_summary_prompt)
+        # This prompt concatenates every page's summary, so its input size scales with
+        # page count. Override back up to the original context window rather than the
+        # smaller per-page default, since a lower window here can silently truncate
+        # earlier page summaries out of the final document summary.
+        doc_summary = self.llm_chat_model.invoke(
+            doc_summary_prompt,
+            format=DOC_SUMMARY_SCHEMA,
+            options={"num_ctx": 8192},
+        )
         if not isinstance(doc_summary.content, str):
             return
-        doc_summary_json = json.loads(doc_summary.content)
-        if doc_summary_json and "doc_summary" in doc_summary_json:
-            DocumentExtraction.objects.create(
-                report=self.report,
+        try:
+            doc_summary_json = json.loads(doc_summary.content)
+            DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
                 status=DocumentExtractionStatus.SUCCESS,
                 text=doc_summary_json["doc_summary"],
-                page_number=None,
-                chunk_type=DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY,
                 embedding=self.llm_embedding_model.embed_query(doc_summary_json["doc_summary"]),
             )
-        else:
-            logger.warning("The key doc_summary is missing in the output")
+        except (ValueError, KeyError):
+            logger.warning("Either key doc_summary is missing or malformed json in the output.")
+            DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
+                status=DocumentExtractionStatus.FAILURE,
+            )
 
 
 @dataclass

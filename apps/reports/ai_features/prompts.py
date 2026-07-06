@@ -1,8 +1,50 @@
-PAGE_PROMPT = """
-You are analyzing an image of a document page.
-Extract all content and return ONLY a valid JSON object with no explanation, no markdown, no backticks.
+PAGE_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "extracted_text": {"type": "string"},
+        "key_findings": {"type": "string"},
+        "tables": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string"},
+                    "headers": {"type": "array", "items": {"type": "string"}},
+                    "rows": {"type": "array", "items": {"type": "array", "items": {"type": "string"}}},
+                },
+                "required": ["title", "headers", "rows"],
+            },
+        },
+        "charts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "type": {"type": "string"},
+                    "title": {"type": "string"},
+                    "description": {"type": "string"},
+                },
+                "required": ["type", "title", "description"],
+            },
+        },
+        "summary": {"type": "string"},
+    },
+    "required": ["extracted_text", "key_findings", "tables", "charts", "summary"],
+}
 
-Use exactly this structure:
+DOC_SUMMARY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "doc_summary": {"type": "string"},
+    },
+}
+
+PAGE_PROMPT = """
+You are analyzing an image(scan) of a document page.
+Extract all content and return ONLY a valid JSON object based on page schema
+with no explanation, no markdown, no backticks.
+
+Use this exact structure:
 {
   "extracted_text": "extracted texts of the page"
   "key_findings": "important phrases separated by a period",
@@ -20,11 +62,11 @@ Use exactly this structure:
       "description": "extract key information and describe what the chart shows"
     }
   ],
-  "summary": "brief summary of the page content including key information from tables and charts under 200 words.",
+  "summary": "brief summary of the extracted texts including key information from tables and charts under 200 words.",
 }
 
 Rules:
-- Return ONLY the JSON object, nothing else
+- Return ONLY the valid JSON object following the schema
 - If no tables found, return "tables": []
 - If no charts found, return "charts": []
 - If no key findings, return "key_findings": "" else express in phrases

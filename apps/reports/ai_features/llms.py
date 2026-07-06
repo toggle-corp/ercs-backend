@@ -11,7 +11,7 @@ from apps.reports.ai_features.prompts import PAGE_PROMPT
 
 @dataclass
 class LLMHandler:
-    temperature: float = 0.2
+    temperature: float = 0.0
 
     def construct_extraction_message(self, img_b64: str) -> HumanMessage:
         return HumanMessage(
@@ -49,7 +49,10 @@ class OllamaHandler(LLMHandler):
                 model=settings.LLM_MODEL_NAME,
                 base_url=settings.LLM_OLLAMA_BASE_URL,
                 temperature=self.temperature,
-                format="json",
+                # Sized for a single page (prompt + one page's vision tokens + JSON output).
+                # The multi-page document summary call needs a larger window and overrides
+                # this via `options={"num_ctx": ...}` at call time.
+                num_ctx=4096,
                 client_kwargs={
                     "timeout": httpx.Timeout(
                         connect=30.0,
