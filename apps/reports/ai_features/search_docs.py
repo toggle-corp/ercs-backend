@@ -7,7 +7,7 @@ from langchain_ollama import OllamaEmbeddings
 from pgvector.django import CosineDistance
 
 from apps.reports.ai_features.llms import OllamaHandler
-from apps.reports.models import DocumentExtraction, Report
+from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
 
 
 class ChunkScore(typing.TypedDict):
@@ -47,7 +47,9 @@ class SearchReports:
         """Calculate the cosine similarity score of each of the chunks."""
         query_vector = self.generate_query_embedding()
         return (
-            DocumentExtraction.objects.select_related("report")
+            DocumentExtraction.objects.filter(status=DocumentExtractionStatus.SUCCESS)
+            .filter(embedding__isnull=False)
+            .select_related("report")
             .annotate(
                 score=1
                 - CosineDistance(
@@ -103,4 +105,4 @@ class SearchReports:
             )
         }
         # Return ordered reports
-        return [reports_by_id[rep_id] for rep_id, _ in ranked_docs]
+        return [reports_by_id[rep_id] for rep_id, _ in ranked_docs[:top_k]]
