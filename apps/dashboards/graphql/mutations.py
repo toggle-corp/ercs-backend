@@ -1,5 +1,7 @@
 import strawberry
 import strawberry_django
+from asgiref.sync import sync_to_async
+from django.db import transaction
 
 from apps.dashboards.models import CapacityAndResource, ExternalDashboard
 from apps.dashboards.serializers import CapacityAndResourceSerializer, ExternalDashboardSerializer
@@ -7,15 +9,31 @@ from main.graphql.context import Info
 from main.graphql.permissions import IsStaffOrAbove
 from utils.graphql.drf import MutationCustomErrorType
 from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from utils.graphql.types import CustomErrorType, MutationResponseType
 
 from .inputs import (
     CapacityAndResourceCreateInput,
     CapacityAndResourceUpdateInput,
     ExternalDashboardCreateInput,
+    ExternalDashboardOrderInput,
     ExternalDashboardUpdateInput,
 )
 from .types import CapacityAndResourceType, ExternalDashboardType
+
+
+@sync_to_async
+def _bulk_update_external_dashboard_order(
+    order_by_id: dict[str, int],
+) -> tuple[CustomErrorType | None, list[ExternalDashboard] | None]:
+    with transaction.atomic():
+        dashboards = list(ExternalDashboard.objects.filter(id__in=order_by_id))
+        if len(dashboards) != len(order_by_id):
+            return MutationCustomErrorType.generate_message("One or more dashboards were not found."), None
+        for dashboard in dashboards:
+            dashboard.order = order_by_id[str(dashboard.pk)]
+        ExternalDashboard.objects.bulk_update(dashboards, ["order"])
+    dashboards.sort(key=lambda dashboard: (dashboard.page, dashboard.order))
+    return None, dashboards
 
 
 @strawberry.type
@@ -55,6 +73,18 @@ class Mutation:
     ) -> MutationResponseType[CapacityAndResourceType]:
         instance = await CapacityAndResource.objects.aget(id=id)
         return await ModelMutation(CapacityAndResourceSerializer).handle_update_mutation(data, info, instance)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def bulk_update_external_dashboards(
+        self,
+        info: Info,
+        data: list[ExternalDashboardOrderInput],
+    ) -> MutationResponseType[list[ExternalDashboardType]]:
+        order_by_id = {str(item.id): item.order for item in data}
+        errors, dashboards = await _bulk_update_external_dashboard_order(order_by_id)
+        if errors:
+            return MutationResponseType(ok=False, errors=errors)
+        return MutationResponseType(result=dashboards)
 
     @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
     async def add_dashboard_to_home(
