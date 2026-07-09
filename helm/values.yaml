@@ -111,7 +111,7 @@ app:
           - "-Q"
           - "default"
           - "--concurrency"
-          - "4"
+          - "1"
           - "--max-tasks-per-child"
           - "10"
 
