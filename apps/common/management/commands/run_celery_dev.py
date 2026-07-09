@@ -8,7 +8,7 @@ from django.utils import autoreload
 
 WORKER_STATE_DIR = Path("/var/run/celery")
 
-CMD = "celery -A main worker -E --concurrency=2 -l info"
+CMD = "celery -A main worker -E --concurrency=1 -l info"
 
 
 def restart_celery(*args: typing.Any, **kwargs: typing.Any) -> None:
