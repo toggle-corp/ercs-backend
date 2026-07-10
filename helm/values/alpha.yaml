@@ -1,27 +1,9 @@
 app:
   environment: ALPHA
 
-  postgresql:
-    enabled: true
-
-  minio:
-    enabled: true
-
+  # NOTE: Postgres is provisioned externally and Redis by the
+  # Dragonfly operator (./values/operators.yaml); S3/media wiring, if needed,
+  # is injected at deploy time. Only env tweaks live here.
   env:
-    # AWS (Using minio)
-    AWS_S3_ENABLED: "true"
-    AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
-    AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
-    AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
-
-  secrets:
-    # Postgres (Using bitnami)
-    POSTGRES_DB: "{{ $.Values.postgresql.auth.database }}"
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "{{ $.Values.postgresql.auth.postgresPassword }}"
-    POSTGRES_HOST: "{{ include \"postgresql.v1.primary.fullname\" $.Subcharts.postgresql }}"
-    POSTGRES_PORT: "{{ include \"postgresql.v1.service.port\" $.Subcharts.postgresql }}"
-    # Minio (S3)
-    AWS_S3_ACCESS_KEY_ID: "{{ required \".app.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
-    AWS_S3_SECRET_ACCESS_KEY: "{{ required \".app.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
-    AWS_S3_REGION_NAME: "us-east-1"
+    SENTRY_TRACES_SAMPLE_RATE: "0.8"
+    SENTRY_PROFILE_SAMPLE_RATE: "0.8"

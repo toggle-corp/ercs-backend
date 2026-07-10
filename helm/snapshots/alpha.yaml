@@ -1,387 +1,63 @@
 ---
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/networkpolicy.yaml
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: minio
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - {}
-  ingress:
-    # Allow inbound connections
-    - ports:
-        - port: 9001
-        - port: 9000
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/provisioning-networkpolicy.yaml
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: ercs-minio-provisioning
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/component: minio-provisioning
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - {}
-  ingress:
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/networkpolicy.yaml
-kind: NetworkPolicy
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-    app.kubernetes.io/component: primary
-spec:
-  podSelector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: postgresql
-      app.kubernetes.io/component: primary
-  policyTypes:
-    - Ingress
-    - Egress
-  egress:
-    - {}
-  ingress:
-    - ports:
-        - port: 5432
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: minio
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/pdb.yaml
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-    app.kubernetes.io/component: primary
-spec:
-  maxUnavailable: 1
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: postgresql
-      app.kubernetes.io/component: primary
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-automountServiceAccountToken: false
-secrets:
-  - name: ercs-minio
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/serviceaccount.yaml
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-automountServiceAccountToken: false
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-type: Opaque
-data:
-  root-user: "ZXJjcw=="
-  root-password: "dGVzdC1wYXNzd29yZA=="
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-type: Opaque
-data:
-  postgres-password: "dGVzdC1wYXNzd29yZA=="
-  # We don't auto-generate LDAP password when it's not provided as we do for other passwords
-
----
 # Source: ercs-backend-helm/charts/app/templates/config/secret.yaml
 kind: Secret
 apiVersion: v1
 metadata:
-  name: release-name-app-secret
+  name: release-name-ercs-secret
   labels:
-    app: release-name-app
+    app: release-name-ercs
     environment: ALPHA
     release: release-name
 type: Opaque
 stringData:
   # secrets
-  AWS_S3_ACCESS_KEY_ID: "ercs"
-  AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
-  AWS_S3_REGION_NAME: "us-east-1"
-  AWS_S3_SECRET_ACCESS_KEY: "test-password"
-  AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
-  CACHE_REDIS_URL: "redis://redis:6379/1"
-  CELERY_REDIS_URL: "redis://redis:6379/0"
-  DJANGO_SECRET_KEY: "django-secret-key"
-  POSTGRES_DB: "ercs"
-  POSTGRES_HOST: "ercs-postgresql"
-  POSTGRES_PASSWORD: "test-password"
+  DJANGO_SECRET_KEY: "dummy-secret-key"
+  POSTGRES_DB: "dummy"
+  POSTGRES_HOST: "dummy"
+  POSTGRES_PASSWORD: "dummy"
   POSTGRES_PORT: "5432"
-  POSTGRES_USER: "postgres"
-  SENTRY_DSN: "https://sentry.test.com"
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/provisioning-configmap.yaml
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: ercs-minio-provisioning
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-    app.kubernetes.io/component: minio-provisioning
-data:
+  POSTGRES_USER: "dummy"
 
 ---
 # Source: ercs-backend-helm/charts/app/templates/config/configmap.yaml
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: release-name-app-env-name
+  name: release-name-ercs-env-name
   labels:
-    app: release-name-app
+    app: release-name-ercs
     environment: ALPHA
     release: release-name
 data:
   # Configs
-  APP_DOMAIN: "https://ercs.test.com"
+  APP_DOMAIN: "https://ercs.example.com"
   APP_ENVIRONMENT: "ALPHA"
-  APP_RELEASE: "https://ercs.test.com"
-  APP_TYPE: "WEB"
+  APP_RELEASE: "develop.xxxxxxxx"
   AWS_S3_ENABLED: "false"
-  AWS_S3_ENDPOINT_URL: "https://ercs-minio.test.com/"
-  AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
-  AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
   CSRF_COOKIE_DOMAIN: ".example.com"
-  DJANGO_DEBUG: "false"
-  FRONTEND_DOMAIN: "https://ercs-frontend.test.com"
+  DEBUG: "false"
+  FRONTEND_DOMAIN: "https://ercs-frontend.example.com"
   SENTRY_ENABLED: "false"
+  SENTRY_PROFILE_SAMPLE_RATE: "0.8"
+  SENTRY_TRACES_SAMPLE_RATE: "0.8"
   SESSION_COOKIE_DOMAIN: ".example.com"
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/pvc.yaml
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  accessModes:
-    - "ReadWriteOnce"
-  resources:
-    requests:
-      storage: "1Gi"
-  
-
----
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  type: ClusterIP
-  ports:
-    - name: minio-api
-      port: 9000
-      targetPort: minio-api
-      nodePort: null
-    - name: minio-console
-      port: 9001
-      targetPort: minio-console
-      nodePort: null
-  selector:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/name: minio
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/svc-headless.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: ercs-postgresql-hl
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-    app.kubernetes.io/component: primary
-  annotations:
-spec:
-  type: ClusterIP
-  clusterIP: None
-  # We want all pods in the StatefulSet to have their addresses published for
-  # the sake of the other Postgresql pods even before they're ready, since they
-  # have to be able to talk to each other in order to become ready.
-  publishNotReadyAddresses: true
-  ports:
-    - name: tcp-postgresql
-      port: 5432
-      targetPort: tcp-postgresql
-  selector:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/component: primary
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/svc.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-    app.kubernetes.io/component: primary
-spec:
-  type: ClusterIP
-  sessionAffinity: None
-  ports:
-    - name: tcp-postgresql
-      port: 5432
-      targetPort: tcp-postgresql
-      nodePort: null
-  selector:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/component: primary
+  TIME_ZONE: "UTC"
 
 ---
 # Source: ercs-backend-helm/charts/app/templates/api/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: release-name-app-api
+  name: release-name-ercs-api
   labels:
-    app: release-name-app
+    app: release-name-ercs
     component: api
     environment: ALPHA
     release: release-name
 spec:
   type: ClusterIP
   selector:
-    app: release-name-app
+    app: release-name-ercs
     component: api
   ports:
     - protocol: TCP
@@ -389,189 +65,38 @@ spec:
       targetPort: 80
 
 ---
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/standalone/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ercs-minio
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-spec:
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: minio
-  strategy:
-    type: Recreate
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/instance: release-name
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: minio
-        app.kubernetes.io/version: 2024.12.18
-        helm.sh/chart: minio-14.10.5
-      annotations:
-        checksum/credentials-secret: 427c5e55a445ebfde5b1d7e18ea48bae9a4a96c93010d97fcf6bf45ef5789126
-    spec:
-      
-      serviceAccountName: ercs-minio
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: release-name
-                    app.kubernetes.io/name: minio
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
-      automountServiceAccountToken: false
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: OnRootMismatch
-        supplementalGroups: []
-        sysctls: []
-      containers:
-        - name: minio
-          image: docker.io/bitnamilegacy/minio:2024.12.18-debian-12-r1
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: MINIO_SCHEME
-              value: "http"
-            - name: MINIO_FORCE_NEW_KEYS
-              value: "yes"
-            - name: MINIO_API_PORT_NUMBER
-              value: "9000"
-            - name: MINIO_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: ercs-minio
-                  key: root-user
-            - name: MINIO_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: ercs-minio
-                  key: root-password
-            - name: MINIO_DEFAULT_BUCKETS
-              value: ercs-static,ercs-media
-            - name: MINIO_BROWSER
-              value: "off"
-            - name: MINIO_PROMETHEUS_AUTH_TYPE
-              value: "public"
-            - name: MINIO_CONSOLE_PORT_NUMBER
-              value: "9001"
-            - name: MINIO_DATA_DIR
-              value: "/bitnami/minio/data"
-          envFrom:
-          ports:
-            - name: minio-api
-              containerPort: 9000
-              protocol: TCP
-            - name: minio-console
-              containerPort: 9001
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /minio/health/live
-              port: minio-api
-              scheme: "HTTP"
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 5
-          readinessProbe:
-            tcpSocket:
-              port: minio-api
-            initialDelaySeconds: 5
-            periodSeconds: 5
-            timeoutSeconds: 1
-            successThreshold: 1
-            failureThreshold: 5
-          resources:
-            limits:
-              cpu: 375m
-              ephemeral-storage: 2Gi
-              memory: 384Mi
-            requests:
-              cpu: 250m
-              ephemeral-storage: 50Mi
-              memory: 256Mi
-          volumeMounts:
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: empty-dir
-              mountPath: /opt/bitnami/minio/tmp
-              subPath: app-tmp-dir
-            - name: empty-dir
-              mountPath: /.mc
-              subPath: app-mc-dir
-            - name: data
-              mountPath: /bitnami/minio/data
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: data
-          persistentVolumeClaim:
-            claimName: ercs-minio
-
----
 # Source: ercs-backend-helm/charts/app/templates/api/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: release-name-app-api
+  name: release-name-ercs-api
   annotations:
+    argocd.argoproj.io/sync-wave: "30"
     reloader.stakater.com/auto: "true"
   labels:
-    app: release-name-app
+    app: release-name-ercs
     component: api
     environment: ALPHA
     release: release-name
 spec:
-  replicas: 1
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
-      app: release-name-app
+      app: release-name-ercs
       component: api
   template:
     metadata:
       annotations:
-        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
-        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
       labels:
-        app: release-name-app
+        app: release-name-ercs
         component: api
     spec:
+      terminationGracePeriodSeconds: 38
       containers:
         - name: api
-          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
           imagePullPolicy: IfNotPresent
           command:
             - misc/prod/run_web.sh
@@ -579,54 +104,94 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
-          # TODO: livenessProbe
+          livenessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/live/
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 6
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz/ready/
+              port: http
+            periodSeconds: 5
           resources:
             limits:
-              cpu: "0.5"
               memory: 1Gi
             requests:
               cpu: "0.3"
               memory: 0.4Gi
           envFrom:
             - secretRef:
-                name: release-name-app-secret
+                name: release-name-ercs-secret
             - configMapRef:
-                name: release-name-app-env-name
+                name: release-name-ercs-env-name
           env:
             - name: APP_TYPE
               value: "web"
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
+            
+          lifecycle:
+            preStop:
+              sleep:
+                seconds: 8
 
 ---
-# Source: ercs-backend-helm/charts/app/templates/worker-beat/deployment.yaml
+# Source: ercs-backend-helm/charts/app/templates/worker-addons/deployment.yaml
+# Addon: beat
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: release-name-app-worker-beat
+  name: release-name-ercs-worker-beat
   annotations:
+    argocd.argoproj.io/sync-wave: "30"
     reloader.stakater.com/auto: "true"
   labels:
-    app: release-name-app
-    component: worker-beat
+    app: release-name-ercs
+    component: worker-addon
+    addon: beat
     environment: ALPHA
     release: release-name
 spec:
-  replicas: 1  # This should only 1
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
-      app: release-name-app
-      component: worker-beat
+      app: release-name-ercs
+      component: worker-addon
+      addon: beat
   template:
     metadata:
       annotations:
-        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
-        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
       labels:
-        app: release-name-app
-        component: worker-beat
+        app: release-name-ercs
+        component: worker-addon
+        addon: beat
     spec:
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
       containers:
-        - name: worker-beat
-          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+        - name: beat
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
           imagePullPolicy: IfNotPresent
           command:
             - celery
@@ -635,22 +200,41 @@ spec:
             - beat
             - -l
             - INFO
-          # TODO: livenessProbe
+            - --scheduler
+            - banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+              - --max-age
+              - "360"
+            failureThreshold: 3
+            periodSeconds: 60
+            timeoutSeconds: 5
           resources:
             limits:
-              cpu: "1"
-              memory: 1Gi
+              memory: 512Mi
             requests:
               cpu: "0.1"
-              memory: 0.5Gi
+              memory: 256Mi
           envFrom:
             - secretRef:
-                name: release-name-app-secret
+                name: release-name-ercs-secret
             - configMapRef:
-                name: release-name-app-env-name
+                name: release-name-ercs-env-name
           env:
             - name: APP_TYPE
               value: "worker"
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/beat_heartbeat"
+          volumeMounts:
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
 
 ---
 # Source: ercs-backend-helm/charts/app/templates/worker/deployment.yaml
@@ -658,32 +242,38 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: release-name-app-worker-default
+  name: release-name-ercs-worker-default
   annotations:
+    argocd.argoproj.io/sync-wave: "30"
     reloader.stakater.com/auto: "true"
   labels:
-    app: release-name-app
+    app: release-name-ercs
     component: worker
     queue: default
     environment: ALPHA
     release: release-name
 spec:
-  replicas: 1
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
-      app: release-name-app
+      app: release-name-ercs
       component: worker
       queue: default
   template:
     metadata:
       annotations:
-        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
-        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
       labels:
-        app: release-name-app
+        app: release-name-ercs
         component: worker
         queue: default
     spec:
+      volumes:
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 1Mi
+          name: celery-heartbeat
       containers:
         - name: worker
           command:
@@ -699,563 +289,268 @@ spec:
             - "1"
             - --max-tasks-per-child
             - "10"
-          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
           imagePullPolicy: IfNotPresent
-          # TODO: livenessProbe
+          livenessProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 6
+            periodSeconds: 20
+            timeoutSeconds: 5
+          startupProbe:
+            exec:
+              command:
+              - banjo-celery-probe
+            failureThreshold: 30
+            periodSeconds: 5
           resources:
             limits:
-              cpu: "1"
-              memory: 2Gi
-            requests:
-              cpu: "1"
               memory: 1Gi
+            requests:
+              cpu: "0.1"
+              memory: 0.5Gi
           envFrom:
             - secretRef:
-                name: release-name-app-secret
+                name: release-name-ercs-secret
             - configMapRef:
-                name: release-name-app-env-name
+                name: release-name-ercs-env-name
           env:
             - name: APP_TYPE
               value: "worker"
-
----
-# Source: ercs-backend-helm/charts/app/charts/postgresql/templates/primary/statefulset.yaml
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: ercs-postgresql
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: postgresql
-    app.kubernetes.io/version: 17.2.0
-    helm.sh/chart: postgresql-16.4.5
-    app.kubernetes.io/component: primary
-spec:
-  replicas: 1
-  serviceName: ercs-postgresql-hl
-  updateStrategy:
-    rollingUpdate: {}
-    type: RollingUpdate
-  selector:
-    matchLabels:
-      app.kubernetes.io/instance: release-name
-      app.kubernetes.io/name: postgresql
-      app.kubernetes.io/component: primary
-  template:
-    metadata:
-      name: ercs-postgresql
-      labels:
-        app.kubernetes.io/instance: release-name
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/name: postgresql
-        app.kubernetes.io/version: 17.2.0
-        helm.sh/chart: postgresql-16.4.5
-        app.kubernetes.io/component: primary
-    spec:
-      serviceAccountName: ercs-postgresql
-      
-      automountServiceAccountToken: false
-      affinity:
-        podAffinity:
-          
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/instance: release-name
-                    app.kubernetes.io/name: postgresql
-                    app.kubernetes.io/component: primary
-                topologyKey: kubernetes.io/hostname
-              weight: 1
-        nodeAffinity:
-          
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      hostNetwork: false
-      hostIPC: false
-      containers:
-        - name: postgresql
-          image: docker.io/bitnamilegacy/postgresql:17.2.0-debian-12-r8
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          env:
-            - name: BITNAMI_DEBUG
-              value: "false"
-            - name: POSTGRESQL_PORT_NUMBER
-              value: "5432"
-            - name: POSTGRESQL_VOLUME_DIR
-              value: "/bitnami/postgresql"
-            - name: PGDATA
-              value: "/bitnami/postgresql/data"
-            # Authentication
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: ercs-postgresql
-                  key: postgres-password
-            - name: POSTGRES_DATABASE
-              value: "ercs"
-            # LDAP
-            - name: POSTGRESQL_ENABLE_LDAP
-              value: "no"
-            # TLS
-            - name: POSTGRESQL_ENABLE_TLS
-              value: "no"
-            # Audit
-            - name: POSTGRESQL_LOG_HOSTNAME
-              value: "false"
-            - name: POSTGRESQL_LOG_CONNECTIONS
-              value: "false"
-            - name: POSTGRESQL_LOG_DISCONNECTIONS
-              value: "false"
-            - name: POSTGRESQL_PGAUDIT_LOG_CATALOG
-              value: "off"
-            # Others
-            - name: POSTGRESQL_CLIENT_MIN_MESSAGES
-              value: "error"
-            - name: POSTGRESQL_SHARED_PRELOAD_LIBRARIES
-              value: "pgaudit"
-          ports:
-            - name: tcp-postgresql
-              containerPort: 5432
-          livenessProbe:
-            failureThreshold: 6
-            initialDelaySeconds: 30
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - exec pg_isready -U "postgres" -d "dbname=ercs" -h 127.0.0.1 -p 5432
-          readinessProbe:
-            failureThreshold: 6
-            initialDelaySeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 5
-            exec:
-              command:
-                - /bin/sh
-                - -c
-                - -e
-                - |
-                  exec pg_isready -U "postgres" -d "dbname=ercs" -h 127.0.0.1 -p 5432
-          resources:
-            limits:
-              cpu: 150m
-              ephemeral-storage: 2Gi
-              memory: 192Mi
-            requests:
-              cpu: 100m
-              ephemeral-storage: 50Mi
-              memory: 128Mi
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
+            
+            - name: BANJO_CELERY_HEARTBEAT_FILE
+              value: "/var/run/celery/worker_heartbeat"
           volumeMounts:
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: empty-dir
-              mountPath: /opt/bitnami/postgresql/conf
-              subPath: app-conf-dir
-            - name: empty-dir
-              mountPath: /opt/bitnami/postgresql/tmp
-              subPath: app-tmp-dir
-            - name: dshm
-              mountPath: /dev/shm
-            - name: data
-              mountPath: /bitnami/postgresql
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: dshm
-          emptyDir:
-            medium: Memory
-  volumeClaimTemplates:
-    - apiVersion: v1
-      kind: PersistentVolumeClaim
-      metadata:
-        name: data
-      spec:
-        accessModes:
-          - "ReadWriteOnce"
-        resources:
-          requests:
-            storage: "1Gi"
-        
+            - mountPath: /var/run/celery
+              name: celery-heartbeat
 
 ---
-# Source: ercs-backend-helm/charts/app/templates/argo-hooks/hook-job.yaml
+# Source: ercs-backend-helm/charts/app/templates/hooks/job.yaml
 # Hook: collect-static
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: release-name-app-collect-static
+  name: release-name-ercs-collect-static
   annotations:
-    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: release-name-ercs
+    component: hook
+    hookName: collect-static
+    environment: ALPHA
+    release: release-name
 spec:
   template:
     metadata:
       annotations:
-        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
-        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
       labels:
-        app: release-name-app
-        component: argo-hooks
+        app: release-name-ercs
+        component: hook
+        hookName: collect-static
     spec:
       restartPolicy: "Never"
       containers:
         - name: collect-static
-          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
           imagePullPolicy: IfNotPresent
           command: 
-            - /bin/bash
-            - -c
-            - ./manage.py wait_for_resources --minio && ./manage.py collectstatic --noinput
+            - ./manage.py
+            - collectstatic
+            - --noinput
           resources:
             limits:
-              cpu: "1"
               memory: 2Gi
             requests:
               cpu: "0.1"
               memory: 1Gi
           envFrom:
             - secretRef:
-                name: release-name-app-secret
+                name: release-name-ercs-secret
             - configMapRef:
-                name: release-name-app-env-name
+                name: release-name-ercs-env-name
           env:
             - name: APP_TYPE
               value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
 ---
-# Source: ercs-backend-helm/charts/app/templates/argo-hooks/hook-job.yaml
+# Source: ercs-backend-helm/charts/app/templates/hooks/job.yaml
 # Hook: db-migrate
 apiVersion: batch/v1
 kind: Job
 metadata:
-  generateName: release-name-app-db-migrate-
+  generateName: release-name-ercs-db-migrate-
   annotations:
-    argocd.argoproj.io/hook: PostSync
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/sync-wave: "20"
+  labels:
+    app: release-name-ercs
+    component: hook
+    hookName: db-migrate
+    environment: ALPHA
+    release: release-name
 spec:
+  activeDeadlineSeconds: 3600
+  ttlSecondsAfterFinished: 604800
   template:
     metadata:
       annotations:
-        checksum/secret: e77f1403534ce3ff6cd39b1662c58f90d38491605f9729a6986ce723a0aad6ed
-        checksum/configmap: 287a079f9e9782396ed4d04a5aeba0aff708103af9eebda1d1bf1b21da310e7b
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
       labels:
-        app: release-name-app
-        component: argo-hooks
+        app: release-name-ercs
+        component: hook
+        hookName: db-migrate
     spec:
       restartPolicy: "Never"
       containers:
         - name: db-migrate
-          image: "SET-BY-CICD-IMAGE:SET-BY-CICD-TAG"
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
           imagePullPolicy: IfNotPresent
           command: 
-            - /bin/bash
-            - -c
-            - ./manage.py wait_for_resources --db && ./manage.py migrate
+            - ./manage.py
+            - migrate
           resources:
             limits:
-              cpu: "1"
               memory: 2Gi
             requests:
               cpu: "0.1"
               memory: 1Gi
           envFrom:
             - secretRef:
-                name: release-name-app-secret
+                name: release-name-ercs-secret
             - configMapRef:
-                name: release-name-app-env-name
+                name: release-name-ercs-env-name
           env:
             - name: APP_TYPE
               value: "hook"
-
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
 ---
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/api-ingress.yaml
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+# Source: ercs-backend-helm/charts/app/templates/hooks/job.yaml
+# Hook: wait-for-resources
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: ercs-minio-api
-  namespace: "default"
-  labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
+  name: release-name-ercs-wait-for-resources
   annotations:
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/sync-wave: "10"
+  labels:
+    app: release-name-ercs
+    component: hook
+    hookName: wait-for-resources
+    environment: ALPHA
+    release: release-name
 spec:
-  rules:
-    - host: ercs-minio.test.com
-      http:
-        paths:
-          - path: /
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: ercs-minio
-                port:
-                  name: minio-api
+  template:
+    metadata:
+      annotations:
+        checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
+        checksum/configmap: 9b6e228187ac8ab2234203ac6f01a0e2ac96312620ff9e89d07efd47d849a0eb
+      labels:
+        app: release-name-ercs
+        component: hook
+        hookName: wait-for-resources
+    spec:
+      restartPolicy: "Never"
+      containers:
+        - name: wait-for-resources
+          image: "local.example.com/toggle-corp/ercs-backend:develop.xxxxxxxx"
+          imagePullPolicy: IfNotPresent
+          command: 
+            - ./manage.py
+            - wait_for_resources
+            - --db
+            - --cache
+            - --celery-broker
+          resources:
+            limits:
+              memory: 2Gi
+            requests:
+              cpu: "0.1"
+              memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: release-name-ercs-secret
+            - configMapRef:
+                name: release-name-ercs-env-name
+          env:
+            - name: APP_TYPE
+              value: "hook"
+            - name: CACHE_REDIS_URL
+              value: redis://ercs-dragonfly:6379/1
+            - name: CELERY_REDIS_URL
+              value: redis://ercs-dragonfly:6379/0
+            
 
 ---
 # Source: ercs-backend-helm/charts/app/templates/api/ingress.yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: release-name-app-api
+  name: release-name-ercs-api
   labels:
-    app: release-name-app
+    app: release-name-ercs
     component: api
     environment: ALPHA
     release: release-name
   annotations:
+    argocd.argoproj.io/sync-wave: "30"
     nginx.ingress.kubernetes.io/proxy-body-size: 20m
 spec:
   ingressClassName: "nginx"
   rules:
-    - host: "test.ercs.com"
+    - host: "ercs.example.com"
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: release-name-app-api
+                name: release-name-ercs-api
                 port:
                   number: 80
+
 ---
-# Source: ercs-backend-helm/charts/app/charts/minio/templates/provisioning-job.yaml
-apiVersion: batch/v1
-kind: Job
+# Source: ercs-backend-helm/charts/app/templates/extraManifests.yaml
+# Manifest: dragonflydb-cluster
+apiVersion: dragonflydb.io/v1alpha1
+kind: Dragonfly
 metadata:
-  name: ercs-minio-provisioning
-  namespace: "default"
   labels:
-    app.kubernetes.io/instance: release-name
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: minio
-    app.kubernetes.io/version: 2024.12.18
-    helm.sh/chart: minio-14.10.5
-    app.kubernetes.io/component: minio-provisioning
-  annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-delete-policy: before-hook-creation
-spec: 
-  ttlSecondsAfterFinished: 600 
-  parallelism: 1
-  template:
-    metadata:
-      labels:
-        app.kubernetes.io/managed-by: Helm
-        app.kubernetes.io/version: 2024.12.18
-        helm.sh/chart: minio-14.10.5
-        app.kubernetes.io/component: minio-provisioning
-    spec:
-      
-      restartPolicy: OnFailure
-      terminationGracePeriodSeconds: 0
-      securityContext:
-        fsGroup: 1001
-        fsGroupChangePolicy: Always
-        supplementalGroups: []
-        sysctls: []
-      serviceAccountName: ercs-minio
-      initContainers:
-        - name: wait-for-available-minio
-          image: docker.io/bitnamilegacy/os-shell:12-debian-12-r35
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          command:
-            - /bin/bash
-            - -c
-            - |-
-              set -e;
-              echo "Waiting for Minio";
-              wait-for-port \
-                --host=ercs-minio \
-                --state=inuse \
-                --timeout=120 \
-                9000;
-              echo "Minio is available";
-          resources:
-            limits:
-              cpu: 150m
-              ephemeral-storage: 2Gi
-              memory: 192Mi
-            requests:
-              cpu: 100m
-              ephemeral-storage: 50Mi
-              memory: 128Mi
-      containers:
-        - name: minio
-          image: docker.io/bitnamilegacy/minio:2024.12.18-debian-12-r1
-          imagePullPolicy: "IfNotPresent"
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-              - ALL
-            privileged: false
-            readOnlyRootFilesystem: true
-            runAsGroup: 1001
-            runAsNonRoot: true
-            runAsUser: 1001
-            seLinuxOptions: {}
-            seccompProfile:
-              type: RuntimeDefault
-          command:
-            - /bin/bash
-            - -c
-            - |-
-              set -e;
-              echo "Start Minio provisioning";
-
-              retry_while() {
-                local -r cmd="${1:?cmd is missing}"
-                local -r retries="${2:-12}"
-                local -r sleep_time="${3:-5}"
-                local return_value=1
-
-                read -r -a command <<< "$cmd"
-                for ((i = 1 ; i <= retries ; i+=1 )); do
-                    "${command[@]}" && return_value=0 && break
-                    sleep "$sleep_time"
-                done
-                return $return_value
-              }
-
-              function attachPolicy() {
-                local tmp=$(mc admin $1 info provisioning $2 | sed -n -e 's/^Policy.*: \(.*\)$/\1/p');
-                IFS=',' read -r -a CURRENT_POLICIES <<< "$tmp";
-                if [[ ! "${CURRENT_POLICIES[*]}" =~ "$3" ]]; then
-                  mc admin policy attach provisioning $3 --$1=$2;
-                fi;
-              };
-
-              function detachDanglingPolicies() {
-                local tmp=$(mc admin $1 info provisioning $2 | sed -n -e 's/^Policy.*: \(.*\)$/\1/p');
-                IFS=',' read -r -a CURRENT_POLICIES <<< "$tmp";
-                IFS=',' read -r -a DESIRED_POLICIES <<< "$3";
-                for current in "${CURRENT_POLICIES[@]}"; do
-                  if [[ ! "${DESIRED_POLICIES[*]}" =~ "${current}" ]]; then
-                    mc admin policy detach provisioning $current --$1=$2;
-                  fi;
-                done;
-              }
-
-              function addUsersFromFile() {
-                local username=$(grep -oP '^username=\K.+' $1);
-                local password=$(grep -oP '^password=\K.+' $1);
-                local disabled=$(grep -oP '^disabled=\K.+' $1);
-                local policies_list=$(grep -oP '^policies=\K.+' $1);
-                local set_policies=$(grep -oP '^setPolicies=\K.+' $1);
-
-                mc admin user add provisioning "${username}" "${password}";
-
-                IFS=',' read -r -a POLICIES <<< "${policies_list}";
-                for policy in "${POLICIES[@]}"; do
-                  attachPolicy user "${username}" "${policy}";
-                done;
-                if [ "${set_policies}" == "true" ]; then
-                  detachDanglingPolicies user "${username}" "${policies_list}";
-                fi;
-
-                local user_status="enable";
-                if [[ "${disabled}" != "" && "${disabled,,}" == "true" ]]; then
-                  user_status="disable";
-                fi;
-
-                mc admin user "${user_status}" provisioning "${username}";
-              };
-              mc alias set provisioning $MINIO_SCHEME://ercs-minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
-
-              mc admin service restart provisioning --wait --json;
-
-              # Adding a sleep to ensure that the check below does not cause
-              # a race condition. We check for the MinIO port because the
-              # "mc admin service restart --wait" command is not working as expected
-              sleep 5;
-              echo "Waiting for Minio to be available after restart";
-              if ! retry_while "mc admin info provisioning"; then
-                  echo "Error connecting to Minio"
-                  exit 1
-              fi
-              echo "Minio is available. Executing provisioning commands";
-              
-              mc anonymous set download provisioning/ercs-static;mc anonymous set download provisioning/ercs-media;
-
-              echo "End Minio provisioning";
-          env:
-            - name: MINIO_SCHEME
-              value: "http"
-            - name: MINIO_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: ercs-minio
-                  key: root-user
-            - name: MINIO_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: ercs-minio
-                  key: root-password
-          envFrom:
-          resources:
-            limits:
-              cpu: 150m
-              ephemeral-storage: 2Gi
-              memory: 192Mi
-            requests:
-              cpu: 100m
-              ephemeral-storage: 50Mi
-              memory: 128Mi
-          volumeMounts:
-            - name: empty-dir
-              mountPath: /.mc
-              subPath: app-mc-dir
-            - name: empty-dir
-              mountPath: /opt/bitnami/minio/tmp
-              subPath: app-tmp-dir
-            - name: empty-dir
-              mountPath: /tmp
-              subPath: tmp-dir
-            - name: minio-provisioning
-              mountPath: /etc/ilm
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
-        - name: minio-provisioning
-          configMap:
-            name: ercs-minio-provisioning
-
+    app.kubernetes.io/name: dragonfly
+  name: ercs-dragonfly
+spec:
+  args:
+  - --dbfilename=mainSnapshot
+  replicas: 1
+  resources:
+    limits:
+      cpu: "1"
+      memory: 750Mi
+    requests:
+      cpu: "0.1"
+      memory: 500Mi
+  snapshot:
+    cron: '*/5 * * * *'
+    persistentVolumeClaimSpec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

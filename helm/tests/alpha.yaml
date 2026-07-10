@@ -1,46 +1,27 @@
+# Dummy values injected by cluster operators / CICD at deploy time.
+# Only present so the alpha overlay can be rendered standalone for snapshot
+# testing (see ../tests.yaml — this file is auto-appended by fugit).
 app:
-  environment: ALPHA
+  image:
+    name: local.example.com/toggle-corp/ercs-backend
+    tag: develop.xxxxxxxx
 
-  ingress:
-    enabled: true
-    className: nginx
-    host: test.ercs.com
-    annotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: "20m"
-
-  redis:
-    enabled: false
-
-  postgresql:
-    enabled: true
-    fullnameOverride: "ercs-postgresql"
-    architecture: standalone
-    auth:
-      postgresPassword: "test-password"
-
-
-  minio:
-    enabled: true
-    apiIngress:
-      hostname: ercs-minio.test.com
-    auth:
-      rootPassword: test-password
-
-  worker:
-    enabled: true
-    beat:
-      enabled: true
+  api:
+    ingress:
+      className: nginx
+      host: ercs.example.com
 
   env:
-    APP_DOMAIN: https://ercs.test.com
-    APP_RELEASE:  https://ercs.test.com
-    FRONTEND_DOMAIN: https://ercs-frontend.test.com
+    APP_DOMAIN: https://ercs.example.com
+    FRONTEND_DOMAIN: https://ercs-frontend.example.com
     SESSION_COOKIE_DOMAIN: .example.com
     CSRF_COOKIE_DOMAIN: .example.com
-    # AWS
-    AWS_S3_ENABLED: "false"
+
   secrets:
-    DJANGO_SECRET_KEY: "django-secret-key"
-    CELERY_REDIS_URL: "redis://redis:6379/0"
-    CACHE_REDIS_URL: "redis://redis:6379/1"
-    SENTRY_DSN: "https://sentry.test.com"
+    DJANGO_SECRET_KEY: dummy-secret-key
+    # Database
+    POSTGRES_DB: dummy
+    POSTGRES_USER: dummy
+    POSTGRES_PASSWORD: dummy
+    POSTGRES_HOST: dummy
+    POSTGRES_PORT: "5432"

@@ -1,3 +1,10 @@
+# Snapshot test matrix consumed by ./update-snapshots.sh (fugit).
+# Each key is a snapshot under ./snapshots/, rendered from values.yaml (base)
+# + the listed values files + the auto-appended per-snapshot ./tests/<key>.
+#   - values/operators.yaml : operator-managed infra (Dragonfly) + redis env
+#   - values/<env>.yaml      : the environment overlay
+#   - tests/<key>            : dummy image/domains/secrets so `required` fields render
 tests:
   alpha.yaml:
+    - values/operators.yaml
     - values/alpha.yaml
