@@ -55,6 +55,15 @@ wheels = [
 ]
 
 [[package]]
+name = "banjo-utils"
+version = "0.2.0"
+source = { git = "https://github.com/toggle-corp/banjo-utils?tag=v0.2.0#5fc5a5d66c1fa0730863b86b17b14e92b34c2714" }
+dependencies = [
+    { name = "django" },
+    { name = "httpx" },
+]
+
+[[package]]
 name = "billiard"
 version = "4.2.4"
 source = { registry = "https://pypi.org/simple" }
@@ -547,6 +556,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "asgiref" },
+    { name = "banjo-utils" },
     { name = "celery" },
     { name = "colorlog" },
     { name = "django" },
@@ -590,6 +600,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "asgiref", specifier = ">=3.8" },
+    { name = "banjo-utils", git = "https://github.com/toggle-corp/banjo-utils?tag=v0.2.0" },
     { name = "celery", specifier = ">=5.0" },
     { name = "colorlog", specifier = ">=6.10.0" },
     { name = "django", specifier = ">=5.1" },
