@@ -31,6 +31,11 @@ class TeamMemberCreateInput:
 
 
 @strawberry.input
+class TeamMemberBulkCreateInput:
+    members: list[TeamMemberCreateInput]
+
+
+@strawberry.input
 class TeamMemberUpdateInput:
     team: strawberry.ID | None = strawberry.UNSET
     name: str | None = strawberry.UNSET
