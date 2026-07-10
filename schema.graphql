@@ -117,6 +117,8 @@ type AppEnumCollectionUserRole {
   label: String!
 }
 
+union BulkCreateTeamMembersPayload = TeamMemberTypeListMutationResponseType | OperationInfo
+
 """A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceCreateInput {
   title: String!
@@ -729,6 +731,7 @@ type Mutation {
   updateTeamMember(id: ID!, data: TeamMemberUpdateInput!): UpdateTeamMemberPayload!
   deleteTeamMember(id: ID!): DeleteTeamMemberPayload!
   deleteTeam(id: ID!): DeleteTeamPayload!
+  bulkCreateTeamMembers(data: TeamMemberBulkCreateInput!): BulkCreateTeamMembersPayload!
 }
 
 input NewsPostCreateInput {
@@ -917,6 +920,7 @@ type Query {
   team(id: ID!): TeamType!
   teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
   teamMember(id: ID!): TeamMemberType!
+  createTeamMemberTemplate: String!
   enums: AppEnumCollection!
 }
 
@@ -1158,6 +1162,10 @@ input TeamFilter {
   search: String
 }
 
+input TeamMemberBulkCreateInput {
+  members: [TeamMemberCreateInput!]!
+}
+
 input TeamMemberCreateInput {
   team: ID!
   name: String!
@@ -1213,6 +1221,12 @@ type TeamMemberType {
   sexDisplay: String
   region: ID
   woreda: ID
+}
+
+type TeamMemberTypeListMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: [TeamMemberType!]
 }
 
 type TeamMemberTypeMutationResponseType {

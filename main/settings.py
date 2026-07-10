@@ -186,6 +186,8 @@ TEMP_DIR = Path(env("TEMP_DIR"))
 MEDIA_URL = env("MEDIA_URL")
 STATIC_URL = env("STATIC_URL")
 
+STATICFILES_DIRS = [BASE_DIR / "static"]
+
 
 if env("AWS_S3_ENABLED"):
     AWS_S3_CONFIG_OPTIONS = {
