@@ -6,7 +6,8 @@ x-server: &base_server_setup
   environment: &base_server_environments
     DEBUG: ${DEBUG:-true}
     APP_ENVIRONMENT: ${APP_ENVIRONMENT:-DEV}
-    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?error}
+    # Insecure default so CI (no .env) can boot; override in real deployments.
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-ci-insecure-dev-secret-key}
     # Domain configs
     APP_DOMAIN: ${APP_DOMAIN:-http://localhost:8000}
     FRONTEND_DOMAIN: ${FRONTEND_DOMAIN:-http://localhost:3000}

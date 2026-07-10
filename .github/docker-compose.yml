@@ -1,0 +1,10 @@
+services:
+  web:
+    image: $DOCKER_IMAGE_BACKEND
+    environment:
+      CI: "true"
+    volumes:
+      - ./:/code
+      - ./ci-share/:/ci-share/
+
+  worker: !reset null
