@@ -28,6 +28,7 @@ def _get_ranked_ids(value: str) -> list[UUID]:
 class LinkFilter:
     id: strawberry.ID | None = strawberry.UNSET
     link_type: LinkTypeEnum | None = strawberry.UNSET
+    created_at: strawberry.auto
 
     @strawberry_django.filter_field
     def search(self, value: str, prefix: str) -> Q:

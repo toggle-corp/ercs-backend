@@ -638,6 +638,7 @@ input LinkCreateInput {
 input LinkFilter {
   id: ID
   linkType: LinkTypeEnum
+  createdAt: DatetimeDatetimeFilterLookup
   AND: LinkFilter
   OR: LinkFilter
   NOT: LinkFilter

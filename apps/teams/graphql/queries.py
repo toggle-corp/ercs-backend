@@ -32,7 +32,7 @@ class Query:
         permission_classes=[IsAuthenticated],
     )
 
-    @strawberry.field
+    @strawberry.field(permission_classes=[IsAuthenticated])
     def create_team_member_template(self, info: strawberry.Info) -> str:
         request = info.context.request
 
