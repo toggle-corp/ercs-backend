@@ -142,8 +142,8 @@ app:
     APP_ENVIRONMENT: "{{ $.Values.environment }}"
     DEBUG: "false"
     TIME_ZONE: UTC
-    # Storage (S3 disabled by default -> filesystem)
-    AWS_S3_ENABLED: "false"
+    # Storage (S3 enabled by default; the local filesystem is ephemeral)
+    AWS_S3_ENABLED: "true"
     # Sentry
     SENTRY_ENABLED: "false"
     # App-domain vars (APP_DOMAIN, FRONTEND_DOMAIN, SESSION_COOKIE_DOMAIN,
