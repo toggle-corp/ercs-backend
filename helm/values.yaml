@@ -20,10 +20,10 @@ app:
     command: ["misc/prod/run_web.sh"]
     ingress:
       enabled: true
-      className: nginx
+      # className is not hardcoded; set it per-environment (e.g. values/traefik.yaml).
+      className:
       host:
       annotations:
-        nginx.ingress.kubernetes.io/proxy-body-size: "20m"
     probes:
       # banjo-utils HealthProbeMiddleware serves /healthz/live/ and /healthz/ready/.
       # Chart defaults (liveness /healthz/live/, readiness+startup /healthz/ready/) apply.
@@ -144,25 +144,16 @@ app:
     TIME_ZONE: UTC
     # Storage (S3 disabled by default -> filesystem)
     AWS_S3_ENABLED: "false"
-    # App Domain
-    APP_DOMAIN: "{{ required \".app.env.APP_DOMAIN\" nil }}"
-    FRONTEND_DOMAIN: "{{ required \".app.env.FRONTEND_DOMAIN\" nil }}"
-    SESSION_COOKIE_DOMAIN: "{{ required \".app.env.SESSION_COOKIE_DOMAIN\" nil }}"
-    CSRF_COOKIE_DOMAIN: "{{ required \".app.env.CSRF_COOKIE_DOMAIN\" nil }}"
     # Sentry
     SENTRY_ENABLED: "false"
+    # App-domain vars (APP_DOMAIN, FRONTEND_DOMAIN, SESSION_COOKIE_DOMAIN,
+    # CSRF_COOKIE_DOMAIN) are set per-environment; see main/settings.py for options.
 
-  # NOTE: Check main/settings.py for all available options
-  secrets:
-    DJANGO_SECRET_KEY: "{{ required \".app.secrets.DJANGO_SECRET_KEY\" nil }}"
-    # Postgres
-    POSTGRES_DB: "{{ required \".app.secrets.POSTGRES_DB\" nil }}"
-    POSTGRES_USER: "{{ required \".app.secrets.POSTGRES_USER\" nil }}"
-    POSTGRES_PASSWORD: "{{ required \".app.secrets.POSTGRES_PASSWORD\" nil }}"
-    POSTGRES_HOST: "{{ required \".app.secrets.POSTGRES_HOST\" nil }}"
-    POSTGRES_PORT: "{{ required \".app.secrets.POSTGRES_PORT\" nil }}"
-    # - Celery / Cache (Redis)
-    # CELERY_REDIS_URL / CACHE_REDIS_URL: Defined via extraEnvVars in ./values/operators.yaml
+  # NOTE: Check main/settings.py for all available options. Required secrets
+  # (DJANGO_SECRET_KEY, POSTGRES_DB/USER/PASSWORD/HOST/PORT) are provided
+  # per-environment (CICD / values/<env>.yaml), not defaulted here.
+  # Celery/Cache Redis URLs are set via extraEnvVars in ./values/operators.yaml.
+  secrets: {}
 
   # NOTE: Operator-managed infra (Dragonfly cache+broker) and the matching
   # extraEnvVars/extraManifests live in ./values/operators.yaml.

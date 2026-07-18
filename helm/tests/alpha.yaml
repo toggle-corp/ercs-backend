@@ -8,7 +8,6 @@ app:
 
   api:
     ingress:
-      className: nginx
       host: ercs.example.com
 
   env:
