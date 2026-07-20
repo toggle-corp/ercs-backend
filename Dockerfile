@@ -18,8 +18,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     apt-get update -y \
     && apt-get install -y --no-install-recommends \
         procps \
+        # Required by uv to fetch the banjo-utils git dependency
+        git \
     && uv lock --locked --offline \
         && uv sync --frozen --no-install-project --all-groups \
+    # git is only needed for the uv git-dependency fetch above; drop it.
+    && apt-get remove -y git \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/*
 

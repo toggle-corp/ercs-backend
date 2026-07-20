@@ -30,6 +30,7 @@ dependencies = [
     "langchain-core>=1.4.0",
     "langchain-ollama>=1.1.0",
     "langchain-openai>=1.2.2",
+    "banjo-utils",
 ]
 
 [dependency-groups]
@@ -47,6 +48,9 @@ dev = [
 
 [tool.uv]
 package = false
+
+[tool.uv.sources]
+banjo-utils = { git = "https://github.com/toggle-corp/banjo-utils", tag = "v0.2.0" }
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"

@@ -1,112 +1,79 @@
 app:
   environment: PROD
-  # Global Image
+  nameOverride: ercs
+
   appTypeEnvName: "APP_TYPE"
+
+  # Global Image
   image:
     name: SET-BY-CICD-IMAGE
     tag: SET-BY-CICD-TAG
     imagePullPolicy: IfNotPresent
 
-  ingress:
-    enabled: true
-    className: nginx
-    annotations:
-      nginx.ingress.kubernetes.io/proxy-body-size: "20m"
-
-  redis:
-    enabled: false
-    architecture: standalone
-    fullnameOverride: ercs-redis
-    auth:
-      enabled: false
-    master:
-      persistence:
-        enabled: true
-        size: .5Gi
-        storageClass:
-
-
-  postgresql:
-    enabled: true
-    fullnameOverride: "ercs-postgresql"
-    architecture: standalone
-    auth:
-      postgresPassword: ""
-      username: ""
-      password: ""
-      database: "ercs"
-    primary:
-      persistence:
-        enabled: "true"
-        storageClass: ""
-        size: 1Gi
-
-  minio:
-    enabled: false
-    disableWebUI: true
-    mode: standalone
-    fullnameOverride: ercs-minio
-    global:
-      defaultStorageClass:
-    apiIngress:
-      enabled: true
-      ingressClassName:
-      hostname:
-      annotations:
-        nginx.ingress.kubernetes.io/proxy-body-size: "50m"
-    auth:
-      forceNewKeys: true
-      rootUser: ercs
-      rootPassword:
-    persistence:
-      enabled: true
-      size: 1Gi
-    defaultBuckets: ercs-static,ercs-media
-    provisioning:
-      enabled: true
-      resourcesPreset: "nano"
-      cleanupAfterFinished:
-        enabled: true
-      extraCommands:
-        - "mc anonymous set download provisioning/ercs-static"
-        - "mc anonymous set download provisioning/ercs-media"
+  # NOTE: DB/cache/broker are supplied externally (operator CRs in
+  # ./values/operators.yaml + user secrets); the old bundled
+  # postgresql/redis/minio subcharts are gone in banjo-helm 0.4.
 
   api:
     enabled: true
-    replicaCount: 1
     containerPort: 80
     command: ["misc/prod/run_web.sh"]
+    ingress:
+      enabled: true
+      # className is not hardcoded; set it per-environment (e.g. values/traefik.yaml).
+      className:
+      host:
+      annotations:
+    probes:
+      # banjo-utils HealthProbeMiddleware serves /healthz/live/ and /healthz/ready/.
+      # Chart defaults (liveness /healthz/live/, readiness+startup /healthz/ready/) apply.
+      enabled: true
     resources:
       requests:
         cpu: "0.3"
         memory: 0.4Gi
       limits:
-        cpu: "0.5"
         memory: 1Gi
 
   worker:
-    enabled: false
-    beat:
-      enabled: false
-      command: ["celery", "-A", "main", "beat", "-l", "INFO"]
+    enabled: true
+    queueDefaults:
+      commandPrefix:
+        - "celery"
+        - "-A"
+        - "main"
+        - "worker"
+        - "-l"
+        - "INFO"
+      # banjo-celery-probe heartbeat wiring (writer via setup_worker_heartbeat,
+      # reader via banjo-celery-probe) on a RAM emptyDir.
+      extraEnv:
+        BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/worker_heartbeat
+      volumes:
+        celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+      volumeMounts:
+        celery-heartbeat: {mountPath: /var/run/celery}
+      probes:
+        enabled: true
+        liveness:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 20
+          timeoutSeconds: 5
+          failureThreshold: 6
+        startup:
+          exec: {command: [banjo-celery-probe]}
+          periodSeconds: 5
+          failureThreshold: 30
       resources:
         requests:
           cpu: "0.1"
           memory: 0.5Gi
         limits:
-          cpu: "1"
           memory: 1Gi
-    queueCommandPrefix:
-      - "celery"
-      - "-A"
-      - "main"
-      - "worker"
-      - "-l"
-      - "INFO"
     queues:
+      # NOTE: Make sure keys are lowercase
       default:
         enabled: true
-        replicaCount: 1
         celeryArgs:
           - "-Q"
           - "default"
@@ -114,62 +81,79 @@ app:
           - "1"
           - "--max-tasks-per-child"
           - "10"
+    addons:
+      beat:
+        enabled: true
+        replicaCount: 1
+        strategy: {type: Recreate}
+        # HeartbeatPersistentScheduler: plain celery beat (no django-celery-beat)
+        # that touches the beat heartbeat file each tick for banjo-celery-probe liveness.
+        command:
+          - "celery"
+          - "-A"
+          - "main"
+          - "beat"
+          - "-l"
+          - "INFO"
+          - "--scheduler"
+          - "banjo_utils.celery_health.persistent.HeartbeatPersistentScheduler"
+        extraEnv:
+          BANJO_CELERY_HEARTBEAT_FILE: /var/run/celery/beat_heartbeat
+        volumes:
+          celery-heartbeat: {emptyDir: {medium: Memory, sizeLimit: 1Mi}}
+        volumeMounts:
+          celery-heartbeat: {mountPath: /var/run/celery}
+        probes:
+          enabled: true
+          liveness:
+            # PersistentScheduler max_interval is 300s, so keep --max-age above it.
+            exec: {command: [banjo-celery-probe, --max-age, "360"]}
+            periodSeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 3
+        resources:
+          requests:
+            cpu: "0.1"
+            memory: 256Mi
+          limits:
+            memory: 512Mi
 
-  argoHook:
+  hooks:
     enabled: true
-    resources:
-      requests:
-        cpu: "0.1"
-        memory: 1Gi
-      limits:
-        cpu: "1"
-        memory: 2Gi
-    hooks:
-      db-migrate:
-        enabled: true
-        hook: PostSync
-        preserveHistory: true
-        command: ["/bin/bash", "-c", "./manage.py wait_for_resources --db && ./manage.py migrate"]
-      collect-static:
-        enabled: true
-        hook: PostSync
-        command: ["/bin/bash", "-c", "./manage.py wait_for_resources --minio && ./manage.py collectstatic --noinput"]
+    defaults:
+      resources:
+        requests:
+          cpu: "0.1"
+          memory: 1Gi
+        limits:
+          memory: 2Gi
+    jobs:
+      # db-migrate and collect-static inherit the chart defaults verbatim
+      # (Sync hook @ wave 20). Only wait-for-resources overrides the bare command.
+      wait-for-resources:
+        command: ["./manage.py", "wait_for_resources", "--db", "--cache", "--celery-broker"]
 
+  cronjobs:
+    enabled: false
 
+  # NOTE: Check main/settings.py for all available options
   env:
     APP_RELEASE: "{{ $.Values.image.tag }}"
     APP_ENVIRONMENT: "{{ $.Values.environment }}"
-    DJANGO_DEBUG: "false"
-    # AWS
-    AWS_S3_ENABLED: "false"
-    AWS_S3_ENDPOINT_URL: "https://{{ $.Values.minio.apiIngress.hostname }}/"
-    AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
-    AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
-    # App Domain
-    APP_TYPE: "WEB"
-    APP_DOMAIN: "{{ required \".app.env.APP_DOMAIN\" nil }}"
-    FRONTEND_DOMAIN: "{{ required \".app.env.FRONTEND_DOMAIN\" nil }}"
-    SESSION_COOKIE_DOMAIN: "{{ required \".app.env.SESSION_COOKIE_DOMAIN\" nil }}"
-    CSRF_COOKIE_DOMAIN: "{{ required \".app.env.CSRF_COOKIE_DOMAIN\" nil }}"
+    DEBUG: "false"
+    TIME_ZONE: UTC
+    # Storage (S3 enabled by default; the local filesystem is ephemeral)
+    AWS_S3_ENABLED: "true"
     # Sentry
     SENTRY_ENABLED: "false"
+    # App-domain vars (APP_DOMAIN, FRONTEND_DOMAIN, SESSION_COOKIE_DOMAIN,
+    # CSRF_COOKIE_DOMAIN) are set per-environment; see main/settings.py for options.
 
-  secrets:
-    DJANGO_SECRET_KEY: "{{ required \".Values.secrets.DJANGO_SECRET_KEY\" nil }}"
-    # Postgres
-    POSTGRES_DB: "{{ $.Values.postgresql.auth.database }}"
-    POSTGRES_USER: "postgres"
-    POSTGRES_PASSWORD: "{{ $.Values.postgresql.auth.postgresPassword }}"
-    POSTGRES_HOST: "{{ include \"postgresql.v1.primary.fullname\" $.Subcharts.postgresql }}"
-    POSTGRES_PORT: "{{ include \"postgresql.v1.service.port\" $.Subcharts.postgresql }}"
-    # Minio (S3)
-    AWS_S3_ACCESS_KEY_ID: "{{ required \".app.minio.auth.rootUser\" $.Values.minio.auth.rootUser }}"
-    AWS_S3_SECRET_ACCESS_KEY: "{{ required \".app.minio.auth.rootPassword\" $.Values.minio.auth.rootPassword }}"
-    AWS_S3_REGION_NAME: "us-east-1"
-    AWS_S3_MEDIA_BUCKET_NAME: "ercs-media"
-    AWS_S3_STATIC_BUCKET_NAME: "ercs-static"
-    # Redis
-    CELERY_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/0"
-    CACHE_REDIS_URL: "redis://{{ printf \"%s-master\" (include \"common.names.fullname\" $.Subcharts.redis) }}:6379/1"
-    # sentry
-    SENTRY_DSN: "{{ required \".app.secrets.SENTRY_DSN\" nil }}"
+  # NOTE: Check main/settings.py for all available options. Required secrets
+  # (DJANGO_SECRET_KEY, POSTGRES_DB/USER/PASSWORD/HOST/PORT) are provided
+  # per-environment (CICD / values/<env>.yaml), not defaulted here.
+  # Celery/Cache Redis URLs are set via extraEnvVars in ./values/operators.yaml.
+  secrets: {}
+
+  # NOTE: Operator-managed infra (Dragonfly cache+broker) and the matching
+  # extraEnvVars/extraManifests live in ./values/operators.yaml.
