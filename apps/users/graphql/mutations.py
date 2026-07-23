@@ -57,8 +57,9 @@ class Mutation:
         info: Info,
         id: strawberry.ID,
     ) -> MutationResponseType[UserType]:
-        instance = await User.objects.aget(id=id)
-        await instance.adelete()
+        user = await User.objects.aget(id=id)
+        user.is_active = False
+        await user.asave(update_fields=["is_active"])
         return MutationResponseType(ok=True)
 
     @strawberry_django.mutation(permission_classes=[IsSuperAdmin])

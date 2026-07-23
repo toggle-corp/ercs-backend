@@ -215,7 +215,9 @@ class TestUserMutations(TestCase):
         )
         resp = content["data"]["deleteUser"]
         assert resp["ok"] is True
-        assert not User.objects.filter(pk=target.pk).exists()
+
+        target.refresh_from_db()
+        assert target.is_active is False
 
     def test_staff_cannot_delete_user(self):
         self.force_login(self.staff)

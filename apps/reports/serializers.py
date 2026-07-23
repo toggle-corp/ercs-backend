@@ -1,11 +1,19 @@
 import typing
 
 from django.core.files import File
+from django.core.validators import FileExtensionValidator
 from rest_framework import serializers
 
 from utils.validators import validate_image_size, validate_report_file_size
 
 from .models import Link, Report, ReportContentType, ReportVisibility, ThematicArea
+
+ALLOWED_FILE_EXTENSIONS: list[str] = ["png", "pdf", "docx", "pptx", "xlsx", "xlsm"]
+
+validate_file_extension = FileExtensionValidator(
+    allowed_extensions=ALLOWED_FILE_EXTENSIONS,
+    message="Unsupported file type. Allowed file types are: %(allowed_extensions)s.",
+)
 
 
 class LinkSerializer(serializers.ModelSerializer):
@@ -47,7 +55,9 @@ class ReportSerializer(serializers.ModelSerializer):
         return validate_image_size(value)
 
     def validate_file(self, value: File) -> File:
-        return validate_report_file_size(value)
+        validate_report_file_size(value)
+        validate_file_extension(value)
+        return value
 
     def validate_visibility(self, value: int) -> int:
         if self.instance and self.instance.visibility == ReportVisibility.PRIVATE and value == ReportVisibility.PUBLIC:
