@@ -183,6 +183,15 @@ class PdfExtraction(BaseExtraction):
                     embedding=self.llm_embedding_model.embed_query(json.dumps(result["charts"])),
                 )
 
+        if not page_summaries:
+            # No page produced a summary (all pages failed or returned no content),
+            # so there is nothing real to summarize.
+            logger.warning("No page summaries extracted for report_id=%s; skipping doc summary.", self.report.pk)
+            DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
+                status=DocumentExtractionStatus.FAILURE,
+            )
+            return
+
         doc_summary_prompt = get_doc_summary_prompt(page_summaries=page_summaries)
         # This prompt concatenates every page's summary, so its input size scales with
         # page count. Override back up to the original context window rather than the
