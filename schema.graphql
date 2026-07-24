@@ -484,6 +484,7 @@ on_delete=SET_NULL so deleting the cover image does not cascade to the album.
 input GalleryAlbumFilter {
   id: ID
   createdById: ID
+  createdAt: DatetimeDatetimeFilterLookup
   AND: GalleryAlbumFilter
   OR: GalleryAlbumFilter
   NOT: GalleryAlbumFilter

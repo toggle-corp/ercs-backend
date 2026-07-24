@@ -58,6 +58,14 @@ class Mutation:
         id: strawberry.ID,
     ) -> MutationResponseType[UserType]:
         user = await User.objects.aget(id=id)
+        current_user: User = info.context.request.user  # type: ignore[reportAssignmentType]
+        if user.role == User.Role.SUPER_ADMIN and user.pk == current_user.pk:
+            return MutationResponseType(
+                ok=False,
+                errors=MutationCustomErrorType.generate_message(
+                    "You cannot deactivate your own super administrator account.",
+                ),
+            )
         user.is_active = False
         await user.asave(update_fields=["is_active"])
         return MutationResponseType(ok=True)
