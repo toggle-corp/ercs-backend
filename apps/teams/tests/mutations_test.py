@@ -1,5 +1,8 @@
 import typing
 
+from apps.geo.factories import RegionFactory
+from apps.teams.factories import TeamFactory
+from apps.teams.models import TeamMember
 from apps.users.factories import UserFactory
 from apps.users.models import User
 from main.tests import TestCase
@@ -37,6 +40,31 @@ class TestTeamMutations(TestCase):
                 }
             }
         }
+        """
+
+        BULK_CREATE_TEAM_MEMBERS = """
+            mutation BulkCreateTeamMembers($data: TeamMemberBulkCreateInput!) {
+                bulkCreateTeamMembers(data: $data) {
+                    ... on TeamMemberTypeListMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            teamId
+                            name
+                            position
+                            email
+                            phoneNumber
+                            sex
+                            region
+                            woreda
+                            training
+                            fieldOfStudy
+                            order
+                        }
+                    }
+                }
+            }
         """
 
     @typing.override
@@ -82,3 +110,112 @@ class TestTeamMutations(TestCase):
         resp = content["data"]["updateTeam"]
         assert resp["ok"] is True
         assert resp["result"]["name"] == "New Name"
+
+    def test_bulk_create_team_members_all_fields(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        region = RegionFactory.create()
+        members = [
+            {
+                "team": self.gID(team.pk),
+                "name": f"Member {i}",
+                "position": "Volunteer",
+                "email": f"member{i}@example.com",
+                "phoneNumber": f"+25190000000{i}",
+                "sex": self.genum(TeamMember.Sex.FEMALE),
+                "region": self.gID(region.pk),
+                "training": "First Aid",
+                "fieldOfStudy": "Public Health",
+                "order": i,
+            }
+            for i in range(3)
+        ]
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            variables={"data": {"members": members}},
+        )
+        resp = content["data"]["bulkCreateTeamMembers"]
+        assert resp["ok"] is True
+        assert resp["errors"] is None
+        assert len(resp["result"]) == 3
+        assert TeamMember.objects.count() == 3
+        first = resp["result"][0]
+        assert first["name"] == "Member 0"
+        assert first["teamId"] == self.gID(team.pk)
+        assert first["region"] == self.gID(region.pk)
+        assert first["sex"] == self.genum(TeamMember.Sex.FEMALE)
+
+    def test_bulk_create_team_members_minimal_required_fields(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        members = [
+            {"team": self.gID(team.pk), "name": "Only Required", "position": "Lead"},
+        ]
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            variables={"data": {"members": members}},
+        )
+        resp = content["data"]["bulkCreateTeamMembers"]
+        assert resp["ok"] is True
+        assert len(resp["result"]) == 1
+        assert TeamMember.objects.count() == 1
+
+    def test_bulk_create_empty_list(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            variables={"data": {"members": []}},
+        )
+        resp = content["data"]["bulkCreateTeamMembers"]
+        assert resp["ok"] is True
+        assert resp["result"] == []
+        assert TeamMember.objects.count() == 0
+
+    def test_bulk_create_is_atomic_when_a_row_is_invalid(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        members = [
+            {"team": self.gID(team.pk), "name": "Valid", "position": "Lead"},
+            # schema-valid but serializer-invalid (bad email) -> whole batch must fail
+            {"team": self.gID(team.pk), "name": "Invalid", "position": "Lead", "email": "not-an-email"},
+        ]
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            variables={"data": {"members": members}},
+        )
+        resp = content["data"]["bulkCreateTeamMembers"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+        assert resp["result"] is None
+        # atomicity: the valid row must NOT have been persisted
+        assert TeamMember.objects.count() == 0
+
+    def test_bulk_create_with_invalid_team_fails(self):
+        self.force_login(self.staff)
+        members = [
+            {
+                "team": "00000000-0000-0000-0000-000000000000",
+                "name": "Orphan",
+                "position": "Lead",
+            },
+        ]
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            variables={"data": {"members": members}},
+        )
+        resp = content["data"]["bulkCreateTeamMembers"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+        assert TeamMember.objects.count() == 0
+
+    def test_viewer_cannot_bulk_create_team_members(self):
+        self.force_login(self.viewer)
+        team = TeamFactory.create()
+        members = [{"team": self.gID(team.pk), "name": "Blocked", "position": "Lead"}]
+        content = self.query_check(
+            self.Mutation.BULK_CREATE_TEAM_MEMBERS,
+            assert_errors=True,
+            variables={"data": {"members": members}},
+        )
+        assert "errors" in content
+        assert TeamMember.objects.count() == 0

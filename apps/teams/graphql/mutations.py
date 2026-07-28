@@ -10,6 +10,7 @@ from utils.graphql.types import MutationResponseType
 
 from .inputs import (
     TeamCreateInput,
+    TeamMemberBulkCreateInput,
     TeamMemberCreateInput,
     TeamMemberUpdateInput,
     TeamUpdateInput,
@@ -83,3 +84,11 @@ class Mutation:
         instance = await Team.objects.aget(id=id)
         await instance.adelete()
         return MutationResponseType(ok=True)
+
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    async def bulk_create_team_members(
+        self,
+        info: Info,
+        data: TeamMemberBulkCreateInput,
+    ) -> MutationResponseType[list[TeamMemberType]]:
+        return await ModelMutation(TeamMemberSerializer).handle_bulk_create_mutation(data.members, info)

@@ -219,6 +219,19 @@ class TestUserMutations(TestCase):
         target.refresh_from_db()
         assert target.is_active is False
 
+    def test_super_admin_cannot_delete_self(self):
+        self.force_login(self.super_admin)
+        content = self.query_check(
+            self.Mutation.DELETE_USER,
+            variables={"id": self.gID(self.super_admin.pk)},
+        )
+        resp = content["data"]["deleteUser"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+
+        self.super_admin.refresh_from_db()
+        assert self.super_admin.is_active is True
+
     def test_staff_cannot_delete_user(self):
         self.force_login(self.staff)
         target = UserFactory.create()

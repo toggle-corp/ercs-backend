@@ -69,6 +69,45 @@ class ModelMutation:
             return MutationResponseType(ok=False, errors=errors)
         return MutationResponseType(result=saved_instance)
 
+    @staticmethod
+    @sync_to_async
+    def handle_bulk_mutation(
+        serializer_class: type[serializers.Serializer],
+        data_list: list[typing.Any],
+        info: Info,
+        extra_context: dict[typing.Any, typing.Any] | None,
+    ) -> tuple[CustomErrorType | None, list[models.Model] | None]:
+        context = _get_serializer_context(info, extra_context=extra_context)
+        validated_serializers = []
+        for data in data_list:
+            serializer = serializer_class(data=data, context=context)
+            if errors := mutation_is_not_valid(serializer):
+                return errors, None
+            validated_serializers.append(serializer)
+        try:
+            with transaction.atomic():
+                instances = [serializer.save() for serializer in validated_serializers]
+        except Exception:
+            logger.error("Failed to handle bulk mutation", exc_info=True)
+            return MutationCustomErrorType.generate_message(), None
+        return None, instances
+
+    async def handle_bulk_create_mutation(
+        self,
+        data: typing.Any,
+        info: Info,
+        extra_context: dict[typing.Any, typing.Any] | None = None,
+    ) -> MutationResponseType:  # type: ignore[reportMissingTypeArgument]
+        errors, saved_instances = await self.handle_bulk_mutation(
+            self.serializer_class,
+            parse_input_data(data),
+            info,
+            extra_context,
+        )
+        if errors:
+            return MutationResponseType(ok=False, errors=errors)
+        return MutationResponseType(result=saved_instances)
+
     async def handle_update_mutation(
         self,
         data: typing.Any,

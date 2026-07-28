@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from django.contrib.staticfiles.storage import staticfiles_storage
 from strawberry_django.pagination import OffsetPaginated
 
 from main.graphql.permissions import IsAuthenticated
@@ -30,3 +31,11 @@ class Query:
     team_member: TeamMemberType = strawberry_django.field(
         permission_classes=[IsAuthenticated],
     )
+
+    @strawberry.field(permission_classes=[IsAuthenticated])
+    def create_team_member_template(self, info: strawberry.Info) -> str:
+        request = info.context.request
+
+        return request.build_absolute_uri(
+            staticfiles_storage.url("files/create-team-member-template.xlsx"),
+        )
