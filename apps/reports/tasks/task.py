@@ -4,7 +4,7 @@ from celery import shared_task
 from django.core.files.storage import default_storage
 
 from apps.reports.ai_features.extraction import HeaderExtraction, PdfExtraction
-from apps.reports.models import Report, ReportContentType
+from apps.reports.models import DocumentExtraction, Report, ReportContentType
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +20,10 @@ def handle_documents(report_id: int, report_type: ReportContentType) -> None:
     if report_type == ReportContentType.FILE and report.file.name is None:
         logger.warning("Report with id %s has no file", report_id)
         return
+
+    # Re-extraction (e.g. after a report edit/file replace) must start clean, otherwise
+    # Any previous report entries will be delete and start fresh.
+    DocumentExtraction.objects.filter(report=report).delete()
 
     if report.file and (file_name := report.file.name) and report_type == ReportContentType.FILE:
         with default_storage.open(file_name, "rb") as f:
