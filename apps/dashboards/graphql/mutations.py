@@ -84,7 +84,7 @@ class Mutation:
         errors, dashboards = await _bulk_update_external_dashboard_order(order_by_id)
         if errors:
             return MutationResponseType(ok=False, errors=errors)
-        return MutationResponseType(result=dashboards)
+        return MutationResponseType(result=dashboards)  # type: ignore[reportAttributeAccessIssue]
 
     @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
     async def add_dashboard_to_home(
