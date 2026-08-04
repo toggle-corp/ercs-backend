@@ -1,4 +1,5 @@
 import typing
+import uuid
 
 from apps.dashboards.factories import CapacityAndResourceFactory, ExternalDashboardFactory
 from apps.dashboards.models import CapacityAndResource, ExternalDashboard
@@ -58,6 +59,35 @@ class TestExternalDashboardMutations(TestCase):
                 }
             }
         }
+        """
+
+        BULK_UPDATE_ORDER = """
+            mutation BulkUpdateExternalDashboards($data: [ExternalDashboardOrderInput!]!) {
+                bulkUpdateExternalDashboards(data: $data) {
+                    ... on ExternalDashboardTypeListMutationResponseType {
+                        ok
+                        errors
+                        result {
+                            id
+                            order
+                            page
+                        }
+                    }
+                }
+            }
+        """
+
+        BULK_UPDATE_ORDER_OPERATION_INFO = """
+            mutation BulkUpdateExternalDashboards($data: [ExternalDashboardOrderInput!]!) {
+                bulkUpdateExternalDashboards(data: $data) {
+                    ... on OperationInfo {
+                        messages {
+                            kind
+                            message
+                        }
+                    }
+                }
+            }
         """
 
         UPDATE_DASHBOARD = """
@@ -288,6 +318,179 @@ class TestExternalDashboardMutations(TestCase):
         assert resp["result"]["showOnHome"] is False
         dashboard.refresh_from_db()
         assert dashboard.show_on_home is False
+
+    def test_bulk_update_dashboard_order(self):
+        self.force_login(self.staff)
+        first, second, third = (
+            ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=order) for order in (1, 2, 3)
+        )
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={
+                "data": [
+                    {"id": str(first.pk), "order": 3},
+                    {"id": str(second.pk), "order": 1},
+                    {"id": str(third.pk), "order": 2},
+                ],
+            },
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is True
+        assert resp["errors"] is None
+        assert [item["id"] for item in resp["result"]] == [str(second.pk), str(third.pk), str(first.pk)]
+        assert [item["order"] for item in resp["result"]] == [1, 2, 3]
+
+        for dashboard, expected_order in ((first, 3), (second, 1), (third, 2)):
+            dashboard.refresh_from_db()
+            assert dashboard.order == expected_order
+
+    def test_bulk_update_dashboard_order_partial_subset(self):
+        """Dashboards left out of the payload keep their existing order."""
+        self.force_login(self.staff)
+        target = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        untouched = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=7)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={"data": [{"id": str(target.pk), "order": 4}]},
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is True
+        assert len(resp["result"]) == 1
+
+        target.refresh_from_db()
+        untouched.refresh_from_db()
+        assert target.order == 4
+        assert untouched.order == 7
+
+    def test_bulk_update_dashboard_order_result_sorted_across_pages(self):
+        self.force_login(self.staff)
+        operations = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        home = ExternalDashboardFactory.create(page=ExternalDashboard.Page.HOME, order=9)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={
+                "data": [
+                    {"id": str(operations.pk), "order": 1},
+                    {"id": str(home.pk), "order": 2},
+                ],
+            },
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is True
+        # HOME (10) sorts before OPERATIONS (20) regardless of order value
+        assert [item["page"] for item in resp["result"]] == [
+            ExternalDashboard.Page.HOME.name,
+            ExternalDashboard.Page.OPERATIONS.name,
+        ]
+        assert [item["id"] for item in resp["result"]] == [str(home.pk), str(operations.pk)]
+
+    def test_bulk_update_dashboard_order_unknown_id(self):
+        """An id that does not exist fails the whole batch and writes nothing."""
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        missing_id = str(uuid.uuid4())
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={
+                "data": [
+                    {"id": str(dashboard.pk), "order": 5},
+                    {"id": missing_id, "order": 6},
+                ],
+            },
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is False
+        assert resp["errors"] is not None
+        assert resp["result"] is None
+
+        dashboard.refresh_from_db()
+        assert dashboard.order == 1
+
+    def test_bulk_update_dashboard_order_empty_data(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={"data": []},
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is True
+        assert resp["result"] == []
+
+    def test_bulk_update_dashboard_order_duplicate_ids(self):
+        """Current behaviour: duplicate ids collapse silently and the last order wins."""
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            variables={
+                "data": [
+                    {"id": str(dashboard.pk), "order": 2},
+                    {"id": str(dashboard.pk), "order": 3},
+                ],
+            },
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["ok"] is True
+        assert len(resp["result"]) == 1
+
+        dashboard.refresh_from_db()
+        assert dashboard.order == 3
+
+    def test_bulk_update_dashboard_order_unparsable_id(self):
+        """An id that is not a valid UUID comes back as an OperationInfo payload, not a reorder."""
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER_OPERATION_INFO,
+            variables={
+                "data": [
+                    {"id": str(dashboard.pk), "order": 5},
+                    {"id": "not-a-uuid", "order": 6},
+                ],
+            },
+        )
+        resp = content["data"]["bulkUpdateExternalDashboards"]
+        assert resp["messages"]
+
+        dashboard.refresh_from_db()
+        assert dashboard.order == 1
+
+    def test_bulk_update_dashboard_order_negative_order(self):
+        """Current behaviour: `order` is not validated, so a negative value hits the db constraint."""
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            assert_errors=True,
+            variables={"data": [{"id": str(dashboard.pk), "order": -1}]},
+        )
+        assert "errors" in content
+
+    def test_viewer_cannot_bulk_update_dashboard_order(self):
+        self.force_login(self.viewer)
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            assert_errors=True,
+            variables={"data": [{"id": str(dashboard.pk), "order": 2}]},
+        )
+        assert "errors" in content
+
+        dashboard.refresh_from_db()
+        assert dashboard.order == 1
+
+    def test_anonymous_cannot_bulk_update_dashboard_order(self):
+        self.logout()
+        dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
+        content = self.query_check(
+            self.Mutation.BULK_UPDATE_ORDER,
+            assert_errors=True,
+            variables={"data": [{"id": str(dashboard.pk), "order": 2}]},
+        )
+        assert "errors" in content
+
+        dashboard.refresh_from_db()
+        assert dashboard.order == 1
 
     def test_viewer_cannot_remove_from_home(self):
         self.force_login(self.viewer)

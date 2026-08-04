@@ -119,6 +119,8 @@ type AppEnumCollectionUserRole {
 
 union BulkCreateTeamMembersPayload = TeamMemberTypeListMutationResponseType | OperationInfo
 
+union BulkUpdateExternalDashboardsPayload = ExternalDashboardTypeListMutationResponseType | OperationInfo
+
 """A Capacity & Resources entry that groups multiple ExternalDashboards."""
 input CapacityAndResourceCreateInput {
   title: String!
@@ -410,6 +412,11 @@ input ExternalDashboardOrder @oneOf {
   title: Ordering
 }
 
+input ExternalDashboardOrderInput {
+  id: ID!
+  order: Int!
+}
+
 """Power BI / iframe dashboards embedded across site pages via CMS."""
 type ExternalDashboardType {
   id: ID!
@@ -428,6 +435,12 @@ type ExternalDashboardType {
   createdAt: DateTime!
   updatedAt: DateTime!
   pageDisplay: String!
+}
+
+type ExternalDashboardTypeListMutationResponseType {
+  ok: Boolean!
+  errors: CustomErrorType
+  result: [ExternalDashboardType!]
 }
 
 type ExternalDashboardTypeMutationResponseType {
@@ -718,6 +731,7 @@ type Mutation {
   updateExternalDashboard(id: ID!, data: ExternalDashboardUpdateInput!): UpdateExternalDashboardPayload!
   createCapacityAndResource(data: CapacityAndResourceCreateInput!): CreateCapacityAndResourcePayload!
   updateCapacityAndResource(id: ID!, data: CapacityAndResourceUpdateInput!): UpdateCapacityAndResourcePayload!
+  bulkUpdateExternalDashboards(data: [ExternalDashboardOrderInput!]!): BulkUpdateExternalDashboardsPayload!
   addDashboardToHome(id: ID!): AddDashboardToHomePayload!
   removeDashboardFromHome(id: ID!): RemoveDashboardFromHomePayload!
   deleteExternalDashboard(id: ID!): DeleteExternalDashboardPayload!

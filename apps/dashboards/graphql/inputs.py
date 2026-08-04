@@ -18,6 +18,12 @@ class ExternalDashboardCreateInput:
 
 
 @strawberry.input
+class ExternalDashboardOrderInput:
+    id: strawberry.ID
+    order: int
+
+
+@strawberry.input
 class ExternalDashboardUpdateInput:
     title: str | None = strawberry.UNSET
     url: str | None = strawberry.UNSET
