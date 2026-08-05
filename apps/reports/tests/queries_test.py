@@ -30,6 +30,16 @@ class TestReportQueries(TestCase):
             }
         """
 
+        REPORT = """
+            query Report($id: ID!) {
+                report(id: $id) {
+                    id
+                    title
+                    visibility
+                }
+            }
+        """
+
     @typing.override
     @classmethod
     def setUpClass(cls):
@@ -46,14 +56,41 @@ class TestReportQueries(TestCase):
             uploaded_by=cls.user,
         )
 
-    def test_reports_query(self):
+    def test_anonymous_only_sees_public_reports(self):
+        content = self.query_check(
+            self.Query.REPORTS,
+            variables={"pagination": {"limit": 10, "offset": 0}},
+        )
+        data = content["data"]["reports"]
+        assert data["totalCount"] == 1
+        assert data["results"][0]["title"] == "Public Report"
+
+    def test_authenticated_sees_all_reports(self):
+        self.force_login(self.user)
         content = self.query_check(
             self.Query.REPORTS,
             variables={"pagination": {"limit": 10, "offset": 0}},
         )
         assert content["data"]["reports"]["totalCount"] == 2
 
+    def test_anonymous_cannot_fetch_private_report(self):
+        content = self.query_check(
+            self.Query.REPORT,
+            variables={"id": self.gID(self.private_report.pk)},
+            assert_errors=True,
+        )
+        assert "errors" in content
+
+    def test_authenticated_can_fetch_private_report(self):
+        self.force_login(self.user)
+        content = self.query_check(
+            self.Query.REPORT,
+            variables={"id": self.gID(self.private_report.pk)},
+        )
+        assert content["data"]["report"]["title"] == "Private Report"
+
     def test_filter_by_visibility(self):
+        self.force_login(self.user)
         content = self.query_check(
             self.Query.REPORTS,
             variables={
