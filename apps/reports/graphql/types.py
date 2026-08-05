@@ -1,6 +1,8 @@
 import strawberry
 import strawberry_django
 from asgiref.sync import sync_to_async
+from django.db import models
+from strawberry.types import Info
 
 from apps.reports.models import (
     DocumentExtraction,
@@ -79,6 +81,13 @@ class ReportType:
     published_at: strawberry.auto
     created_at: strawberry.auto
     updated_at: strawberry.auto
+
+    @classmethod
+    def get_queryset(cls, queryset: models.QuerySet[Report], info: Info) -> models.QuerySet[Report]:
+        user = info.context.request.user
+        if user and user.is_authenticated:
+            return queryset
+        return queryset.filter(visibility=ReportVisibility.PUBLIC)
 
 
 @strawberry_django.type(DocumentExtraction)
