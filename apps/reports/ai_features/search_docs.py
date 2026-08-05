@@ -2,12 +2,16 @@ import typing
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from django.db.models import QuerySet
+from django.contrib.postgres.search import SearchQuery, SearchRank
 from langchain_ollama import OllamaEmbeddings
 from pgvector.django import CosineDistance
 
 from apps.reports.ai_features.llms import OllamaHandler
 from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
+
+# ts_rank normalization: divide rank by (rank + 1), bounding it to [0, 1) so it is
+# comparable to the [0, 1] cosine similarity score used for semantic search.
+KEYWORD_RANK_NORMALIZATION = 32
 
 
 class ChunkScore(typing.TypedDict):
@@ -17,10 +21,12 @@ class ChunkScore(typing.TypedDict):
 
 @dataclass
 class SearchReports:
-    """Search and rank reports based on user query."""
+    """Search and rank reports based on user query using hybrid (semantic + keyword) search."""
 
     query: str
-    score_threshold: float = 0.5
+    score_threshold: float = 0.4
+    semantic_weight: float = 0.6
+    keyword_weight: float = 0.4
     llm_embedding_model: OllamaEmbeddings = field(init=False)
     weights: dict[int, float] = field(init=False)
 
@@ -43,13 +49,12 @@ class SearchReports:
         """Return the vector of the query."""
         return self.llm_embedding_model.embed_query(self.query)
 
-    def get_scores(self, k_top: int = 100) -> QuerySet[DocumentExtraction]:
-        """Calculate the cosine similarity score of each of the chunks."""
+    def get_semantic_scores(self, k_top: int = 100) -> dict[int, float]:
+        """Return chunk id -> cosine similarity score for the top matching chunks."""
         query_vector = self.generate_query_embedding()
-        return (
+        results = (
             DocumentExtraction.objects.filter(status=DocumentExtractionStatus.SUCCESS)
             .filter(embedding__isnull=False)
-            .select_related("report")
             .annotate(
                 score=1
                 - CosineDistance(
@@ -59,6 +64,35 @@ class SearchReports:
             )
             .order_by("-score")[:k_top]
         )
+        return {result.pk: result.score for result in results}  # type: ignore[attr-defined]
+
+    def get_keyword_scores(self, k_top: int = 100) -> dict[int, float]:
+        """Return chunk id -> normalized full-text-search rank for the top matching chunks."""
+        search_query = SearchQuery(self.query)
+        results = (
+            DocumentExtraction.objects.filter(status=DocumentExtractionStatus.SUCCESS)
+            .annotate(score=SearchRank("text", search_query, normalization=KEYWORD_RANK_NORMALIZATION))
+            .filter(score__gt=0)
+            .order_by("-score")[:k_top]
+        )
+        return {result.pk: result.score for result in results}  # type: ignore[attr-defined]
+
+    def get_scores(self, k_top: int = 100) -> list[DocumentExtraction]:
+        """Combine semantic and keyword scores into a single hybrid score per chunk."""
+        semantic_scores = self.get_semantic_scores(k_top)
+        keyword_scores = self.get_keyword_scores(k_top)
+
+        chunks = DocumentExtraction.objects.filter(
+            pk__in=set(semantic_scores) | set(keyword_scores),
+        ).select_related("report")
+
+        for chunk in chunks:
+            chunk.score = (  # type: ignore[attr-defined]
+                semantic_scores.get(chunk.pk, 0.0) * self.semantic_weight
+                + keyword_scores.get(chunk.pk, 0.0) * self.keyword_weight
+            )
+
+        return sorted(chunks, key=lambda chunk: chunk.score, reverse=True)[:k_top]  # type: ignore[attr-defined]
 
     def group_by_reports(self) -> defaultdict[int, list[ChunkScore]]:
         """Group the reports by report id."""
