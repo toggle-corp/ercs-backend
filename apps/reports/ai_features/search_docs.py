@@ -3,10 +3,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from django.contrib.postgres.search import SearchQuery, SearchRank
-from langchain_ollama import OllamaEmbeddings
+from langchain_core.embeddings import Embeddings
 from pgvector.django import CosineDistance
 
-from apps.reports.ai_features.llms import OllamaHandler
+from apps.reports.ai_features.llms import get_embedding_llm_handler
 from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
 
 # ts_rank normalization: divide rank by (rank + 1), bounding it to [0, 1) so it is
@@ -27,12 +27,11 @@ class SearchReports:
     score_threshold: float = 0.4
     semantic_weight: float = 0.6
     keyword_weight: float = 0.4
-    llm_embedding_model: OllamaEmbeddings = field(init=False)
+    llm_embedding_model: Embeddings = field(init=False)
     weights: dict[int, float] = field(init=False)
 
     def __post_init__(self):
-        llm_handler = OllamaHandler()
-        self.llm_embedding_model = llm_handler.load_embedding_model()
+        self.llm_embedding_model = get_embedding_llm_handler().load_embedding_model()
 
         self.weights: dict[int, float] = {
             DocumentExtraction.ExtractionType.EXTRACTED_CONTENT: 0.9,

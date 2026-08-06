@@ -79,6 +79,10 @@ env = environ.Env(
     LLM_MODEL_NAME=(str, None),
     LLM_OLLAMA_BASE_URL=(str, None),
     LLM_EMBEDDING_MODEL=(str, None),
+    LLM_USE_OPENROUTER=(bool, False),
+    OPENROUTER_API_KEY=(str, None),
+    LLM_USE_SENTENCE_TRANSFORMERS=(bool, False),
+    SENTENCE_TRANSFORMER_MODEL_NAME=(str, "sentence-transformers/all-mpnet-base-v2"),
 )
 
 APP_DOMAIN = urlparse(env("APP_DOMAIN"))
@@ -311,6 +315,12 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = False
 LLM_MODEL_NAME = env("LLM_MODEL_NAME")
 LLM_OLLAMA_BASE_URL = env("LLM_OLLAMA_BASE_URL")
 LLM_EMBEDDING_MODEL = env("LLM_EMBEDDING_MODEL")
+# Chat completions can be switched to OpenRouter; OpenRouter has no embeddings
+# endpoint, so embeddings independently switch between Ollama and sentence-transformers.
+LLM_USE_OPENROUTER = env("LLM_USE_OPENROUTER")
+OPENROUTER_API_KEY = env("OPENROUTER_API_KEY")
+LLM_USE_SENTENCE_TRANSFORMERS = env("LLM_USE_SENTENCE_TRANSFORMERS")
+SENTENCE_TRANSFORMER_MODEL_NAME = env("SENTENCE_TRANSFORMER_MODEL_NAME")
 
 # HEALTH-CHECK
 # banjo-utils HealthProbeMiddleware endpoints (k8s liveness/readiness).
