@@ -51,9 +51,7 @@ class TeamMember(BaseModel):
     sex: int = IntegerChoicesField(choices_enum=TeamMemberSex, null=True, blank=True)  # type: ignore[reportAssignmentType]
     region = models.ForeignKey(
         "geo.AdminArea",
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
+        on_delete=models.PROTECT,
         related_name="team_members",
         help_text="AdminArea at region level (level=20).",
     )
