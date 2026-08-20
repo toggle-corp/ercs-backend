@@ -1189,7 +1189,7 @@ input TeamMemberCreateInput {
   email: String
   phoneNumber: String
   sex: TeamMemberSex
-  region: ID
+  region: ID!
   woreda: ID
   training: String
   fieldOfStudy: String
