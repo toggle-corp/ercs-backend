@@ -4,11 +4,11 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
+from typing import Any
 
-import fitz
-from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_openai import ChatOpenAI
-from langchain_openrouter import ChatOpenRouter
+import fitz  # pyright: ignore[reportMissingTypeStubs]
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 from PIL import Image
 
 from apps.reports.ai_features.llms import LLMHandler, get_chat_llm_handler, get_embedding_llm_handler
@@ -23,8 +23,8 @@ class BaseExtraction:
     report: Report
 
     llm_handler: LLMHandler = field(init=False)
-    llm_chat_model: ChatOllama | ChatOpenAI | ChatOpenRouter = field(init=False)
-    llm_embedding_model: OllamaEmbeddings = field(init=False)
+    llm_chat_model: BaseChatModel = field(init=False)
+    llm_embedding_model: Embeddings = field(init=False)
 
     def __post_init__(self):
         try:
@@ -87,7 +87,7 @@ class PdfExtraction(BaseExtraction):
 
         return base64.b64encode(img_bytes).decode("utf-8")
 
-    def extract_page(self, page_idx: int, img_b64: str) -> dict | None:
+    def extract_page(self, page_idx: int, img_b64: str) -> dict[str, Any] | None:
         """Run the LLM extraction call for a single page, retrying on failure."""
         message = self.llm_handler.construct_extraction_message(img_b64=img_b64)
 
@@ -143,6 +143,14 @@ class PdfExtraction(BaseExtraction):
 
             if "summary" in result and result["summary"]:
                 page_summaries.append(result["summary"])
+                DocumentExtraction.objects.create(
+                    report=self.report,
+                    status=DocumentExtractionStatus.SUCCESS,
+                    text=result["summary"],
+                    page_number=page_idx + 1,
+                    chunk_type=DocumentExtraction.ExtractionType.PAGE_SUMMARY,
+                    embedding=self.llm_embedding_model.embed_query(result["summary"]),
+                )
 
             if "extracted_text" in result and result["extracted_text"]:
                 DocumentExtraction.objects.create(
