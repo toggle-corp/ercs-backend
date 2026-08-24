@@ -168,6 +168,7 @@ class DocumentExtraction(BaseModel):
         CHART = 6, "Chart"
         TITLE = 7, "Title"
         DESCRIPTION = 8, "Description"
+        DOCUMENT_SUMMARY_SHORT = 9, "Document Summary Short"
 
     report = models.ForeignKey(
         Report,
