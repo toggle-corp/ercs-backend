@@ -31,6 +31,9 @@ dependencies = [
     "langchain-ollama>=1.1.0",
     "langchain-openai>=1.2.2",
     "banjo-utils",
+    "langchain-openrouter>=0.2.3",
+    "sentence-transformers>=5.6.1",
+    "torch",
 ]
 
 [dependency-groups]
@@ -51,6 +54,12 @@ package = false
 
 [tool.uv.sources]
 banjo-utils = { git = "https://github.com/toggle-corp/banjo-utils", tag = "v0.2.0" }
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "main.settings"

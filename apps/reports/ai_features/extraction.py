@@ -4,13 +4,14 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
+from typing import Any
 
-import fitz
-from langchain_ollama import ChatOllama, OllamaEmbeddings
-from langchain_openai import ChatOpenAI
+import fitz  # pyright: ignore[reportMissingTypeStubs]
+from langchain_core.embeddings import Embeddings
+from langchain_core.language_models import BaseChatModel
 from PIL import Image
 
-from apps.reports.ai_features.llms import OllamaHandler
+from apps.reports.ai_features.llms import LLMHandler, get_chat_llm_handler, get_embedding_llm_handler
 from apps.reports.ai_features.prompts import DOC_SUMMARY_SCHEMA, PAGE_SCHEMA, get_doc_summary_prompt
 from apps.reports.models import DocumentExtraction, DocumentExtractionStatus, Report
 
@@ -21,15 +22,15 @@ logger = logging.getLogger(__name__)
 class BaseExtraction:
     report: Report
 
-    llm_handler: OllamaHandler = field(init=False)
-    llm_chat_model: ChatOllama | ChatOpenAI = field(init=False)
-    llm_embedding_model: OllamaEmbeddings = field(init=False)
+    llm_handler: LLMHandler = field(init=False)
+    llm_chat_model: BaseChatModel = field(init=False)
+    llm_embedding_model: Embeddings = field(init=False)
 
     def __post_init__(self):
         try:
-            self.llm_handler = OllamaHandler()
+            self.llm_handler = get_chat_llm_handler()
             self.llm_chat_model = self.llm_handler.load_chat_model()
-            self.llm_embedding_model = self.llm_handler.load_embedding_model()
+            self.llm_embedding_model = get_embedding_llm_handler().load_embedding_model()
         except Exception as e:
             raise e
 
@@ -86,16 +87,13 @@ class PdfExtraction(BaseExtraction):
 
         return base64.b64encode(img_bytes).decode("utf-8")
 
-    def extract_page(self, page_idx: int, img_b64: str) -> dict | None:
+    def extract_page(self, page_idx: int, img_b64: str) -> dict[str, Any] | None:
         """Run the LLM extraction call for a single page, retrying on failure."""
         message = self.llm_handler.construct_extraction_message(img_b64=img_b64)
 
         for attempt in range(1, self.MAX_PAGE_ATTEMPTS + 1):
             try:
-                response = self.llm_chat_model.invoke([message], format=PAGE_SCHEMA)
-                if not isinstance(response.content, str):
-                    raise TypeError("Response content is not a string")  # noqa: TRY301
-                return json.loads(response.content)
+                return self.llm_handler.generate_structured(self.llm_chat_model, [message], PAGE_SCHEMA)
             except Exception:
                 logger.warning(
                     "Page %s extraction attempt %s/%s failed",
@@ -145,6 +143,14 @@ class PdfExtraction(BaseExtraction):
 
             if "summary" in result and result["summary"]:
                 page_summaries.append(result["summary"])
+                DocumentExtraction.objects.create(
+                    report=self.report,
+                    status=DocumentExtractionStatus.SUCCESS,
+                    text=result["summary"],
+                    page_number=page_idx + 1,
+                    chunk_type=DocumentExtraction.ExtractionType.PAGE_SUMMARY,
+                    embedding=self.llm_embedding_model.embed_query(result["summary"]),
+                )
 
             if "extracted_text" in result and result["extracted_text"]:
                 DocumentExtraction.objects.create(
@@ -193,26 +199,25 @@ class PdfExtraction(BaseExtraction):
             return
 
         doc_summary_prompt = get_doc_summary_prompt(page_summaries=page_summaries)
-        # This prompt concatenates every page's summary, so its input size scales with
-        # page count. Override back up to the original context window rather than the
-        # smaller per-page default, since a lower window here can silently truncate
-        # earlier page summaries out of the final document summary.
-        doc_summary = self.llm_chat_model.invoke(
-            doc_summary_prompt,
-            format=DOC_SUMMARY_SCHEMA,
-            options={"num_ctx": 8192},
-        )
-        if not isinstance(doc_summary.content, str):
-            return
         try:
-            doc_summary_json = json.loads(doc_summary.content)
+            # This prompt concatenates every page's summary, so its input size scales with
+            # page count. Override back up to the original context window rather than the
+            # smaller per-page default, since a lower window here can silently truncate
+            # earlier page summaries out of the final document summary. (Ollama-only; ignored
+            # by handlers whose backend sizes context from the model itself.)
+            doc_summary_json = self.llm_handler.generate_structured(
+                self.llm_chat_model,
+                doc_summary_prompt,
+                DOC_SUMMARY_SCHEMA,
+                context_window=8192,
+            )
             DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
                 status=DocumentExtractionStatus.SUCCESS,
                 text=doc_summary_json["doc_summary"],
                 embedding=self.llm_embedding_model.embed_query(doc_summary_json["doc_summary"]),
             )
-        except (ValueError, KeyError):
-            logger.warning("Either key doc_summary is missing or malformed json in the output.")
+        except Exception:
+            logger.warning("Doc summary generation failed or returned malformed output.", exc_info=True)
             DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
                 status=DocumentExtractionStatus.FAILURE,
             )
