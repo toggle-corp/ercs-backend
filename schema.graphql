@@ -480,6 +480,7 @@ enum ExtractionType {
   CHART
   TITLE
   DESCRIPTION
+  DOCUMENT_SUMMARY_SHORT
 }
 
 input GalleryAlbumCreateInput {
