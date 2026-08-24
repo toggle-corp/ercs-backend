@@ -23,12 +23,13 @@ KEYWORD_RANK_NORMALIZATION = 32
 # this specific corpus - revisit once a real query/relevance eval set exists.
 WEIGHTS: dict[int, float] = {
     DocumentExtraction.ExtractionType.TITLE: 1.00,
-    DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY: 0.90,
+    DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY: 0.8,
+    DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY_SHORT: 0.98,
     DocumentExtraction.ExtractionType.PAGE_SUMMARY: 0.80,
     DocumentExtraction.ExtractionType.DESCRIPTION: 0.80,
     DocumentExtraction.ExtractionType.KEYWORDS: 0.70,
-    DocumentExtraction.ExtractionType.TABLE: 0.65,
-    DocumentExtraction.ExtractionType.EXTRACTED_CONTENT: 0.55,
+    DocumentExtraction.ExtractionType.TABLE: 0.45,
+    DocumentExtraction.ExtractionType.EXTRACTED_CONTENT: 0.45,
     DocumentExtraction.ExtractionType.CHART: 0.45,
 }
 DEFAULT_CHUNK_WEIGHT = 0.5
@@ -61,10 +62,10 @@ class SearchReports:
     # Keep only results within this fraction of the top result's score, so ranking
     # doesn't silently recouple to a fixed absolute number tied to the current
     # embedding model/weights.
-    relative_cutoff: float = 0.85
-    semantic_weight: float = 0.6
-    keyword_weight: float = 0.4
-    max_chunks_per_report: int = 5
+    relative_cutoff: float = 0.7
+    semantic_weight: float = 0.65
+    keyword_weight: float = 0.35
+    max_chunks_per_report: int = 3
     llm_embedding_model: Embeddings = field(init=False)
 
     def __post_init__(self):

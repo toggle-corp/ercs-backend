@@ -36,6 +36,7 @@ DOC_SUMMARY_SCHEMA = {
     "type": "object",
     "properties": {
         "doc_summary": {"type": "string"},
+        "doc_summary_short": {"type": "string"},
     },
 }
 
@@ -105,6 +106,8 @@ def get_doc_summary_prompt(page_summaries: list[str]):
 
         {chr(10).join(f"Page {i + 1}: {summary}" for i, summary in enumerate(page_summaries))}
 
-        Return only a concise abstractive summary in 2–4 paragraphs,
-        formatted exactly as a JSON object with the single key "doc_summary".
+        Return two things as a JSON object with the specified keys:
+        1. a concise abstractive summary in 2–4 paragraphs in the key "doc_summary".
+        2. a concise and very short summary in 15-20 words, specifying what this document
+        is all about including the year of the report published(if available) in the key "doc_summary_short".
     """

@@ -141,7 +141,7 @@ class PdfExtraction(BaseExtraction):
                 )
                 continue
 
-            if "summary" in result and result["summary"]:
+            if result.get("summary"):
                 page_summaries.append(result["summary"])
                 DocumentExtraction.objects.create(
                     report=self.report,
@@ -152,7 +152,7 @@ class PdfExtraction(BaseExtraction):
                     embedding=self.llm_embedding_model.embed_query(result["summary"]),
                 )
 
-            if "extracted_text" in result and result["extracted_text"]:
+            if result.get("extracted_text"):
                 DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
@@ -161,7 +161,7 @@ class PdfExtraction(BaseExtraction):
                     chunk_type=DocumentExtraction.ExtractionType.EXTRACTED_CONTENT,
                     embedding=self.llm_embedding_model.embed_query(result["extracted_text"]),
                 )
-            if "key_findings" in result and result["key_findings"]:
+            if result.get("key_findings"):
                 DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
@@ -170,7 +170,7 @@ class PdfExtraction(BaseExtraction):
                     chunk_type=DocumentExtraction.ExtractionType.KEYWORDS,
                     embedding=self.llm_embedding_model.embed_query(result["key_findings"]),
                 )
-            if "tables" in result and result["tables"]:
+            if result.get("tables"):
                 DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
@@ -179,7 +179,7 @@ class PdfExtraction(BaseExtraction):
                     chunk_type=DocumentExtraction.ExtractionType.TABLE,
                     embedding=self.llm_embedding_model.embed_query(json.dumps(result["tables"])),
                 )
-            if "charts" in result and result["charts"]:
+            if result.get("charts"):
                 DocumentExtraction.objects.create(
                     report=self.report,
                     status=DocumentExtractionStatus.SUCCESS,
@@ -216,6 +216,15 @@ class PdfExtraction(BaseExtraction):
                 text=doc_summary_json["doc_summary"],
                 embedding=self.llm_embedding_model.embed_query(doc_summary_json["doc_summary"]),
             )
+            if doc_summary_json.get("doc_summary_short"):
+                DocumentExtraction.objects.create(
+                    report=self.report,
+                    status=DocumentExtractionStatus.SUCCESS,
+                    text=doc_summary_json["doc_summary_short"],
+                    page_number=None,
+                    chunk_type=DocumentExtraction.ExtractionType.DOCUMENT_SUMMARY_SHORT,
+                    embedding=self.llm_embedding_model.embed_query(doc_summary_json["doc_summary_short"]),
+                )
         except Exception:
             logger.warning("Doc summary generation failed or returned malformed output.", exc_info=True)
             DocumentExtraction.objects.filter(pk=doc_summary_obj.pk).update(
