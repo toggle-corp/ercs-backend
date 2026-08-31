@@ -4,6 +4,7 @@ from logging.config import dictConfig
 
 from banjo_utils.celery_health.worker import setup_worker_heartbeat
 from celery import Celery, signals
+from celery.schedules import crontab
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,14 @@ setup_worker_heartbeat(app)
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.task_default_queue = "default"
+
+# Static beat schedule (no django-celery-beat). Times are UTC (settings.TIME_ZONE).
+app.conf.beat_schedule = {
+    "sync-kobo-daily": {
+        "task": "apps.kobo.tasks.sync_kobo",
+        "schedule": crontab(minute=0, hour=0),  # 00:00 UTC == 03:00 EAT daily
+    },
+}
 
 app.autodiscover_tasks()
 

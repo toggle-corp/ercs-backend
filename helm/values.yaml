@@ -146,12 +146,14 @@ app:
     AWS_S3_ENABLED: "true"
     # Sentry
     SENTRY_ENABLED: "false"
+    # Kobo (ERCS EOC Toolkit) — KOBO_ACCESS_TOKEN is a per-environment secret.
+    KOBO_DOMAIN: "https://kobo.ifrc.org"
     # App-domain vars (APP_DOMAIN, FRONTEND_DOMAIN, SESSION_COOKIE_DOMAIN,
     # CSRF_COOKIE_DOMAIN) are set per-environment; see main/settings.py for options.
 
   # NOTE: Check main/settings.py for all available options. Required secrets
-  # (DJANGO_SECRET_KEY, POSTGRES_DB/USER/PASSWORD/HOST/PORT) are provided
-  # per-environment (CICD / values/<env>.yaml), not defaulted here.
+  # (DJANGO_SECRET_KEY, POSTGRES_DB/USER/PASSWORD/HOST/PORT, KOBO_ACCESS_TOKEN) are
+  # provided per-environment (CICD / values/<env>.yaml), not defaulted here.
   # Celery/Cache Redis URLs are set via extraEnvVars in ./values/operators.yaml.
   secrets: {}
 
