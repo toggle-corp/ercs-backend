@@ -683,15 +683,17 @@ A single Kobo submission, mirrored verbatim.
 The full record is preserved in ``raw``; a handful of keys are promoted to
 columns for indexing/joining/aggregation. Populated exclusively by the sync
 job (``sync_kobo``), which reconciles the table to match Kobo on every run
-(upsert by ``kobo_id`` + prune of rows no longer present) — it is never
-additive and keeps no history.
 """
 type KoboEmergencyType {
   id: ID!
 
   """Kobo `_id` — stable submission id, used as the upsert key."""
   koboId: Int!
-  submissionTime: DateTime!
+
+  """
+  Kobo `_submission_time`. Nullable: a record with a missing/unparseable value is still mirrored.
+  """
+  submissionTime: DateTime
 
   """
   Links Alert/RNA/Field submissions for the same emergency. Derived on sync.
