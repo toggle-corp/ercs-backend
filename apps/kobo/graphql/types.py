@@ -1,10 +1,18 @@
 import datetime
+from typing import Any
 
 import strawberry
 import strawberry_django
 from strawberry.scalars import JSON
 
-from apps.kobo.models import KoboSubmission
+from apps.kobo.models import VALIDATION_STATUS_APPROVED, KoboForm, KoboSubmission
+
+
+def _raw_int(raw: dict[str, Any], key: str) -> int | None:
+    try:
+        return int(float(raw.get(key)))  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
 
 
 @strawberry_django.type(KoboSubmission)
@@ -24,6 +32,58 @@ class KoboSubmissionType:
     @strawberry.field
     def form_display(self) -> str:
         return self.get_form_display()  # type: ignore[attr-defined]
+
+
+@strawberry_django.type(KoboSubmission)
+class KoboEmergencyType:
+    """An ERCS Kobo Emergency Alert, shaped for the emergencies list.
+
+    Scoped to approved Emergency Alert submissions (see get_queryset); the
+    display fields are derived from the raw Kobo record.
+    """
+
+    id: strawberry.ID
+    kobo_id: strawberry.auto
+    submission_time: strawberry.auto
+    emergency_code: strawberry.auto
+    region_id: strawberry.ID | None
+
+    @classmethod
+    def get_queryset(cls, queryset: Any, info: Any, **kwargs: Any) -> Any:
+        return queryset.filter(
+            form=KoboForm.EMERGENCY_ALERT,
+            validation_status=VALIDATION_STATUS_APPROVED,
+        )
+
+    # `only=["raw"]` tells the optimizer to load the raw column, otherwise it is
+    # deferred and `self.raw` triggers a lazy DB fetch in the async resolver.
+    @strawberry_django.field(only=["raw"])
+    def hazard(self) -> str | None:
+        return self.raw.get("context/hazard")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def alert_type(self) -> str | None:
+        return self.raw.get("context/alert-type")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def region(self) -> str | None:
+        return self.raw.get("geo/region-one")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def location_scope(self) -> str | None:
+        return self.raw.get("geo/location_scope")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def start_date(self) -> str | None:
+        return self.raw.get("context/start_date")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def people_affected(self) -> int | None:
+        return _raw_int(self.raw, "ppl_impact_group/ppl_affected")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def people_displaced(self) -> int | None:
+        return _raw_int(self.raw, "ppl_impact_group/ppl_affected_displaced")  # type: ignore[attr-defined]
 
 
 # --------------------------------------------------------------------------

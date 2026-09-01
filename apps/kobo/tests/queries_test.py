@@ -113,3 +113,69 @@ class TestFieldReachedDedup(TestCase):
         # max(100,300) + 50 + 200 = 550  (naive sum would be 650)
         assert stats.field.people_reached == 550
         assert stats.field.total_reports == 4
+
+
+class TestKoboEmergenciesQuery(TestCase):
+    """koboEmergencies exposes only approved Emergency Alerts, with fields
+    derived from the raw record.
+    """
+
+    class Query:
+        KOBO_EMERGENCIES = """
+            query KoboEmergencies($pagination: OffsetPaginationInput) {
+                koboEmergencies(pagination: $pagination, order: { submissionTime: DESC }) {
+                    totalCount
+                    results {
+                        koboId
+                        emergencyCode
+                        hazard
+                        region
+                        startDate
+                        peopleAffected
+                        peopleDisplaced
+                    }
+                }
+            }
+        """
+
+    def test_only_approved_alerts_with_derived_fields(self):
+        KoboSubmissionFactory.create(
+            form=KoboForm.EMERGENCY_ALERT,
+            emergency_code="EM-X",
+            raw={
+                "context/hazard": "flood",
+                "geo/region-one": "Oromia",
+                "context/start_date": "2026-01-02",
+                "ppl_impact_group/ppl_affected": "1200",
+                "ppl_impact_group/ppl_affected_displaced": "300",
+                "emergency_code/unique_code": "EM-X",
+            },
+        )
+        # Unapproved alert -> excluded.
+        KoboSubmissionFactory.create(
+            form=KoboForm.EMERGENCY_ALERT,
+            validation_status="validation_status_not_approved",
+            emergency_code="EM-Y",
+            raw={"emergency_code/unique_code": "EM-Y"},
+        )
+        # Approved, but wrong form -> excluded.
+        KoboSubmissionFactory.create(
+            form=KoboForm.RAPID_NEEDS_ASSESSMENT,
+            asset_uid="aPuV7tDb9mdRiK8hUhkxJC",
+            emergency_code="EM-Z",
+            raw={},
+        )
+
+        content = self.query_check(
+            self.Query.KOBO_EMERGENCIES,
+            variables={"pagination": {"limit": 10, "offset": 0}},
+        )
+        data = content["data"]["koboEmergencies"]
+        assert data["totalCount"] == 1
+        row = data["results"][0]
+        assert row["emergencyCode"] == "EM-X"
+        assert row["hazard"] == "flood"
+        assert row["region"] == "Oromia"
+        assert row["startDate"] == "2026-01-02"
+        assert row["peopleAffected"] == 1200
+        assert row["peopleDisplaced"] == 300
