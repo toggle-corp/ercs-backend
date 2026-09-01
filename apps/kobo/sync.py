@@ -110,7 +110,7 @@ class KoboSyncer:
         label = KoboForm(spec.form).label
         try:
             records = list(self._fetch_all(spec.asset_uid))  # network first, before any DB write
-        except Exception as exc:  # noqa: BLE001 — isolate this form; keep the others going
+        except Exception as exc:
             sentry_sdk.capture_exception(exc)
             logger.exception("Kobo fetch failed for %s (%s)", label, spec.asset_uid)
             self._record_state(spec, ok=False, error=str(exc), count=None)
@@ -124,7 +124,7 @@ class KoboSyncer:
                     transaction.set_rollback(True)
                 else:
                     self._record_state(spec, ok=True, error="", count=result.total)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             sentry_sdk.capture_exception(exc)
             logger.exception("Kobo reconcile failed for %s", label)
             self._record_state(spec, ok=False, error=str(exc), count=None)

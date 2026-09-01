@@ -79,3 +79,37 @@ class TestKoboStatsQuery(TestCase):
         assert alert["source"]["lastFetchedAt"] is not None
         assert {b["key"]: b["count"] for b in alert["byHazard"]} == {"flood": 2}
         assert {b["key"]: b["count"] for b in alert["byRegion"]} == {"Oromia": 1, "Tigray": 1}
+
+
+class TestFieldReachedDedup(TestCase):
+    """People Reached must be max per (emergency_code, branch), not a naive sum,
+    because `g_reach` is reported per period and would double-count.
+    """
+
+    def _make(self, code: str, branch: str, reach: int):
+        KoboSubmissionFactory.create(
+            form=KoboForm.EMERGENCY_FIELD,
+            asset_uid="aby6sxp4DyEiohs4XMn7Mu",
+            emergency_code=code,
+            raw={
+                "location/alert_code": code,
+                "context/reporting_branch": branch,
+                "branch_sitrep/reached_population/g_reach": str(reach),
+            },
+        )
+
+    def test_people_reached_is_max_per_branch(self):
+        from apps.kobo.stats import build_kobo_stats
+
+        # Same (code, branch) reported twice -> only the max (300) should count.
+        self._make("EM-1", "B1", 100)
+        self._make("EM-1", "B1", 300)
+        # Different branch, same emergency -> additive.
+        self._make("EM-1", "B2", 50)
+        # Different emergency, same branch -> additive.
+        self._make("EM-2", "B1", 200)
+
+        stats = build_kobo_stats()
+        # max(100,300) + 50 + 200 = 550  (naive sum would be 650)
+        assert stats.field.people_reached == 550
+        assert stats.field.total_reports == 4

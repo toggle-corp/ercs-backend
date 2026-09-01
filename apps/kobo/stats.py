@@ -110,13 +110,34 @@ def _rapid_needs_stats() -> RapidNeedsStats:
     )
 
 
+def _field_reached(rows: list[Row]) -> int:
+    """De-duplicated people reached.
+
+    ``g_reach`` is reported *per reporting period*, so summing across a branch's
+    periodic sitreps double-counts recurring beneficiaries. We take the maximum
+    reached per ``(emergency_code, reporting_branch)`` as a proxy for that
+    branch's response, then sum across branches/emergencies.
+    """
+    max_by_branch: dict[tuple[str | None, str | None], int] = {}
+    for raw, _ in rows:
+        key = (
+            raw.get("location/alert_code") or raw.get("context/emergency-selection"),
+            raw.get("context/reporting_branch"),
+        )
+        max_by_branch[key] = max(
+            max_by_branch.get(key, 0),
+            _to_int(raw.get("branch_sitrep/reached_population/g_reach")),
+        )
+    return sum(max_by_branch.values())
+
+
 def _field_stats() -> FieldStats:
     rows = _confirmed(KoboForm.EMERGENCY_FIELD)
     support = sum(1 for raw, _ in rows if raw.get("branch_sitrep/resources_group/support_request") == "yes")
     return FieldStats(
         source=_source(KoboForm.EMERGENCY_FIELD, len(rows)),
         total_reports=len(rows),
-        people_reached=_sum(rows, "branch_sitrep/reached_population/g_reach"),
+        people_reached=_field_reached(rows),
         staff_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_staff"),
         volunteers_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_volunteers"),
         bdrt_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_BDRT"),
