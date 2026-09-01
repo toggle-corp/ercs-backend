@@ -5,9 +5,6 @@ Usage
     ./manage.py sync_kobo                 # sync all three forms
     ./manage.py sync_kobo --dry-run       # fetch + log, but roll back DB writes
     ./manage.py sync_kobo --form alert     # sync a single form (alert|rna|field)
-
-This is the same reconcile the daily Celery beat runs (``apps.kobo.tasks.sync_kobo``);
-it is a full mirror, so it is safe to run any time and a missed run self-heals.
 """
 
 import typing
@@ -16,7 +13,7 @@ from typing import Any
 from django.core.management.base import BaseCommand, CommandError
 
 from apps.kobo.models import KoboForm
-from apps.kobo.sync import KoboSyncer
+from apps.kobo.sync import KoboConfigError, KoboSyncer
 
 _FORM_CHOICES: dict[str, KoboForm] = {
     "alert": KoboForm.EMERGENCY_ALERT,
@@ -50,10 +47,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Dry-run mode — changes will be rolled back."))
 
         syncer = KoboSyncer(stdout=self.stdout, style=self.style)
-        results = syncer.run(dry_run=dry_run, only=only)
+        try:
+            results = syncer.run(dry_run=dry_run, only=only)
+        except KoboConfigError as exc:
+            # Nothing was attempted: no network call, no DB write, no sync state.
+            raise CommandError(str(exc)) from exc
 
         failed = [r for r in results if not r.ok]
         self.stdout.write(self.style.SUCCESS(f"\nSync complete: {len(results) - len(failed)}/{len(results)} forms OK."))
         if failed:
-            names = ", ".join(KoboForm(r.form).label for r in failed)
-            raise CommandError(f"{len(failed)} form(s) failed: {names}")
+            detail = "; ".join(f"{KoboForm(r.form).label!s}: {r.error}" for r in failed)
+            raise CommandError(f"{len(failed)} form(s) failed — {detail}")

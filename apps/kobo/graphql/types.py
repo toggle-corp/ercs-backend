@@ -3,7 +3,6 @@ from typing import Any
 
 import strawberry
 import strawberry_django
-from strawberry.scalars import JSON
 
 from apps.kobo.models import VALIDATION_STATUS_APPROVED, KoboForm, KoboSubmission
 
@@ -25,7 +24,6 @@ class KoboSubmissionType:
     validation_status: strawberry.auto
     emergency_code: strawberry.auto
     region_id: strawberry.ID | None
-    raw: JSON
     created_at: strawberry.auto
     updated_at: strawberry.auto
 

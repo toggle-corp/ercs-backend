@@ -12,8 +12,6 @@ from .types import KoboEmergencyType, KoboStats, KoboSubmissionType
 
 @strawberry.type
 class Query:
-    # Key stats for the public dashboards, each carrying its source (form + asset
-    # uid) and last-fetched date. Public, like the other dashboard queries.
     @strawberry.field
     @sync_to_async
     def kobo_stats(self) -> KoboStats:
@@ -28,5 +26,4 @@ class Query:
         filters=KoboSubmissionFilter,
         order=KoboSubmissionOrder,
     )
-
     kobo_submission: KoboSubmissionType = strawberry_django.field()

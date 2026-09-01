@@ -12,7 +12,7 @@ humanized version of the raw Kobo region string (e.g. ``South_Ethiopia`` →
 """
 
 from collections import Counter
-from typing import Any
+from typing import Any, NamedTuple
 
 from django.utils import timezone
 
@@ -26,8 +26,14 @@ from apps.kobo.graphql.types import (
 )
 from apps.kobo.models import VALIDATION_STATUS_APPROVED, KoboForm, KoboSubmission, KoboSyncState
 
-# A confirmed submission, as loaded for aggregation: (raw_record, matched_region_name).
-Row = tuple[dict[str, Any], str | None]
+
+class Row(NamedTuple):
+    """A confirmed submission, as loaded for aggregation."""
+
+    raw: dict[str, Any]
+    region_name: str | None
+    emergency_code: str | None
+    kobo_id: int
 
 
 def _to_int(value: Any) -> int:
@@ -42,19 +48,19 @@ def _humanize(value: str) -> str:
 
 
 def _sum(rows: list[Row], key: str) -> int:
-    return sum(_to_int(raw.get(key)) for raw, _ in rows)
+    return sum(_to_int(row.raw.get(key)) for row in rows)
 
 
 def _breakdown(rows: list[Row], key: str) -> list[KeyCount]:
-    counter = Counter(str(raw.get(key)) for raw, _ in rows if raw.get(key))
+    counter = Counter(str(row.raw.get(key)) for row in rows if row.raw.get(key))
     return [KeyCount(key=k, count=n) for k, n in counter.most_common()]
 
 
 def _region_breakdown(rows: list[Row], raw_key: str) -> list[KeyCount]:
     """Count by matched AdminArea name, falling back to the humanized raw name."""
     counter: Counter[str] = Counter()
-    for raw, region_name in rows:
-        name = region_name or _humanize(str(raw.get(raw_key) or "")) or "Unknown"
+    for row in rows:
+        name = row.region_name or _humanize(str(row.raw.get(raw_key) or "")) or "Unknown"
         counter[name] += 1
     return [KeyCount(key=k, count=n) for k, n in counter.most_common()]
 
@@ -63,7 +69,7 @@ def _source(form: KoboForm, confirmed: int) -> KoboSource:
     state = KoboSyncState.objects.filter(form=form).first()
     return KoboSource(
         form=int(form),
-        form_label=KoboForm(form).label,
+        form_label=str(KoboForm(form).label),
         asset_uid=state.asset_uid if state else "",
         last_fetched_at=state.last_fetched_at if state else None,
         last_status=state.last_status if state else "",
@@ -73,17 +79,19 @@ def _source(form: KoboForm, confirmed: int) -> KoboSource:
 
 
 def _confirmed(form: KoboForm) -> list[Row]:
-    return list(
-        KoboSubmission.objects.filter(
+    return [
+        Row(*values)
+        for values in KoboSubmission.objects.filter(
             form=form,
             validation_status=VALIDATION_STATUS_APPROVED,
-        ).values_list("raw", "region__name"),
-    )
+        ).values_list("raw", "region__name", "emergency_code", "kobo_id")
+    ]
 
 
 def _alert_stats() -> AlertStats:
     rows = _confirmed(KoboForm.EMERGENCY_ALERT)
-    codes = {raw.get("emergency_code/unique_code") for raw, _ in rows if raw.get("emergency_code/unique_code")}
+    # The promoted column, derived once during sync from `FORM_SPECS`.
+    codes = {row.emergency_code for row in rows if row.emergency_code}
     return AlertStats(
         source=_source(KoboForm.EMERGENCY_ALERT, len(rows)),
         total_emergencies=len(codes),
@@ -110,39 +118,56 @@ def _rapid_needs_stats() -> RapidNeedsStats:
     )
 
 
-def _field_reached(rows: list[Row]) -> int:
-    """De-duplicated people reached.
+def _branch_key(row: Row) -> tuple[Any, Any]:
+    """The ``(emergency, branch)`` bucket a Field sitrep belongs to.
 
-    ``g_reach`` is reported *per reporting period*, so summing across a branch's
-    periodic sitreps double-counts recurring beneficiaries. We take the maximum
-    reached per ``(emergency_code, reporting_branch)`` as a proxy for that
-    branch's response, then sum across branches/emergencies.
+    A row with neither key becomes its own bucket, keyed on ``kobo_id`` —
+    collapsing every unkeyed row into one shared bucket would let
+    :func:`_max_per_branch` discard all but the largest of them.
     """
-    max_by_branch: dict[tuple[str | None, str | None], int] = {}
-    for raw, _ in rows:
-        key = (
-            raw.get("location/alert_code") or raw.get("context/emergency-selection"),
-            raw.get("context/reporting_branch"),
-        )
-        max_by_branch[key] = max(
-            max_by_branch.get(key, 0),
-            _to_int(raw.get("branch_sitrep/reached_population/g_reach")),
-        )
-    return sum(max_by_branch.values())
+    branch = row.raw.get("context/reporting_branch")
+    if not row.emergency_code and not branch:
+        return ("kobo_id", row.kobo_id)
+    return (row.emergency_code, branch)
+
+
+def _max_per_branch(rows: list[Row], key: str) -> int:
+    """Sum ``key``'s peak value per ``(emergency, branch)``.
+
+    Field figures are restated in every periodic sitrep, so a plain sum
+    multiplies a branch's contribution by how often it reported. We take that
+    branch's peak for the emergency as the proxy for its response, then sum
+    across branches and emergencies.
+    """
+    peaks: dict[tuple[Any, Any], int] = {}
+    for row in rows:
+        bucket = _branch_key(row)
+        peaks[bucket] = max(peaks.get(bucket, 0), _to_int(row.raw.get(key)))
+    return sum(peaks.values())
+
+
+def _support_requested(rows: list[Row]) -> int:
+    """Branch responses that requested support at least once.
+
+    ``support_required`` is a ``select_multiple``: a space-delimited list of what
+    the branch needs, absent/empty when nothing was requested. Counted per
+    ``(emergency, branch)`` like the other Field figures, so a branch repeating
+    the request in each sitrep still counts once.
+    """
+    return len({_branch_key(row) for row in rows if row.raw.get("branch_sitrep/resources_group/support_required")})
 
 
 def _field_stats() -> FieldStats:
     rows = _confirmed(KoboForm.EMERGENCY_FIELD)
-    support = sum(1 for raw, _ in rows if raw.get("branch_sitrep/resources_group/support_request") == "yes")
     return FieldStats(
         source=_source(KoboForm.EMERGENCY_FIELD, len(rows)),
         total_reports=len(rows),
-        people_reached=_field_reached(rows),
-        staff_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_staff"),
-        volunteers_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_volunteers"),
-        bdrt_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_BDRT"),
-        ambulances_mobilized=_sum(rows, "branch_sitrep/resources_group/resources_ambulances"),
-        support_requested=support,
+        people_reached=_max_per_branch(rows, "branch_sitrep/reached_population/g_reach"),
+        staff_mobilized=_max_per_branch(rows, "branch_sitrep/resources_group/resources_staff"),
+        volunteers_mobilized=_max_per_branch(rows, "branch_sitrep/resources_group/resources_volunteers"),
+        bdrt_mobilized=_max_per_branch(rows, "branch_sitrep/resources_group/resources_BDRT"),
+        ambulances_mobilized=_max_per_branch(rows, "branch_sitrep/resources_group/resources_ambulances"),
+        support_requested=_support_requested(rows),
         by_region=_region_breakdown(rows, "location/region-one"),
     )
 

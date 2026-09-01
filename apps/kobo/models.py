@@ -29,26 +29,26 @@ class KoboSubmission(BaseModel):
     The full record is preserved in ``raw``; a handful of keys are promoted to
     columns for indexing/joining/aggregation. Populated exclusively by the sync
     job (``sync_kobo``), which reconciles the table to match Kobo on every run
-    (upsert by ``kobo_id`` + prune of rows no longer present) — it is never
-    additive and keeps no history.
     """
 
     form: int = IntegerChoicesField(choices_enum=KoboForm)  # type: ignore[reportAssignmentType]
-    asset_uid = models.CharField[str, str](max_length=32, db_index=True)
+    asset_uid = models.CharField[str, str](max_length=32)
     kobo_id = models.IntegerField[int, int](help_text="Kobo `_id` — stable submission id, used as the upsert key.")
-    submission_time = models.DateTimeField()
+    submission_time = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="Kobo `_submission_time`. Nullable: a record with a missing/unparseable value is still mirrored.",
+    )
     validation_status = models.CharField[str, str](
         max_length=64,
         blank=True,
         default="",
-        db_index=True,
         help_text="Kobo `_validation_status.uid`, e.g. 'validation_status_approved'. Empty if unset.",
     )
     emergency_code = models.CharField[str | None, str | None](
         max_length=128,
         null=True,
         blank=True,
-        db_index=True,
         help_text="Links Alert/RNA/Field submissions for the same emergency. Derived on sync.",
     )
     region = models.ForeignKey(
@@ -64,12 +64,13 @@ class KoboSubmission(BaseModel):
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Kobo Submission"
         verbose_name_plural = "Kobo Submissions"
-        ordering = ["-submission_time"]
+        ordering = ["-submission_time", "-kobo_id"]
         constraints = [
             models.UniqueConstraint(fields=["asset_uid", "kobo_id"], name="uniq_kobo_submission"),
         ]
         indexes = [
             models.Index(fields=["form", "validation_status"]),
+            models.Index(fields=["emergency_code"]),
         ]
 
     @typing.override

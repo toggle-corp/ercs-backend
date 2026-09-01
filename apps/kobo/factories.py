@@ -1,7 +1,6 @@
 import datetime
 
-from factory import Sequence
-from factory.declarations import LazyAttribute
+from factory.declarations import LazyAttribute, Sequence
 from factory.django import DjangoModelFactory
 
 from apps.kobo.models import VALIDATION_STATUS_APPROVED, KoboForm, KoboSubmission

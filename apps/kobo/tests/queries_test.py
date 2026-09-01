@@ -114,68 +114,69 @@ class TestFieldReachedDedup(TestCase):
         assert stats.field.people_reached == 550
         assert stats.field.total_reports == 4
 
+    def test_unkeyed_rows_are_not_collapsed(self):
+        """Rows with neither emergency code nor branch each stand on their own.
 
-class TestKoboEmergenciesQuery(TestCase):
-    """koboEmergencies exposes only approved Emergency Alerts, with fields
-    derived from the raw record.
+        Sharing one ``(None, None)`` bucket would let ``max()`` throw all but the
+        largest away.
+        """
+        from apps.kobo.stats import build_kobo_stats
+
+        for reach in (100, 200):
+            KoboSubmissionFactory.create(
+                form=KoboForm.EMERGENCY_FIELD,
+                asset_uid="aby6sxp4DyEiohs4XMn7Mu",
+                emergency_code=None,
+                raw={"branch_sitrep/reached_population/g_reach": str(reach)},
+            )
+
+        assert build_kobo_stats().field.people_reached == 300
+
+
+class TestFieldResourceDedup(TestCase):
+    """Mobilized resources are restated in every periodic sitrep, so they get the
+    same per-(emergency, branch) treatment as People Reached.
     """
 
-    class Query:
-        KOBO_EMERGENCIES = """
-            query KoboEmergencies($pagination: OffsetPaginationInput) {
-                koboEmergencies(pagination: $pagination, order: { submissionTime: DESC }) {
-                    totalCount
-                    results {
-                        koboId
-                        emergencyCode
-                        hazard
-                        region
-                        startDate
-                        peopleAffected
-                        peopleDisplaced
-                    }
-                }
-            }
-        """
-
-    def test_only_approved_alerts_with_derived_fields(self):
+    def _make(self, code: str, branch: str, **raw: str):
         KoboSubmissionFactory.create(
-            form=KoboForm.EMERGENCY_ALERT,
-            emergency_code="EM-X",
-            raw={
-                "context/hazard": "flood",
-                "geo/region-one": "Oromia",
-                "context/start_date": "2026-01-02",
-                "ppl_impact_group/ppl_affected": "1200",
-                "ppl_impact_group/ppl_affected_displaced": "300",
-                "emergency_code/unique_code": "EM-X",
-            },
-        )
-        # Unapproved alert -> excluded.
-        KoboSubmissionFactory.create(
-            form=KoboForm.EMERGENCY_ALERT,
-            validation_status="validation_status_not_approved",
-            emergency_code="EM-Y",
-            raw={"emergency_code/unique_code": "EM-Y"},
-        )
-        # Approved, but wrong form -> excluded.
-        KoboSubmissionFactory.create(
-            form=KoboForm.RAPID_NEEDS_ASSESSMENT,
-            asset_uid="aPuV7tDb9mdRiK8hUhkxJC",
-            emergency_code="EM-Z",
-            raw={},
+            form=KoboForm.EMERGENCY_FIELD,
+            asset_uid="aby6sxp4DyEiohs4XMn7Mu",
+            emergency_code=code,
+            raw={"context/reporting_branch": branch, **raw},
         )
 
-        content = self.query_check(
-            self.Query.KOBO_EMERGENCIES,
-            variables={"pagination": {"limit": 10, "offset": 0}},
-        )
-        data = content["data"]["koboEmergencies"]
-        assert data["totalCount"] == 1
-        row = data["results"][0]
-        assert row["emergencyCode"] == "EM-X"
-        assert row["hazard"] == "flood"
-        assert row["region"] == "Oromia"
-        assert row["startDate"] == "2026-01-02"
-        assert row["peopleAffected"] == 1200
-        assert row["peopleDisplaced"] == 300
+    def test_resources_are_not_summed_across_periods(self):
+        from apps.kobo.stats import build_kobo_stats
+
+        # One branch, two reporting periods, the same standing figures.
+        for _ in range(2):
+            self._make(
+                "EM-1",
+                "B1",
+                **{
+                    "branch_sitrep/resources_group/resources_staff": "8",
+                    "branch_sitrep/resources_group/resources_volunteers": "3",
+                    "branch_sitrep/resources_group/resources_BDRT": "7",
+                },
+            )
+        # A second branch is additive.
+        self._make("EM-1", "B2", **{"branch_sitrep/resources_group/resources_staff": "2"})
+
+        stats = build_kobo_stats()
+        assert stats.field.staff_mobilized == 10  # 8 + 2, not 8 + 8 + 2
+        assert stats.field.volunteers_mobilized == 3
+        assert stats.field.bdrt_mobilized == 7
+
+    def test_support_requested_reads_support_required(self):
+        """``support_required`` is a select_multiple, not a yes/no."""
+        from apps.kobo.stats import build_kobo_stats
+
+        # Same branch asks in both of its sitreps -> counted once.
+        for _ in range(2):
+            self._make("EM-1", "B1", **{"branch_sitrep/resources_group/support_required": "relief_nfi coordination"})
+        self._make("EM-1", "B2", **{"branch_sitrep/resources_group/support_required": "allocation_funds_response"})
+        # Nothing requested.
+        self._make("EM-2", "B3", **{"branch_sitrep/resources_group/support_required": ""})
+
+        assert build_kobo_stats().field.support_requested == 2
