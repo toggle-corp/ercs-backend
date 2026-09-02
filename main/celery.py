@@ -5,6 +5,8 @@ from logging.config import dictConfig
 from banjo_utils.celery_health.worker import setup_worker_heartbeat
 from celery import Celery, signals
 
+from main.cronjobs import BEAT_SCHEDULES
+
 logger = logging.getLogger(__name__)
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "main.settings")
@@ -16,6 +18,9 @@ setup_worker_heartbeat(app)
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
 app.conf.task_default_queue = "default"
+
+# Static beat schedule (no django-celery-beat); defined in main/cronjobs.py.
+app.conf.beat_schedule = BEAT_SCHEDULES
 
 app.autodiscover_tasks()
 

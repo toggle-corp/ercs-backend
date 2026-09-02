@@ -83,6 +83,9 @@ env = environ.Env(
     OPENROUTER_API_KEY=(str, None),
     LLM_USE_SENTENCE_TRANSFORMERS=(bool, False),
     SENTENCE_TRANSFORMER_MODEL_NAME=(str, "sentence-transformers/all-mpnet-base-v2"),
+    # Kobo (ERCS EOC Toolkit)
+    KOBO_DOMAIN=(str, "https://kobo.ifrc.org"),
+    KOBO_ACCESS_TOKEN=(str, None),
 )
 
 APP_DOMAIN = urlparse(env("APP_DOMAIN"))
@@ -123,6 +126,7 @@ INSTALLED_APPS = [
     "apps.emergency",
     "apps.gallery",
     "apps.teams",
+    "apps.kobo",
 ]
 
 MIDDLEWARE = [
@@ -321,6 +325,10 @@ LLM_USE_OPENROUTER = env("LLM_USE_OPENROUTER")
 OPENROUTER_API_KEY = env("OPENROUTER_API_KEY")
 LLM_USE_SENTENCE_TRANSFORMERS = env("LLM_USE_SENTENCE_TRANSFORMERS")
 SENTENCE_TRANSFORMER_MODEL_NAME = env("SENTENCE_TRANSFORMER_MODEL_NAME")
+
+# Kobo (ERCS EOC Toolkit) — see backend/docs/kobo-api.md
+KOBO_DOMAIN = env("KOBO_DOMAIN")
+KOBO_ACCESS_TOKEN = env("KOBO_ACCESS_TOKEN")
 
 # HEALTH-CHECK
 # banjo-utils HealthProbeMiddleware endpoints (k8s liveness/readiness).

@@ -16,6 +16,7 @@ redis-data
 data/*
 data/media
 data/static
+docs/*
 
 production.env
 

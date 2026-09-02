@@ -37,6 +37,7 @@ data:
   CSRF_COOKIE_DOMAIN: ".example.com"
   DEBUG: "false"
   FRONTEND_DOMAIN: "https://ercs-frontend.example.com"
+  KOBO_DOMAIN: "https://kobo.ifrc.org"
   SENTRY_ENABLED: "false"
   SENTRY_PROFILE_SAMPLE_RATE: "0.8"
   SENTRY_TRACES_SAMPLE_RATE: "0.8"
@@ -88,7 +89,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: api
@@ -178,7 +179,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: worker-addon
@@ -263,7 +264,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: worker
@@ -351,7 +352,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: hook
@@ -410,7 +411,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: hook
@@ -467,7 +468,7 @@ spec:
     metadata:
       annotations:
         checksum/secret: 88fb2eb54fc8fca9dee7d1b4311e3ef332fa815e9c0237507067ab43e438b5ee
-        checksum/configmap: 55784466d20b3c282e1f9704196140a2a3820659651b8d49ff29cfaaa033d277
+        checksum/configmap: e065969f0b9711d576cc1f3dc0c8a8e948b85363d6279044098f6b6730642f7c
       labels:
         app: release-name-ercs
         component: hook
