@@ -14,6 +14,8 @@ from apps.gallery.graphql import mutations as gallery_mutations
 from apps.gallery.graphql import queries as gallery_queries
 from apps.geo.graphql import queries as geo_queries
 from apps.kobo.graphql import queries as kobo_queries
+from apps.pmer.graphql import mutations as pmer_mutations
+from apps.pmer.graphql import queries as pmer_queries
 from apps.reports.graphql import mutations as report_mutations
 from apps.reports.graphql import queries as report_queries
 from apps.teams.graphql import mutations as team_mutations
@@ -45,6 +47,7 @@ class Query(
     gallery_queries.Query,
     team_queries.Query,
     kobo_queries.Query,
+    pmer_queries.Query,
 ):
     enums: AppEnumCollection = strawberry.field(  # type: ignore[reportGeneralTypeIssues]
         resolver=lambda: AppEnumCollectionData(),  # noqa: PLW0108
@@ -59,6 +62,7 @@ class Mutation(
     dashboard_mutations.Mutation,
     gallery_mutations.Mutation,
     team_mutations.Mutation,
+    pmer_mutations.Mutation,
 ): ...
 
 
