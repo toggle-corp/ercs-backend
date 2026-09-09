@@ -127,6 +127,7 @@ INSTALLED_APPS = [
     "apps.gallery",
     "apps.teams",
     "apps.kobo",
+    "apps.pmer",
 ]
 
 MIDDLEWARE = [

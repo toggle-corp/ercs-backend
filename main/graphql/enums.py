@@ -5,6 +5,7 @@ import strawberry
 from apps.dashboards.models import DashboardPage
 from apps.geo.models import AdminAreaLevel
 from apps.kobo.models import KoboForm
+from apps.pmer.models import PmerReportCategory, PmerReportDocumentType
 from apps.reports.models import DocumentExtractionStatus, LinkType, ReportContentType, ReportType, ReportVisibility
 from apps.teams.models import TeamMemberSex
 from apps.users.models import UserRole
@@ -20,6 +21,8 @@ ENUM_TO_STRAWBERRY_ENUMS: list[type] = [
     DashboardPage,
     TeamMemberSex,
     KoboForm,
+    PmerReportCategory,
+    PmerReportDocumentType,
 ]
 
 
