@@ -1151,6 +1151,7 @@ input PmerReportFilter {
   OR: PmerReportFilter
   NOT: PmerReportFilter
   DISTINCT: Boolean
+  search: String
 }
 
 input PmerReportOrder @oneOf {

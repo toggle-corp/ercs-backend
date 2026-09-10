@@ -180,6 +180,41 @@ class TestPmerReportQueries(TestCase):
         assert resp["totalCount"] == 1
         assert resp["results"][0]["project"] == "National Preparedness Programme"
 
+    def search_check(self, value: str) -> list[dict]:
+        self.force_login(self.user)
+        content = self.query_check(
+            self.Query.PMER_REPORTS,
+            variables={
+                "pagination": {"limit": 10, "offset": 0},
+                "filters": {"search": value},
+            },
+        )
+        return content["data"]["pmerReports"]["results"]
+
+    def test_search_matches_title(self):
+        results = self.search_check("monitoring")
+        assert [result["id"] for result in results] == [str(self.wash_report.pk)]
+
+    def test_search_matches_department(self):
+        results = self.search_check("disaster management")
+        assert [result["id"] for result in results] == [str(self.dpr_report.pk)]
+
+    def test_search_matches_project(self):
+        results = self.search_check("scale-up")
+        assert [result["id"] for result in results] == [str(self.wash_report.pk)]
+
+    def test_search_matches_across_fields(self):
+        """`wash_report` matches on both title and project -- it must be returned once."""
+        results = self.search_check("wash")
+        assert [result["id"] for result in results] == [str(self.wash_report.pk)]
+
+    def test_search_is_case_insensitive(self):
+        results = self.search_check("PREPAREDNESS")
+        assert [result["id"] for result in results] == [str(self.dpr_report.pk)]
+
+    def test_search_no_match(self):
+        assert self.search_check("nonexistent") == []
+
     def test_filter_by_region(self):
         self.force_login(self.user)
         content = self.query_check(
