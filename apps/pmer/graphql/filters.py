@@ -1,5 +1,6 @@
 import strawberry
 import strawberry_django
+from django.db.models import Q
 
 from apps.pmer.models import PmerReport, PmerReportCategory, PmerReportDocumentType
 from apps.reports.models import ReportVisibility
@@ -15,3 +16,7 @@ class PmerReportFilter:
     project: strawberry.auto
     region_id: strawberry.ID | None = strawberry.UNSET
     visibility: ReportVisibility | None = strawberry.UNSET
+
+    @strawberry_django.filter_field
+    def search(self, value: str, prefix: str) -> Q:
+        return Q(title__icontains=value) | Q(project__icontains=value) | Q(department__icontains=value)
