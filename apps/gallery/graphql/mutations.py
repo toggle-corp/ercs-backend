@@ -8,9 +8,9 @@ from apps.gallery.serializers import (
     GalleryImageSerializer,
 )
 from main.graphql.context import Info
-from main.graphql.permissions import IsAuthenticated
-from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from main.graphql.permissions import IsAuthenticatedDelete, IsAuthenticatedMutation
+from utils.graphql.mutations import ModelMutation, handle_delete_mutation
+from utils.graphql.types import DeleteMutationResponseType, MutationResponseType
 
 from .inputs import GalleryAlbumCreateInput, GalleryAlbumUpdateInput, GalleryImageCreateInput
 from .types import GalleryAlbumType, GalleryImageType
@@ -18,7 +18,7 @@ from .types import GalleryAlbumType, GalleryImageType
 
 @strawberry.type
 class Mutation:
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def create_gallery_album(
         self,
         info: Info,
@@ -26,7 +26,7 @@ class Mutation:
     ) -> MutationResponseType[GalleryAlbumType]:
         return await ModelMutation(GalleryAlbumSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def update_gallery_album(
         self,
         info: Info,
@@ -36,7 +36,7 @@ class Mutation:
         instance = await GalleryAlbum.objects.aget(id=id)
         return await ModelMutation(GalleryAlbumUpdateSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def create_gallery_image(
         self,
         info: Info,
@@ -44,31 +44,18 @@ class Mutation:
     ) -> MutationResponseType[GalleryImageType]:
         return await ModelMutation(GalleryImageSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedDelete], handle_django_errors=False)
     async def delete_gallery_image(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[GalleryImageType]:
-        from asgiref.sync import sync_to_async
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(GalleryImage, id=id)
 
-        @sync_to_async
-        def _delete() -> MutationResponseType:
-            try:
-                obj = GalleryImage.objects.get(id=id)
-                obj.delete()
-                return MutationResponseType(ok=True)
-            except GalleryImage.DoesNotExist:
-                return MutationResponseType(ok=False)
-
-        return await _delete()
-
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedDelete], handle_django_errors=False)
     async def delete_gallery_album(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[GalleryAlbumType]:
-        instance = await GalleryAlbum.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(GalleryAlbum, id=id)

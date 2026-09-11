@@ -46,10 +46,8 @@ class TestUserMutations(TestCase):
         DELETE_USER = """
             mutation DeleteUser($id: ID!) {
                 deleteUser(id: $id) {
-                    ... on UserTypeMutationResponseType {
-                        ok
-                        errors
-                    }
+                    ok
+                    errors
                 }
             }
         """
@@ -145,7 +143,6 @@ class TestUserMutations(TestCase):
         self.force_login(self.staff)
         content = self.query_check(
             self.Mutation.CREATE_USER,
-            assert_errors=True,
             variables={
                 "data": {
                     "email": "blocked@ercs.org",
@@ -155,13 +152,12 @@ class TestUserMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createUser")
 
     def test_unauthenticated_cannot_create_user(self):
         self.logout()
         content = self.query_check(
             self.Mutation.CREATE_USER,
-            assert_errors=True,
             variables={
                 "data": {
                     "email": "anon@ercs.org",
@@ -171,7 +167,7 @@ class TestUserMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createUser")
 
     # ------------------------------------------------------------------
     # updateUser
@@ -197,10 +193,9 @@ class TestUserMutations(TestCase):
         target = UserFactory.create(role=User.Role.VIEWER)
         content = self.query_check(
             self.Mutation.UPDATE_USER,
-            assert_errors=True,
             variables={"id": self.gID(target.pk), "data": {"fullName": "Hacked"}},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "updateUser")
 
     # ------------------------------------------------------------------
     # deleteUser
@@ -237,10 +232,9 @@ class TestUserMutations(TestCase):
         target = UserFactory.create()
         content = self.query_check(
             self.Mutation.DELETE_USER,
-            assert_errors=True,
             variables={"id": self.gID(target.pk)},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "deleteUser")
 
     # ------------------------------------------------------------------
     # resetUserPassword
@@ -263,10 +257,9 @@ class TestUserMutations(TestCase):
         target = UserFactory.create(password="oldpassword")
         content = self.query_check(
             self.Mutation.RESET_USER_PASSWORD,
-            assert_errors=True,
             variables={"id": self.gID(target.pk), "newPassword": "newpassword"},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "resetUserPassword")
 
     # ------------------------------------------------------------------
     # updateMyPassword
@@ -312,7 +305,6 @@ class TestUserMutations(TestCase):
         self.logout()
         content = self.query_check(
             self.Mutation.UPDATE_MY_PASSWORD,
-            assert_errors=True,
             variables={
                 "data": {
                     "currentPassword": "any",
@@ -320,4 +312,17 @@ class TestUserMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "updateMyPassword")
+
+    def test_deleting_missing_user_is_reported_on_the_payload(self):
+        self.force_login(self.super_admin)
+        target = UserFactory.create()
+        target_id = self.gID(target.pk)
+        target.delete()
+        content = self.query_check(
+            self.Mutation.DELETE_USER,
+            variables={"id": target_id},
+        )
+        resp = content["data"]["deleteUser"]
+        assert resp["ok"] is False, resp
+        assert resp["errors"][0]["messages"] == "This User no longer exists. It may already have been deleted."

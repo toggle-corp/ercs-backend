@@ -25,6 +25,18 @@ class MutationResponseType(typing.Generic[ResultTypeVar]):  # noqa: UP046
 
 
 @strawberry.type
+class DeleteMutationResponseType:
+    """Outcome of a delete: it succeeded, or it did not and here is why.
+
+    Deletes carry no `result` -- the object is gone, and returning a Django type the
+    client cannot use only risks resolving its fields in an async context.
+    """
+
+    ok: bool = True
+    errors: CustomErrorType | None = None
+
+
+@strawberry.type
 class DjangoFileType:
     name: str
     size: int

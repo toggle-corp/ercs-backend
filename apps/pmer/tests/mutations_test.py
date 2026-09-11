@@ -67,10 +67,8 @@ class TestPmerReportMutations(TestCase):
         DELETE_PMER_REPORT = """
             mutation DeletePmerReport($id: ID!) {
                 deletePmerReport(id: $id) {
-                    ... on PmerReportTypeMutationResponseType {
-                        ok
-                        errors
-                    }
+                    ok
+                    errors
                 }
             }
         """
@@ -167,9 +165,8 @@ class TestPmerReportMutations(TestCase):
         content = self.create_pmer_report(
             title="Unauthorized",
             category=PmerReport.Category.DPR,
-            assert_errors=True,
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createPmerReport")
         assert not PmerReport.objects.filter(title="Unauthorized").exists()
 
     def test_create_pmer_report_rejects_unsupported_file_type(self):
@@ -300,10 +297,9 @@ class TestPmerReportMutations(TestCase):
         report = PmerReportFactory.create(title="Untouched", created_by=self.user)
         content = self.query_check(
             self.Mutation.UPDATE_PMER_REPORT,
-            assert_errors=True,
             variables={"id": str(report.pk), "data": {"title": "Hacked"}},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "updatePmerReport")
         report.refresh_from_db()
         assert report.title == "Untouched"
 
@@ -323,8 +319,20 @@ class TestPmerReportMutations(TestCase):
         report = PmerReportFactory.create(created_by=self.user)
         content = self.query_check(
             self.Mutation.DELETE_PMER_REPORT,
-            assert_errors=True,
             variables={"id": str(report.pk)},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "deletePmerReport")
         assert PmerReport.objects.filter(pk=report.pk).exists()
+
+    def test_deleting_missing_pmer_report_is_reported_on_the_payload(self):
+        self.force_login(self.user)
+        report = PmerReportFactory.create(created_by=self.user)
+        report_id = str(report.pk)
+        report.delete()
+        content = self.query_check(
+            self.Mutation.DELETE_PMER_REPORT,
+            variables={"id": report_id},
+        )
+        resp = content["data"]["deletePmerReport"]
+        assert resp["ok"] is False, resp
+        assert resp["errors"][0]["messages"] == "This PMER Report no longer exists. It may already have been deleted."

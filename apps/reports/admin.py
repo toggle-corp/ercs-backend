@@ -5,7 +5,7 @@ from .models import DocumentExtraction, Link, Report, ThematicArea
 
 @admin.register(ThematicArea)
 class ThematicAreaAdmin(admin.ModelAdmin):
-    list_display = ["name", "created_at"]
+    list_display = ["id", "name", "created_at"]
     search_fields = ["name"]
     ordering = ["name"]
 

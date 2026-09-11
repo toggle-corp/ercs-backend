@@ -2,7 +2,7 @@ import typing
 from unittest.mock import patch
 
 from apps.reports.factories import LinkFactory, ReportFactory, ThematicAreaFactory
-from apps.reports.models import Link, Report
+from apps.reports.models import Link, Report, ThematicArea
 from apps.users.factories import UserFactory
 from apps.users.models import User
 from main.tests import TestCase
@@ -13,10 +13,8 @@ class TestReportMutations(TestCase):
         DELETE_REPORT = """
             mutation DeleteReport($id: ID!) {
                 deleteReport(id: $id) {
-                    ... on ReportTypeMutationResponseType {
-                        ok
-                        errors
-                    }
+                    ok
+                    errors
                 }
             }
         """
@@ -56,10 +54,17 @@ class TestReportMutations(TestCase):
         DELETE_LINK = """
             mutation DeleteLink($id: ID!) {
                 deleteLink(id: $id) {
-                    ... on LinkTypeMutationResponseType {
-                        ok
-                        errors
-                    }
+                    ok
+                    errors
+                }
+            }
+        """
+
+        DELETE_THEMATIC_AREA = """
+            mutation DeleteThematicArea($id: ID!) {
+                deleteThematicArea(id: $id) {
+                    ok
+                    errors
                 }
             }
         """
@@ -136,7 +141,6 @@ class TestReportMutations(TestCase):
         self.logout()
         content = self.query_check(
             self.Mutation.CREATE_REPORT,
-            assert_errors=True,
             variables={
                 "data": {
                     "title": "Unauthorized",
@@ -146,7 +150,7 @@ class TestReportMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createReport")
 
     def test_cannot_change_private_to_public(self):
         self.force_login(self.user)
@@ -185,10 +189,9 @@ class TestReportMutations(TestCase):
         report = ReportFactory.create(uploaded_by=self.user)
         content = self.query_check(
             self.Mutation.DELETE_REPORT,
-            assert_errors=True,
             variables={"id": self.gID(report.pk)},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "deleteReport")
 
     # ------------------------------------------------------------------
     # Document extraction triggered on REPORT-type create
@@ -259,7 +262,6 @@ class TestReportMutations(TestCase):
         self.force_login(self.user)
         content = self.query_check(
             self.Mutation.CREATE_LINK,
-            assert_errors=True,
             variables={
                 "data": {
                     "title": "Blocked",
@@ -268,7 +270,7 @@ class TestReportMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createLink")
 
     def test_staff_can_update_link(self):
         self.force_login(self.staff)
@@ -291,3 +293,48 @@ class TestReportMutations(TestCase):
         resp = content["data"]["deleteLink"]
         assert resp["ok"] is True
         assert not Link.objects.filter(pk=link.pk).exists()
+
+    def test_viewer_cannot_delete_link(self):
+        self.force_login(self.user)
+        link = LinkFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_LINK,
+            variables={"id": self.gID(link.pk)},
+        )
+        self.assert_permission_denied(content, "deleteLink")
+        assert Link.objects.filter(pk=link.pk).exists()
+
+    def test_staff_can_delete_unused_thematic_area(self):
+        self.force_login(self.staff)
+        thematic_area = ThematicAreaFactory.create(name="Unused Area")
+        content = self.query_check(
+            self.Mutation.DELETE_THEMATIC_AREA,
+            variables={"id": self.gID(thematic_area.pk)},
+        )
+        resp = content["data"]["deleteThematicArea"]
+        assert resp["ok"] is True, resp
+        assert not ThematicArea.objects.filter(pk=thematic_area.pk).exists()
+
+    def test_cannot_delete_thematic_area_used_by_reports(self):
+        self.force_login(self.staff)
+        thematic_area = ThematicAreaFactory.create(name="In Use Area")
+        ReportFactory.create_batch(2, thematic_area=thematic_area, uploaded_by=self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_THEMATIC_AREA,
+            variables={"id": self.gID(thematic_area.pk)},
+        )
+        resp = content["data"]["deleteThematicArea"]
+        assert resp["ok"] is False, resp
+        assert ThematicArea.objects.filter(pk=thematic_area.pk).exists()
+
+    def test_deleting_missing_report_is_reported_on_the_payload(self):
+        self.force_login(self.staff)
+        report = ReportFactory.create(uploaded_by=self.staff)
+        report_id = self.gID(report.pk)
+        report.delete()
+        content = self.query_check(
+            self.Mutation.DELETE_REPORT,
+            variables={"id": report_id},
+        )
+        resp = content["data"]["deleteReport"]
+        assert resp["ok"] is False, resp

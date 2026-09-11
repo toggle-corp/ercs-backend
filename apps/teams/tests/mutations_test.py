@@ -2,7 +2,7 @@ import typing
 
 from apps.geo.factories import RegionFactory
 from apps.teams.factories import TeamFactory
-from apps.teams.models import TeamMember
+from apps.teams.models import Team, TeamMember
 from apps.users.factories import UserFactory
 from apps.users.models import User
 from main.tests import TestCase
@@ -40,6 +40,24 @@ class TestTeamMutations(TestCase):
                 }
             }
         }
+        """
+
+        DELETE_TEAM = """
+            mutation DeleteTeam($id: ID!) {
+                deleteTeam(id: $id) {
+                    ok
+                    errors
+                }
+            }
+        """
+
+        DELETE_TEAM_MEMBER = """
+            mutation DeleteTeamMember($id: ID!) {
+                deleteTeamMember(id: $id) {
+                    ok
+                    errors
+                }
+            }
         """
 
         BULK_CREATE_TEAM_MEMBERS = """
@@ -88,10 +106,9 @@ class TestTeamMutations(TestCase):
         self.force_login(self.viewer)
         content = self.query_check(
             self.Mutation.CREATE_TEAM,
-            assert_errors=True,
             variables={"data": {"name": "Blocked"}},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createTeam")
 
     def test_update_team(self):
         self.force_login(self.staff)
@@ -268,8 +285,86 @@ class TestTeamMutations(TestCase):
         ]
         content = self.query_check(
             self.Mutation.BULK_CREATE_TEAM_MEMBERS,
-            assert_errors=True,
             variables={"data": {"members": members}},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "bulkCreateTeamMembers")
         assert TeamMember.objects.count() == 0
+
+    def test_staff_can_delete_team(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM,
+            variables={"id": str(team.pk)},
+        )
+        resp = content["data"]["deleteTeam"]
+        assert resp["ok"] is True, resp
+        assert not Team.objects.filter(pk=team.pk).exists()
+
+    def test_viewer_cannot_delete_team(self):
+        self.force_login(self.viewer)
+        team = TeamFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM,
+            variables={"id": str(team.pk)},
+        )
+        self.assert_permission_denied(content, "deleteTeam")
+        assert Team.objects.filter(pk=team.pk).exists()
+
+    def test_deleting_missing_team_is_reported_on_the_payload(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        team_id = str(team.pk)
+        team.delete()
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM,
+            variables={"id": team_id},
+        )
+        resp = content["data"]["deleteTeam"]
+        assert resp["ok"] is False, resp
+        assert resp["errors"][0]["messages"] == "This Team no longer exists. It may already have been deleted."
+
+    def test_staff_can_delete_team_member(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        member = TeamMember.objects.create(team=team, name="Gone", position="Lead", region=RegionFactory.create())
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM_MEMBER,
+            variables={"id": str(member.pk)},
+        )
+        resp = content["data"]["deleteTeamMember"]
+        assert resp["ok"] is True, resp
+        assert not TeamMember.objects.filter(pk=member.pk).exists()
+
+    def test_viewer_cannot_delete_team_member(self):
+        self.force_login(self.viewer)
+        team = TeamFactory.create()
+        member = TeamMember.objects.create(team=team, name="Stays", position="Lead", region=RegionFactory.create())
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM_MEMBER,
+            variables={"id": str(member.pk)},
+        )
+        self.assert_permission_denied(content, "deleteTeamMember")
+        assert TeamMember.objects.filter(pk=member.pk).exists()
+
+    def test_deleting_team_cascades_to_members(self):
+        self.force_login(self.staff)
+        team = TeamFactory.create()
+        TeamMember.objects.create(team=team, name="Member", position="Lead", region=RegionFactory.create())
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM,
+            variables={"id": str(team.pk)},
+        )
+        resp = content["data"]["deleteTeam"]
+        assert resp["ok"] is True, resp
+        assert not TeamMember.objects.filter(team_id=team.pk).exists()
+
+    def test_deleting_with_a_malformed_id_is_reported_on_the_payload(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_TEAM,
+            variables={"id": ""},
+        )
+        resp = content["data"]["deleteTeam"]
+        assert resp["ok"] is False, resp
+        assert resp["errors"][0]["messages"] == "This Team no longer exists. It may already have been deleted."

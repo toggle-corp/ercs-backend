@@ -4,9 +4,9 @@ import strawberry_django
 from apps.teams.models import Team, TeamMember
 from apps.teams.serializers import TeamMemberSerializer, TeamSerializer
 from main.graphql.context import Info
-from main.graphql.permissions import IsStaffOrAbove
-from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from main.graphql.permissions import IsStaffOrAboveDelete, IsStaffOrAboveMutation
+from utils.graphql.mutations import ModelMutation, handle_delete_mutation
+from utils.graphql.types import DeleteMutationResponseType, MutationResponseType
 
 from .inputs import (
     TeamCreateInput,
@@ -20,7 +20,7 @@ from .types import TeamMemberType, TeamType
 
 @strawberry.type
 class Mutation:
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_team(
         self,
         info: Info,
@@ -28,7 +28,7 @@ class Mutation:
     ) -> MutationResponseType[TeamType]:
         return await ModelMutation(TeamSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_team(
         self,
         info: Info,
@@ -38,7 +38,7 @@ class Mutation:
         instance = await Team.objects.aget(id=id)
         return await ModelMutation(TeamSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_team_member(
         self,
         info: Info,
@@ -46,7 +46,7 @@ class Mutation:
     ) -> MutationResponseType[TeamMemberType]:
         return await ModelMutation(TeamMemberSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_team_member(
         self,
         info: Info,
@@ -56,36 +56,23 @@ class Mutation:
         instance = await TeamMember.objects.aget(id=id)
         return await ModelMutation(TeamMemberSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_team_member(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[TeamMemberType]:
-        from asgiref.sync import sync_to_async
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(TeamMember, id=id)
 
-        @sync_to_async
-        def _delete() -> MutationResponseType:
-            try:
-                obj = TeamMember.objects.get(id=id)
-                obj.delete()
-                return MutationResponseType(ok=True)
-            except TeamMember.DoesNotExist:
-                return MutationResponseType(ok=False)
-
-        return await _delete()
-
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_team(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[TeamType]:
-        instance = await Team.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(Team, id=id)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def bulk_create_team_members(
         self,
         info: Info,
