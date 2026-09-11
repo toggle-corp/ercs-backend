@@ -8,7 +8,7 @@ from utils.validators import validate_report_file_size
 
 from .models import PmerReport
 
-ALLOWED_FILE_EXTENSIONS: list[str] = ["pdf", "doc", "docx", "xlsx", "xlsm", "png", "jpg", "jpeg"]
+ALLOWED_FILE_EXTENSIONS: list[str] = ["pdf", "doc", "docx", "xlsx", "xlsm", "png", "jpg", ".csv"]
 
 validate_file_extension = FileExtensionValidator(
     allowed_extensions=ALLOWED_FILE_EXTENSIONS,

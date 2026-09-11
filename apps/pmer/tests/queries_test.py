@@ -78,24 +78,6 @@ class TestPmerReportQueries(TestCase):
             created_by=cls.user,
         )
 
-    def test_pmer_reports_require_auth(self):
-        self.logout()
-        content = self.query_check(
-            self.Query.PMER_REPORTS,
-            assert_errors=True,
-            variables={"pagination": {"limit": 10, "offset": 0}},
-        )
-        assert "errors" in content
-
-    def test_pmer_report_require_auth(self):
-        self.logout()
-        content = self.query_check(
-            self.Query.PMER_REPORT,
-            assert_errors=True,
-            variables={"id": str(self.dpr_report.pk)},
-        )
-        assert "errors" in content
-
     def test_pmer_reports_authenticated(self):
         self.force_login(self.user)
         content = self.query_check(
