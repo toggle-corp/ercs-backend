@@ -64,6 +64,18 @@ class TestCase(BaseTestCase):
         content = resp.json()
         assert "errors" in list(content.keys()), msg or content
 
+    def assert_permission_denied(self, content: dict[typing.Any, typing.Any], operation: str) -> None:
+        """Assert a mutation was refused, with the reason on the payload.
+
+        Permission failures are reported through `MutationResponseType.errors` rather
+        than the top-level GraphQL `errors`, so clients can show the actual reason.
+        """
+        assert "errors" not in content, content
+        resp = content["data"][operation]
+        assert resp["ok"] is False, content
+        messages = " ".join(error["messages"] or "" for error in resp["errors"])
+        assert "permission" in messages or "signed in" in messages, content
+
     @staticmethod
     def genum(_enum: models.TextChoices | models.IntegerChoices | Enum) -> str | None:
         if _enum:

@@ -61,6 +61,15 @@ class TestExternalDashboardMutations(TestCase):
         }
         """
 
+        DELETE_DASHBOARD = """
+            mutation DeleteExternalDashboard($id: ID!) {
+                deleteExternalDashboard(id: $id) {
+                    ok
+                    errors
+                }
+            }
+        """
+
         BULK_UPDATE_ORDER = """
             mutation BulkUpdateExternalDashboards($data: [ExternalDashboardOrderInput!]!) {
                 bulkUpdateExternalDashboards(data: $data) {
@@ -235,7 +244,6 @@ class TestExternalDashboardMutations(TestCase):
         self.force_login(self.viewer)
         content = self.query_check(
             self.Mutation.CREATE_DASHBOARD,
-            assert_errors=True,
             variables={
                 "data": {
                     "title": "Blocked",
@@ -244,7 +252,7 @@ class TestExternalDashboardMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createExternalDashboard")
 
     def test_deactivate_dashboard(self):
         self.force_login(self.staff)
@@ -301,10 +309,9 @@ class TestExternalDashboardMutations(TestCase):
         dashboard = ExternalDashboardFactory.create(show_on_home=False)
         content = self.query_check(
             self.Mutation.ADD_TO_HOME,
-            assert_errors=True,
             variables={"id": str(dashboard.pk)},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "addDashboardToHome")
 
     def test_remove_dashboard_from_home(self):
         self.force_login(self.staff)
@@ -471,10 +478,9 @@ class TestExternalDashboardMutations(TestCase):
         dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
         content = self.query_check(
             self.Mutation.BULK_UPDATE_ORDER,
-            assert_errors=True,
             variables={"data": [{"id": str(dashboard.pk), "order": 2}]},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "bulkUpdateExternalDashboards")
 
         dashboard.refresh_from_db()
         assert dashboard.order == 1
@@ -484,10 +490,9 @@ class TestExternalDashboardMutations(TestCase):
         dashboard = ExternalDashboardFactory.create(page=ExternalDashboard.Page.OPERATIONS, order=1)
         content = self.query_check(
             self.Mutation.BULK_UPDATE_ORDER,
-            assert_errors=True,
             variables={"data": [{"id": str(dashboard.pk), "order": 2}]},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "bulkUpdateExternalDashboards")
 
         dashboard.refresh_from_db()
         assert dashboard.order == 1
@@ -497,10 +502,42 @@ class TestExternalDashboardMutations(TestCase):
         dashboard = ExternalDashboardFactory.create(show_on_home=True)
         content = self.query_check(
             self.Mutation.REMOVE_FROM_HOME,
-            assert_errors=True,
             variables={"id": str(dashboard.pk)},
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "removeDashboardFromHome")
+
+    def test_staff_can_delete_dashboard(self):
+        self.force_login(self.staff)
+        dashboard = ExternalDashboardFactory.create(created_by=self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_DASHBOARD,
+            variables={"id": str(dashboard.pk)},
+        )
+        resp = content["data"]["deleteExternalDashboard"]
+        assert resp["ok"] is True, resp
+        assert not ExternalDashboard.objects.filter(pk=dashboard.pk).exists()
+
+    def test_viewer_cannot_delete_dashboard(self):
+        self.force_login(self.viewer)
+        dashboard = ExternalDashboardFactory.create(created_by=self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_DASHBOARD,
+            variables={"id": str(dashboard.pk)},
+        )
+        self.assert_permission_denied(content, "deleteExternalDashboard")
+        assert ExternalDashboard.objects.filter(pk=dashboard.pk).exists()
+
+    def test_deleting_missing_dashboard_is_reported_on_the_payload(self):
+        self.force_login(self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_DASHBOARD,
+            variables={"id": str(uuid.uuid4())},
+        )
+        resp = content["data"]["deleteExternalDashboard"]
+        assert resp["ok"] is False, resp
+        assert resp["errors"][0]["messages"] == (
+            "This External Dashboard no longer exists. It may already have been deleted."
+        )
 
 
 class TestCapacityAndResourceMutations(TestCase):
@@ -524,6 +561,15 @@ class TestCapacityAndResourceMutations(TestCase):
                             }
                         }
                     }
+                }
+            }
+        """
+
+        DELETE_CAPACITY_AND_RESOURCE = """
+            mutation DeleteCapacityAndResource($id: ID!) {
+                deleteCapacityAndResource(id: $id) {
+                    ok
+                    errors
                 }
             }
         """
@@ -577,7 +623,6 @@ class TestCapacityAndResourceMutations(TestCase):
         self.force_login(self.viewer)
         content = self.query_check(
             self.Mutation.CREATE_CAPACITY_AND_RESOURCE,
-            assert_errors=True,
             variables={
                 "data": {
                     "title": "Blocked",
@@ -586,7 +631,7 @@ class TestCapacityAndResourceMutations(TestCase):
                 },
             },
         )
-        assert "errors" in content
+        self.assert_permission_denied(content, "createCapacityAndResource")
 
     def test_deactivate_capacity_and_resource(self):
         self.force_login(self.staff)
@@ -643,3 +688,27 @@ class TestCapacityAndResourceMutations(TestCase):
         """Verifies CapacityAndResource is created and pk can be used."""
         instance = CapacityAndResourceFactory.create()
         assert CapacityAndResource.objects.filter(pk=instance.pk).exists()
+
+    def test_viewer_cannot_delete_capacity_and_resource(self):
+        self.force_login(self.viewer)
+        instance = CapacityAndResourceFactory.create()
+        content = self.query_check(
+            self.Mutation.DELETE_CAPACITY_AND_RESOURCE,
+            variables={"id": str(instance.pk)},
+        )
+        self.assert_permission_denied(content, "deleteCapacityAndResource")
+        assert CapacityAndResource.objects.filter(pk=instance.pk).exists()
+
+    def test_staff_can_delete_capacity_and_resource_with_linked_dashboard(self):
+        self.force_login(self.staff)
+        instance = CapacityAndResourceFactory.create()
+        dashboard = ExternalDashboardFactory.create(capacity_and_resource=instance, created_by=self.staff)
+        content = self.query_check(
+            self.Mutation.DELETE_CAPACITY_AND_RESOURCE,
+            variables={"id": str(instance.pk)},
+        )
+        resp = content["data"]["deleteCapacityAndResource"]
+        assert resp["ok"] is True, resp
+        assert not CapacityAndResource.objects.filter(pk=instance.pk).exists()
+        dashboard.refresh_from_db()
+        assert dashboard.capacity_and_resource is None

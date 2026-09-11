@@ -6,9 +6,14 @@ from apps.reports.models import Link, Report, ThematicArea
 from apps.reports.models import ReportType as ReportTypeEnum
 from apps.reports.serializers import LinkSerializer, ReportSerializer, ThematicAreaSerializer
 from main.graphql.context import Info
-from main.graphql.permissions import IsAuthenticated, IsStaffOrAbove
-from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from main.graphql.permissions import (
+    IsAuthenticatedDelete,
+    IsAuthenticatedMutation,
+    IsStaffOrAboveDelete,
+    IsStaffOrAboveMutation,
+)
+from utils.graphql.mutations import ModelMutation, handle_delete_mutation
+from utils.graphql.types import DeleteMutationResponseType, MutationResponseType
 
 from .inputs import LinkCreateInput, LinkUpdateInput, ReportCreateInput, ReportUpdateInput
 from .types import LinkType, ReportType, ThematicAreaType
@@ -21,7 +26,7 @@ class ThematicAreaInput:
 
 @strawberry.type
 class Mutation:
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_thematic_area(
         self,
         info: Info,
@@ -29,7 +34,7 @@ class Mutation:
     ) -> MutationResponseType[ThematicAreaType]:
         return await ModelMutation(ThematicAreaSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_thematic_area(
         self,
         info: Info,
@@ -39,17 +44,15 @@ class Mutation:
         instance = await ThematicArea.objects.aget(id=id)
         return await ModelMutation(ThematicAreaSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_thematic_area(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[ThematicAreaType]:
-        instance = await ThematicArea.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(ThematicArea, id=id)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def create_report(
         self,
         info: Info,
@@ -60,7 +63,7 @@ class Mutation:
             await trigger_document_extraction(response.result)
         return response
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def update_report(
         self,
         info: Info,
@@ -74,7 +77,7 @@ class Mutation:
             await trigger_document_extraction(response.result)
         return response
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_link(
         self,
         info: Info,
@@ -82,7 +85,7 @@ class Mutation:
     ) -> MutationResponseType[LinkType]:
         return await ModelMutation(LinkSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_link(
         self,
         info: Info,
@@ -92,22 +95,18 @@ class Mutation:
         instance = await Link.objects.aget(id=id)
         return await ModelMutation(LinkSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_link(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[LinkType]:
-        instance = await Link.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(Link, id=id)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedDelete], handle_django_errors=False)
     async def delete_report(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[ReportType]:
-        instance = await Report.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(Report, id=id)

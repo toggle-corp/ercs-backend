@@ -4,9 +4,14 @@ import strawberry_django
 from apps.content.models import NewsPost, NewsPostReport
 from apps.content.serializers import NewsPostReportSerializer, NewsPostSerializer
 from main.graphql.context import Info
-from main.graphql.permissions import IsAuthenticated, IsStaffOrAbove
-from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import MutationResponseType
+from main.graphql.permissions import (
+    IsAuthenticatedDelete,
+    IsAuthenticatedMutation,
+    IsStaffOrAboveDelete,
+    IsStaffOrAboveMutation,
+)
+from utils.graphql.mutations import ModelMutation, handle_delete_mutation
+from utils.graphql.types import DeleteMutationResponseType, MutationResponseType
 
 from .inputs import NewsPostCreateInput, NewsPostReportInput, NewsPostUpdateInput
 from .types import NewsPostReportType, NewsPostType
@@ -14,7 +19,7 @@ from .types import NewsPostReportType, NewsPostType
 
 @strawberry.type
 class Mutation:
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_news_post(
         self,
         info: Info,
@@ -22,7 +27,7 @@ class Mutation:
     ) -> MutationResponseType[NewsPostType]:
         return await ModelMutation(NewsPostSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_news_post(
         self,
         info: Info,
@@ -32,7 +37,7 @@ class Mutation:
         instance = await NewsPost.objects.aget(id=id)
         return await ModelMutation(NewsPostSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedMutation])
     async def create_news_post_report(
         self,
         info: Info,
@@ -40,32 +45,19 @@ class Mutation:
     ) -> MutationResponseType[NewsPostReportType]:
         return await ModelMutation(NewsPostReportSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsAuthenticated])
+    @strawberry_django.mutation(permission_classes=[IsAuthenticatedDelete], handle_django_errors=False)
     async def delete_news_post_report(
         self,
         info: Info,
         newspost: strawberry.ID,
         report: strawberry.ID,
-    ) -> MutationResponseType[NewsPostReportType]:
-        from asgiref.sync import sync_to_async
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(NewsPostReport, newspost_id=newspost, report_id=report)
 
-        @sync_to_async
-        def _delete() -> MutationResponseType:
-            try:
-                obj = NewsPostReport.objects.get(newspost_id=newspost, report_id=report)
-                obj.delete()
-                return MutationResponseType(ok=True)
-            except NewsPostReport.DoesNotExist:
-                return MutationResponseType(ok=False)
-
-        return await _delete()
-
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_news_post(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[NewsPostType]:
-        instance = await NewsPost.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(NewsPost, id=id)

@@ -6,10 +6,10 @@ from django.db import transaction
 from apps.dashboards.models import CapacityAndResource, ExternalDashboard
 from apps.dashboards.serializers import CapacityAndResourceSerializer, ExternalDashboardSerializer
 from main.graphql.context import Info
-from main.graphql.permissions import IsStaffOrAbove
+from main.graphql.permissions import IsStaffOrAboveDelete, IsStaffOrAboveMutation
 from utils.graphql.drf import MutationCustomErrorType
-from utils.graphql.mutations import ModelMutation
-from utils.graphql.types import CustomErrorType, MutationResponseType
+from utils.graphql.mutations import ModelMutation, handle_delete_mutation
+from utils.graphql.types import CustomErrorType, DeleteMutationResponseType, MutationResponseType
 
 from .inputs import (
     CapacityAndResourceCreateInput,
@@ -38,7 +38,7 @@ def _bulk_update_external_dashboard_order(
 
 @strawberry.type
 class Mutation:
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_external_dashboard(
         self,
         info: Info,
@@ -46,7 +46,7 @@ class Mutation:
     ) -> MutationResponseType[ExternalDashboardType]:
         return await ModelMutation(ExternalDashboardSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_external_dashboard(
         self,
         info: Info,
@@ -56,7 +56,7 @@ class Mutation:
         instance = await ExternalDashboard.objects.aget(id=id)
         return await ModelMutation(ExternalDashboardSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def create_capacity_and_resource(
         self,
         info: Info,
@@ -64,7 +64,7 @@ class Mutation:
     ) -> MutationResponseType[CapacityAndResourceType]:
         return await ModelMutation(CapacityAndResourceSerializer).handle_create_mutation(data, info)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def update_capacity_and_resource(
         self,
         info: Info,
@@ -74,7 +74,7 @@ class Mutation:
         instance = await CapacityAndResource.objects.aget(id=id)
         return await ModelMutation(CapacityAndResourceSerializer).handle_update_mutation(data, info, instance)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def bulk_update_external_dashboards(
         self,
         info: Info,
@@ -86,7 +86,7 @@ class Mutation:
             return MutationResponseType(ok=False, errors=errors)
         return MutationResponseType(result=dashboards)  # type: ignore[reportAttributeAccessIssue]
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def add_dashboard_to_home(
         self,
         info: Info,
@@ -109,7 +109,7 @@ class Mutation:
         await instance.asave(update_fields=["show_on_home"])
         return MutationResponseType(result=instance)  # type: ignore[reportAttributeAccessIssue]
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveMutation])
     async def remove_dashboard_from_home(
         self,
         info: Info,
@@ -120,22 +120,18 @@ class Mutation:
         await instance.asave(update_fields=["show_on_home"])
         return MutationResponseType(result=instance)  # type: ignore[reportAttributeAccessIssue]
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_external_dashboard(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[ExternalDashboardType]:
-        instance = await ExternalDashboard.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(ExternalDashboard, id=id)
 
-    @strawberry_django.mutation(permission_classes=[IsStaffOrAbove])
+    @strawberry_django.mutation(permission_classes=[IsStaffOrAboveDelete], handle_django_errors=False)
     async def delete_capacity_and_resource(
         self,
         info: Info,
         id: strawberry.ID,
-    ) -> MutationResponseType[CapacityAndResourceType]:
-        instance = await CapacityAndResource.objects.aget(id=id)
-        await instance.adelete()
-        return MutationResponseType(ok=True)
+    ) -> DeleteMutationResponseType:
+        return await handle_delete_mutation(CapacityAndResource, id=id)
