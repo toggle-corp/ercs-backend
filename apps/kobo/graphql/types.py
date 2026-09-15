@@ -14,6 +14,48 @@ def _raw_int(raw: dict[str, Any], key: str) -> int | None:
         return None
 
 
+def _humanize(value: str | None) -> str | None:
+    """`South_Ethiopia` → `South Ethiopia` (Kobo uses underscores for spaces)."""
+    return value.replace("_", " ").strip() if value else value
+
+
+def raw_geolocation(raw: dict[str, Any]) -> tuple[float | None, float | None]:
+    """Kobo's parsed `[lat, lon]`; returns (lat, lon) or (None, None)."""
+    geo = raw.get("_geolocation") or []
+    if len(geo) >= 2 and geo[0] is not None and geo[1] is not None:
+        try:
+            return float(geo[0]), float(geo[1])
+        except (TypeError, ValueError):
+            return None, None
+    return None, None
+
+
+def raw_zone(raw: dict[str, Any]) -> str | None:
+    """Zone(s) — `zone-one` for woreda/kebele scope, `zone-multiple` for zone scope."""
+    return _humanize(raw.get("geo/zone-one") or raw.get("geo/zone-multiple"))
+
+
+def raw_woreda(raw: dict[str, Any]) -> str | None:
+    return _humanize(raw.get("geo/woreda-one") or raw.get("geo/woreda-multiple"))
+
+
+def raw_emergency_title(raw: dict[str, Any]) -> str:
+    """Constructed heading: `<Disaster type> — <Zone/Woreda>, <Region>`.
+
+    The Emergency Alert form has no title field, so we build one from the hazard
+    and the most specific available locality.
+    """
+    hazard = (raw.get("context/hazard") or "").strip()
+    hazard_disp = (hazard[:1].upper() + hazard[1:]) if hazard else "Emergency"
+    region = _humanize(raw.get("geo/region-one"))
+    locality = raw_zone(raw) or raw_woreda(raw)
+    if locality and region and locality.casefold() != region.casefold():
+        return f"{hazard_disp} — {locality}, {region}"
+    if region:
+        return f"{hazard_disp} — {region}"
+    return hazard_disp
+
+
 @strawberry_django.type(KoboSubmission)
 class KoboSubmissionType:
     id: strawberry.ID
@@ -56,8 +98,20 @@ class KoboEmergencyType:
     # `only=["raw"]` tells the optimizer to load the raw column, otherwise it is
     # deferred and `self.raw` triggers a lazy DB fetch in the async resolver.
     @strawberry_django.field(only=["raw"])
+    def title(self) -> str:
+        return raw_emergency_title(self.raw)  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
     def hazard(self) -> str | None:
         return self.raw.get("context/hazard")  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def latitude(self) -> float | None:
+        return raw_geolocation(self.raw)[0]  # type: ignore[attr-defined]
+
+    @strawberry_django.field(only=["raw"])
+    def longitude(self) -> float | None:
+        return raw_geolocation(self.raw)[1]  # type: ignore[attr-defined]
 
     @strawberry_django.field(only=["raw"])
     def alert_type(self) -> str | None:
@@ -65,7 +119,7 @@ class KoboEmergencyType:
 
     @strawberry_django.field(only=["raw"])
     def region(self) -> str | None:
-        return self.raw.get("geo/region-one")  # type: ignore[attr-defined]
+        return _humanize(self.raw.get("geo/region-one"))  # type: ignore[attr-defined]
 
     @strawberry_django.field(only=["raw"])
     def location_scope(self) -> str | None:
@@ -157,3 +211,106 @@ class KoboStats:
     alert: AlertStats
     rapid_needs: RapidNeedsStats
     field: FieldStats
+
+
+# --------------------------------------------------------------------------
+# Emergency detail (alert + linked RNA / field reports) — for the alert popup
+# --------------------------------------------------------------------------
+
+
+@strawberry.type
+class KoboRelatedReport:
+    """A linked Rapid Needs Assessment or Field Report row, for the detail lists."""
+
+    id: strawberry.ID
+    kobo_id: int
+    submission_time: datetime.datetime | None
+    label: str
+    # People in need (RNA) or people reached (Field Report).
+    value: int | None
+
+
+@strawberry.type
+class KoboEmergencyDetail:
+    """Full detail for a single Emergency Alert, joined with the Rapid Needs
+    Assessments and Field Reports that share its emergency code. Backs the alert
+    popup / detail modal (built in ``apps.kobo.stats.build_emergency_detail``).
+    """
+
+    id: strawberry.ID
+    kobo_id: int
+    emergency_code: str | None
+    title: str
+    hazard: str | None
+    alert_type: str | None
+    submission_time: datetime.datetime | None
+    reporting_branch: str | None
+    region: str | None
+    zone: str | None
+    woreda: str | None
+    kebele: str | None
+    location_scope: str | None
+    onset_date: str | None
+    general_description: str | None
+    population_in_affected_area: int | None
+    people_affected: int | None
+    people_displaced: int | None
+    latitude: float | None
+    longitude: float | None
+    rapid_needs: list[KoboRelatedReport]
+    field_reports: list[KoboRelatedReport]
+
+
+@strawberry.type
+class KoboRapidNeedsDetail:
+    """Full detail for one approved Rapid Needs Assessment (the RNA popup).
+
+    Chip lists (affected groups, sectors, vulnerable groups, modalities) are
+    label-resolved from the stored form schema (see ``apps.kobo.labels``).
+    """
+
+    id: strawberry.ID
+    kobo_id: int
+    emergency_code: str | None
+    index: int
+    title: str
+    submission_time: datetime.datetime | None
+    reporting_branch: str | None
+    region: str | None
+    zone: str | None
+    woreda: str | None
+    kebele: str | None
+    people_in_need: int | None
+    people_affected: int | None
+    people_displaced: int | None
+    people_affected_non_displaced: int | None
+    top_affected_groups: list[str]
+    priority_sectors: list[str]
+    vulnerable_groups: list[str]
+    response_modalities: list[str]
+
+
+@strawberry.type
+class KoboFieldReportDetail:
+    """Full detail for one approved Emergency Field Report (the Field Report popup)."""
+
+    id: strawberry.ID
+    kobo_id: int
+    emergency_code: str | None
+    index: int
+    title: str
+    submission_time: datetime.datetime | None
+    reporting_branch: str | None
+    region: str | None
+    location: str | None
+    reporting_period_start: str | None
+    reporting_period_end: str | None
+    reporting_days: int | None
+    people_reached: int | None
+    volunteers: int | None
+    staff: int | None
+    bdrt: int | None
+    type_of_reported_information: str | None
+    prepositioned_stocks_used: str | None
+    response_actions: list[str]
+    latest_developments: str | None

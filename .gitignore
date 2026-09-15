@@ -164,3 +164,4 @@ deploy/eb/
 .claude/
 
 CLAUDE.md
+celerybeat*
