@@ -11,7 +11,7 @@ import typing
 from django.contrib import admin
 from django.http import HttpRequest
 
-from apps.kobo.models import KoboSubmission, KoboSyncState
+from apps.kobo.models import KoboFormSchema, KoboSubmission, KoboSyncState
 
 
 class ReadOnlyAdmin(admin.ModelAdmin):  # type: ignore[reportMissingTypeArgument]
@@ -43,3 +43,8 @@ class KoboSubmissionAdmin(ReadOnlyAdmin):
 @admin.register(KoboSyncState)
 class KoboSyncStateAdmin(ReadOnlyAdmin):
     list_display = ("form", "last_status", "last_fetched_at", "record_count")
+
+
+@admin.register(KoboFormSchema)
+class KoboFormSchemaAdmin(ReadOnlyAdmin):
+    list_display = ("form", "asset_uid", "fetched_at")

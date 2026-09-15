@@ -59,7 +59,7 @@ class KoboSubmission(BaseModel):
         related_name="kobo_submissions",
         help_text="Best-effort match of the reporting region name during sync.",
     )
-    raw = models.JSONField[dict, dict](help_text="The full Kobo record, verbatim.")
+    raw = models.JSONField[dict[str, typing.Any], dict[str, typing.Any]](help_text="The full Kobo record, verbatim.")
 
     class Meta:  # type: ignore[reportIncompatibleVariableOverride]
         verbose_name = "Kobo Submission"
@@ -76,6 +76,32 @@ class KoboSubmission(BaseModel):
     @typing.override
     def __str__(self) -> str:
         return f"{self.get_form_display()} #{self.kobo_id}"  # type: ignore[reportAttributeAccessIssue]
+
+
+class KoboFormSchema(BaseModel):
+    """The form definition (choice labels) for a Kobo form. One row per form.
+
+    Kobo submissions store choice *codes* (e.g. ``Modality2``); the human labels
+    live in the asset's ``content`` (``survey`` + ``choices``). The sync fetches
+    that and precomputes compact lookup maps so the detail views can render
+    friendly labels without re-parsing the whole schema on every request.
+    """
+
+    form: int = IntegerChoicesField(choices_enum=KoboForm, unique=True)  # type: ignore[reportAssignmentType]
+    asset_uid = models.CharField[str, str](max_length=32)
+    labels = models.JSONField[dict[str, typing.Any], dict[str, typing.Any]](
+        default=dict,
+        help_text='Precomputed maps: {"choices": {list: {code: label}}, "fields": {leaf: {"list", "multiple"}}}.',
+    )
+    fetched_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:  # type: ignore[reportIncompatibleVariableOverride]
+        verbose_name = "Kobo Form Schema"
+        verbose_name_plural = "Kobo Form Schemas"
+
+    @typing.override
+    def __str__(self) -> str:
+        return f"{self.get_form_display()} schema"  # type: ignore[reportAttributeAccessIssue]
 
 
 class KoboSyncState(BaseModel):

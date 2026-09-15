@@ -34,7 +34,8 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from apps.geo.models import AdminArea, AdminAreaLevel
-from apps.kobo.models import KoboForm, KoboSubmission, KoboSyncState
+from apps.kobo.labels import build_label_maps
+from apps.kobo.models import KoboForm, KoboFormSchema, KoboSubmission, KoboSyncState
 
 logger = logging.getLogger(__name__)
 
@@ -132,7 +133,29 @@ class KoboSyncer:
             if only is not None and spec.form != only:
                 continue
             results.append(self.sync_form(spec, dry_run=dry_run))
+            if not dry_run:
+                self.sync_schema(spec)
         return results
+
+    def sync_schema(self, spec: FormSpec) -> None:
+        """Fetch the form's choice labels and store them (best-effort).
+
+        Independent of the data sync and never fatal: a failure keeps the last
+        stored labels (or, first time, leaves values shown as humanized codes).
+        """
+        label = KoboForm(spec.form).label
+        try:
+            content = self._fetch_schema(spec.asset_uid)
+            labels = build_label_maps(content)
+            KoboFormSchema.objects.update_or_create(
+                form=spec.form,
+                defaults={"asset_uid": spec.asset_uid, "labels": labels, "fetched_at": timezone.now()},
+            )
+            self._ok(f"  {label}: schema labels updated ({len(labels['choices'])} choice lists)")
+        except Exception as exc:
+            sentry_sdk.capture_exception(exc)
+            logger.exception("Kobo schema fetch failed for %s (%s)", label, spec.asset_uid)
+            self._warn(f"  {label}: SCHEMA FETCH FAILED — {exc} (existing labels kept)")
 
     def sync_form(self, spec: FormSpec, dry_run: bool = False) -> FormResult:
         self.check_config()  # `sync_form` is also called directly (tests, one-off scripts).
@@ -235,6 +258,15 @@ class KoboSyncer:
             data = resp.json()
             yield from data["results"]
             url = data.get("next")
+
+    def _fetch_schema(self, asset_uid: str) -> dict[str, Any]:
+        """The asset's ``content`` (``survey`` + ``choices``) — the choice-label source."""
+        self.check_config()
+        headers = {"Authorization": f"Token {settings.KOBO_ACCESS_TOKEN}"}
+        url = f"{settings.KOBO_DOMAIN}/api/v2/assets/{asset_uid}/?format=json"
+        resp = requests.get(url, headers=headers, timeout=HTTP_TIMEOUT)
+        resp.raise_for_status()
+        return resp.json().get("content", {})
 
     # ------------------------------------------------------------------
     # Helpers
