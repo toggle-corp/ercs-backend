@@ -672,6 +672,31 @@ type KeyCount {
   count: Int!
 }
 
+type KoboEmergencyDetail {
+  id: ID!
+  koboId: Int!
+  emergencyCode: String
+  title: String!
+  hazard: String
+  alertType: String
+  submissionTime: DateTime
+  reportingBranch: String
+  region: String
+  zone: String
+  woreda: String
+  kebele: String
+  locationScope: String
+  onsetDate: String
+  generalDescription: String
+  populationInAffectedArea: Int
+  peopleAffected: Int
+  peopleDisplaced: Int
+  latitude: Float
+  longitude: Float
+  rapidNeeds: [KoboRelatedReport!]!
+  fieldReports: [KoboRelatedReport!]!
+}
+
 """
 A single Kobo submission, mirrored verbatim.
 
@@ -697,7 +722,10 @@ type KoboEmergencyType {
 
   """Best-effort match of the reporting region name during sync."""
   regionId: ID
+  title: String!
   hazard: String
+  latitude: Float
+  longitude: Float
   alertType: String
 
   """Best-effort match of the reporting region name during sync."""
@@ -718,10 +746,63 @@ type KoboEmergencyTypeOffsetPaginated {
   results: [KoboEmergencyType!]!
 }
 
+type KoboFieldReportDetail {
+  id: ID!
+  koboId: Int!
+  emergencyCode: String
+  index: Int!
+  title: String!
+  submissionTime: DateTime
+  reportingBranch: String
+  region: String
+  location: String
+  reportingPeriodStart: String
+  reportingPeriodEnd: String
+  reportingDays: Int
+  peopleReached: Int
+  volunteers: Int
+  staff: Int
+  bdrt: Int
+  typeOfReportedInformation: String
+  prepositionedStocksUsed: String
+  responseActions: [String!]!
+  latestDevelopments: String
+}
+
 enum KoboForm {
   EMERGENCY_ALERT
   RAPID_NEEDS_ASSESSMENT
   EMERGENCY_FIELD
+}
+
+type KoboRapidNeedsDetail {
+  id: ID!
+  koboId: Int!
+  emergencyCode: String
+  index: Int!
+  title: String!
+  submissionTime: DateTime
+  reportingBranch: String
+  region: String
+  zone: String
+  woreda: String
+  kebele: String
+  peopleInNeed: Int
+  peopleAffected: Int
+  peopleDisplaced: Int
+  peopleAffectedNonDisplaced: Int
+  topAffectedGroups: [String!]!
+  prioritySectors: [String!]!
+  vulnerableGroups: [String!]!
+  responseModalities: [String!]!
+}
+
+type KoboRelatedReport {
+  id: ID!
+  koboId: Int!
+  submissionTime: DateTime
+  label: String!
+  value: Int
 }
 
 type KoboSource {
@@ -1220,6 +1301,9 @@ type Query {
   koboSubmissions(pagination: OffsetPaginationInput, filters: KoboSubmissionFilter, order: KoboSubmissionOrder): KoboSubmissionTypeOffsetPaginated!
   koboSubmission(id: ID!): KoboSubmissionType!
   koboStats: KoboStats!
+  koboEmergency(id: ID!): KoboEmergencyDetail
+  koboRapidNeeds(id: ID!): KoboRapidNeedsDetail
+  koboFieldReport(id: ID!): KoboFieldReportDetail
   pmerReports(pagination: OffsetPaginationInput, filters: PmerReportFilter, order: PmerReportOrder): PmerReportTypeOffsetPaginated!
   pmerReport(id: ID!): PmerReportType!
   enums: AppEnumCollection!
