@@ -1268,43 +1268,43 @@ input PmerReportUpdateInput {
 }
 
 type Query {
-  adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, order: AdminAreaOrder): AdminAreaTypeOffsetPaginated!
+  adminAreas(pagination: OffsetPaginationInput, filters: AdminAreaFilter, ordering: [AdminAreaOrder!]! = []): AdminAreaTypeOffsetPaginated!
   adminArea(id: ID!): AdminAreaType!
-  users(pagination: OffsetPaginationInput, filters: UserFilter, order: UserOrder): UserTypeOffsetPaginated!
+  users(pagination: OffsetPaginationInput, filters: UserFilter, ordering: [UserOrder!]! = []): UserTypeOffsetPaginated!
   user(id: ID!): UserType!
   me: UserMeType
   thematicAreas(pagination: OffsetPaginationInput, filters: ThematicAreaFilter): ThematicAreaTypeOffsetPaginated!
   reports(pagination: OffsetPaginationInput, filters: ReportFilter): ReportTypeOffsetPaginated!
   report(id: ID!): ReportType!
-  publicLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
-  internalLinks(pagination: OffsetPaginationInput, filters: LinkFilter, order: LinkOrder): LinkTypeOffsetPaginated!
+  publicLinks(pagination: OffsetPaginationInput, filters: LinkFilter, ordering: [LinkOrder!]! = []): LinkTypeOffsetPaginated!
+  internalLinks(pagination: OffsetPaginationInput, filters: LinkFilter, ordering: [LinkOrder!]! = []): LinkTypeOffsetPaginated!
   link(id: ID!): LinkType!
   reportSummaries(pagination: OffsetPaginationInput, filters: ReportSummaryFilter): ReportSummaryTypeOffsetPaginated!
   reportSummary(id: ID!): ReportSummaryType!
-  newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, order: NewsPostOrder): NewsPostTypeOffsetPaginated!
+  newsPosts(pagination: OffsetPaginationInput, filters: NewsPostFilter, ordering: [NewsPostOrder!]! = []): NewsPostTypeOffsetPaginated!
   newsPost(id: ID!): NewsPostType!
-  externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, order: ExternalDashboardOrder): ExternalDashboardTypeOffsetPaginated!
+  externalDashboards(pagination: OffsetPaginationInput, filters: ExternalDashboardFilter, ordering: [ExternalDashboardOrder!]! = []): ExternalDashboardTypeOffsetPaginated!
   externalDashboard(id: ID!): ExternalDashboardType!
-  capacityAndResources(pagination: OffsetPaginationInput, filters: CapacityAndResourceFilter, order: CapacityAndResourceOrder): CapacityAndResourceTypeOffsetPaginated!
+  capacityAndResources(pagination: OffsetPaginationInput, filters: CapacityAndResourceFilter, ordering: [CapacityAndResourceOrder!]! = []): CapacityAndResourceTypeOffsetPaginated!
   capacityAndResource(id: ID!): CapacityAndResourceType!
-  emergencies(pagination: OffsetPaginationInput, filters: EmergencyFilter, order: EmergencyOrder): EmergencyTypeOffsetPaginated!
+  emergencies(pagination: OffsetPaginationInput, filters: EmergencyFilter, ordering: [EmergencyOrder!]! = []): EmergencyTypeOffsetPaginated!
   emergency(id: ID!): EmergencyType!
-  galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, order: GalleryAlbumOrder): GalleryAlbumTypeOffsetPaginated!
+  galleryAlbums(pagination: OffsetPaginationInput, filters: GalleryAlbumFilter, ordering: [GalleryAlbumOrder!]! = []): GalleryAlbumTypeOffsetPaginated!
   galleryAlbum(id: ID!): GalleryAlbumType!
-  galleryImages(pagination: OffsetPaginationInput, filters: GalleryImageFilter, order: GalleryImageOrder): GalleryImageTypeOffsetPaginated!
-  teams(pagination: OffsetPaginationInput, filters: TeamFilter, order: TeamOrder): TeamTypeOffsetPaginated!
+  galleryImages(pagination: OffsetPaginationInput, filters: GalleryImageFilter, ordering: [GalleryImageOrder!]! = []): GalleryImageTypeOffsetPaginated!
+  teams(pagination: OffsetPaginationInput, filters: TeamFilter, ordering: [TeamOrder!]! = []): TeamTypeOffsetPaginated!
   team(id: ID!): TeamType!
-  teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, order: TeamMemberOrder): TeamMemberTypeOffsetPaginated!
+  teamMembers(pagination: OffsetPaginationInput, filters: TeamMemberFilter, ordering: [TeamMemberOrder!]! = []): TeamMemberTypeOffsetPaginated!
   teamMember(id: ID!): TeamMemberType!
   createTeamMemberTemplate: String!
-  koboEmergencies(pagination: OffsetPaginationInput, order: KoboSubmissionOrder): KoboEmergencyTypeOffsetPaginated!
-  koboSubmissions(pagination: OffsetPaginationInput, filters: KoboSubmissionFilter, order: KoboSubmissionOrder): KoboSubmissionTypeOffsetPaginated!
+  koboEmergencies(pagination: OffsetPaginationInput, ordering: [KoboSubmissionOrder!]! = []): KoboEmergencyTypeOffsetPaginated!
+  koboSubmissions(pagination: OffsetPaginationInput, filters: KoboSubmissionFilter, ordering: [KoboSubmissionOrder!]! = []): KoboSubmissionTypeOffsetPaginated!
   koboSubmission(id: ID!): KoboSubmissionType!
   koboStats: KoboStats!
   koboEmergency(id: ID!): KoboEmergencyDetail
   koboRapidNeeds(id: ID!): KoboRapidNeedsDetail
   koboFieldReport(id: ID!): KoboFieldReportDetail
-  pmerReports(pagination: OffsetPaginationInput, filters: PmerReportFilter, order: PmerReportOrder): PmerReportTypeOffsetPaginated!
+  pmerReports(pagination: OffsetPaginationInput, filters: PmerReportFilter, ordering: [PmerReportOrder!]! = []): PmerReportTypeOffsetPaginated!
   pmerReport(id: ID!): PmerReportType!
   enums: AppEnumCollection!
 }
